@@ -1,0 +1,626 @@
+{
+  "id": "1776027055552",
+  "name": "LaTex",
+  "cards": [
+    {
+      "front": "LaTeX ",
+      "back": "LaTeX / LaTeX ",
+      "ipa": "ˈleɪtɛk",
+      "spanish_ipa": "lá-tecs",
+      "explanation": "This is a proper noun, referring to a specific document preparation system. It's used as the subject of a sentence.",
+      "srs": {
+        "interval": 1,
+        "repetition": 1,
+        "ef": 2.5,
+        "nextReview": 1776378535882,
+        "status": "review"
+      }
+    },
+    {
+      "front": "is ",
+      "back": "es / is ",
+      "ipa": "ɪz",
+      "spanish_ipa": "is",
+      "explanation": "This is a form of the verb 'to be', used here to describe the nature or identity of LaTeX. Use it to link a subject to its description.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "a high-quality ",
+      "back": "de alta calidad / a high-quality ",
+      "ipa": "ə ˈhaɪˌkwɒlɪti",
+      "spanish_ipa": "a jai-kwa-li-ti",
+      "explanation": "'High-quality' is an adjective phrase used to describe something that is very good or excellent. 'A' is an indefinite article. Use this to praise the standard of something.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "typesetting system; ",
+      "back": "sistema de composición tipográfica; / typesetting system; ",
+      "ipa": "ˈtaɪpˌsɛtɪŋ ˈsɪstəm;",
+      "spanish_ipa": "tái-pset-ing sis-tem;",
+      "explanation": "'Typesetting system' is a noun phrase referring to software used to arrange text and graphics for publication. The semicolon connects two closely related independent clauses.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "it includes ",
+      "back": "incluye / it includes ",
+      "ipa": "ɪt ɪnˈkluːdz",
+      "spanish_ipa": "it in-kluds",
+      "explanation": "'It includes' means that something has or contains certain parts or features. Use this to list what something contains or offers.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "features designed for ",
+      "back": "características diseñadas para / features designed for ",
+      "ipa": "ˈfiːtʃərz dɪˈzaɪnd fɔːr",
+      "spanish_ipa": "fi-churs di-záind for",
+      "explanation": "This phrase means that specific capabilities or elements were created with a particular goal or purpose. Use it to explain why certain parts of something exist.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "the production of ",
+      "back": "la producción de / the production of ",
+      "ipa": "ðə prəˈdʌkʃən əv",
+      "spanish_ipa": "dha pro-duc-shion ov",
+      "explanation": "'The production of' refers to the process of making or creating something. Use this to talk about the manufacturing or creation process.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "technical and scientific documentation. ",
+      "back": "documentación técnica y científica. / technical and scientific documentation. ",
+      "ipa": "ˈtɛknɪkəl ænd ˌsaɪənˈtɪfɪk ˌdɒkjʊmɛnˈteɪʃən.",
+      "spanish_ipa": "tek-ni-kal and sai-en-ti-fic dok-u-men-tei-shion.",
+      "explanation": "This noun phrase describes written materials related to technology or science. 'Technical' and 'scientific' are adjectives specifying the type of documentation.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "LaTeX ",
+      "back": "LaTeX / LaTeX ",
+      "ipa": "ˈleɪtɛk",
+      "spanish_ipa": "lá-tecs",
+      "explanation": "This is a proper noun, referring to a specific document preparation system. It's used as the subject of a sentence.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "is ",
+      "back": "es / is ",
+      "ipa": "ɪz",
+      "spanish_ipa": "is",
+      "explanation": "This is a form of the verb 'to be', used here to describe the nature or identity of LaTeX. Use it to link a subject to its description.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "the de facto standard ",
+      "back": "el estándar de facto / the de facto standard ",
+      "ipa": "ðə deɪ ˈfæktoʊ ˈstændərd",
+      "spanish_ipa": "dha de fak-to stan-dard",
+      "explanation": "'De facto standard' means something widely accepted and used in practice, even if not officially recognized. Use this to describe an unofficial but common benchmark.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "for the communication and publication of ",
+      "back": "para la comunicación y publicación de / for the communication and publication of ",
+      "ipa": "fɔːr ðə kəˌmjuːnɪˈkeɪʃən ænd ˌpʌblɪˈkeɪʃən əv",
+      "spanish_ipa": "for dha ko-miu-ni-kei-shion and pa-bli-kei-shion ov",
+      "explanation": "This phrase explains the purpose or area for which something is considered a standard. 'Communication' and 'publication' are related actions of sharing information.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "scientific documents. ",
+      "back": "documentos científicos. / scientific documents. ",
+      "ipa": "ˌsaɪənˈtɪfɪk ˈdɒkjʊmənts.",
+      "spanish_ipa": "sai-en-ti-fic dok-u-ments.",
+      "explanation": "This noun phrase refers to written materials on scientific topics. 'Scientific' is an adjective describing the type of documents. The period ends the sentence.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "LaTeX ",
+      "back": "LaTeX / LaTeX ",
+      "ipa": "ˈleɪtɛk",
+      "spanish_ipa": "lá-tecs",
+      "explanation": "This is a proper noun, referring to a specific document preparation system. It's used as the subject of a sentence.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "is available ",
+      "back": "está disponible / is available ",
+      "ipa": "ɪz əˈveɪləbl",
+      "spanish_ipa": "is a-vei-la-bl",
+      "explanation": "'Is available' means that something can be found or obtained. Use this to say that something is ready to be used or bought.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "as free software. ",
+      "back": "como software libre. / as free software. ",
+      "ipa": "æz friː ˈsɒftwɛr.",
+      "spanish_ipa": "az fri sof-twer.",
+      "explanation": "'Free software' refers to software that users can run, study, change, and distribute without restrictions. 'As' indicates its status.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "You don't have to pay for ",
+      "back": "No tienes que pagar por / You don't have to pay for ",
+      "ipa": "juː doʊnt hæv tə peɪ fɔːr",
+      "spanish_ipa": "iu dont hav tu pei for",
+      "explanation": "'Don't have to' expresses a lack of obligation, meaning something is not necessary. 'Pay for' means to give money in exchange for something.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "using LaTeX, ",
+      "back": "usar LaTeX, / using LaTeX, ",
+      "ipa": "ˈjuːzɪŋ ˈleɪtɛk,",
+      "spanish_ipa": "iu-sing lá-tecs,",
+      "explanation": "'Using' is the present participle of the verb 'to use', indicating the action of employing something. The comma separates clauses.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "i.e., ",
+      "back": "es decir, / i.e., ",
+      "ipa": "aɪ ˈiː,",
+      "spanish_ipa": "ái í,",
+      "explanation": "'i.e.' is an abbreviation for 'id est', meaning 'that is' or 'in other words'. Use this to clarify or rephrase a previous statement.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "there are no ",
+      "back": "no hay / there are no ",
+      "ipa": "ðɛər ɑːr noʊ",
+      "spanish_ipa": "dher ar nou",
+      "explanation": "'There are no' is used to state that something does not exist or is not present. Use this to indicate the absence of something.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "license fees, ",
+      "back": "tarifas de licencia, / license fees, ",
+      "ipa": "ˈlaɪsəns fiːz,",
+      "spanish_ipa": "lái-sens fis,",
+      "explanation": "'License fees' are payments required to use software or a service legally. The comma separates items in a list.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "etc. ",
+      "back": "etc. / etc. ",
+      "ipa": "ɛtˈsɛtərə.",
+      "spanish_ipa": "et-se-te-ra.",
+      "explanation": "'Etc.' is an abbreviation for 'et cetera', meaning 'and other similar things'. Use this to indicate that a list continues with similar items.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "But ",
+      "back": "Pero / But ",
+      "ipa": "bʌt",
+      "spanish_ipa": "bat",
+      "explanation": "'But' is a conjunction used to introduce a contrasting idea or statement. Use it to show a difference or opposition.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "you are, ",
+      "back": "estás, / you are, ",
+      "ipa": "juː ɑːr,",
+      "spanish_ipa": "iu ar,",
+      "explanation": "This is the subject 'you' with the verb 'to be', part of a larger phrase. The comma separates the parenthetical remark 'of course'.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "of course, ",
+      "back": "por supuesto, / of course, ",
+      "ipa": "əv kɔːrs,",
+      "spanish_ipa": "ov kors,",
+      "explanation": "'Of course' is an adverbial phrase meaning 'naturally' or 'as expected'. Use this to emphasize something obvious or generally accepted.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "invited to support ",
+      "back": "invitado a apoyar / invited to support ",
+      "ipa": "ɪnˈvaɪtɪd tə səˈpɔːrt",
+      "spanish_ipa": "in-váit-ed tu su-port",
+      "explanation": "'Invited to support' means encouraged or asked to help with something. Use this when someone is asked to contribute to a cause or effort.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "the maintenance and development efforts ",
+      "back": "los esfuerzos de mantenimiento y desarrollo / the maintenance and development efforts ",
+      "ipa": "ðə ˈmeɪntɪnəns ænd dɪˈvɛləpmənt ˈɛfərts",
+      "spanish_ipa": "dha mein-ten-ans and de-vel-op-ment ef-orts",
+      "explanation": "This noun phrase refers to the work done to keep something working properly ('maintenance') and to improve it over time ('development'). 'Efforts' means the hard work involved.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "through a donation to ",
+      "back": "a través de una donación a / through a donation to ",
+      "ipa": "θruː ə doʊˈneɪʃən tuː",
+      "spanish_ipa": "thru a do-nei-shion tu",
+      "explanation": "'Through a donation to' explains the method (a gift of money) and recipient for providing support. 'Through' indicates the means by which something is done.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "the TeX Users Group ",
+      "back": "el Grupo de Usuarios de TeX / the TeX Users Group ",
+      "ipa": "ðə tɛx ˈjuːzərz gruːp",
+      "spanish_ipa": "dha teks iu-sers grup",
+      "explanation": "This is a proper noun, the name of an organization. 'Users Group' refers to a community of people who use a particular technology or product.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "(choose LaTeX Project contribution) ",
+      "back": "(elige la contribución al Proyecto LaTeX) / (choose LaTeX Project contribution) ",
+      "ipa": "(tʃuːz ˈleɪtɛk ˈprɒdʒɛkt ˌkɒntrɪˈbjuːʃən) ",
+      "spanish_ipa": "(chuz lá-tecs pro-yect con-tri-biu-shion) ",
+      "explanation": "This is an instruction, advising the user to specify their donation for the LaTeX Project. 'Choose' is an imperative verb.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "if you are satisfied with ",
+      "back": "si estás satisfecho con / if you are satisfied with ",
+      "ipa": "ɪf juː ɑːr ˈsætɪsfaɪd wɪð",
+      "spanish_ipa": "if iu ar sa-tis-fáid with",
+      "explanation": "'If you are satisfied with' introduces a condition for a previous statement to apply. 'Satisfied with' means pleased or content with something.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "LaTeX. ",
+      "back": "LaTeX. / LaTeX. ",
+      "ipa": "ˈleɪtɛk.",
+      "spanish_ipa": "lá-tecs.",
+      "explanation": "This is the proper noun for the software, ending the sentence. The period signals the end of a complete thought.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "You can also ",
+      "back": "También puedes / You can also ",
+      "ipa": "juː kæn ˈɔːlsoʊ",
+      "spanish_ipa": "iu kan ol-so",
+      "explanation": "'Can also' means you have the ability or opportunity to do something extra or in addition to what was previously mentioned. Use this to suggest another option.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "sponsor the work of ",
+      "back": "patrocinar el trabajo de / sponsor the work of ",
+      "ipa": "ˈspɒnsər ðə wɜːrk əv",
+      "spanish_ipa": "spon-sor dha work ov",
+      "explanation": "'Sponsor the work of' means to provide financial support for someone's activities or efforts. Use this when funding someone's project or job.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "LaTeX team members ",
+      "back": "miembros del equipo LaTeX / LaTeX team members ",
+      "ipa": "ˈleɪtɛk tiːm ˈmɛmbərz",
+      "spanish_ipa": "lá-tecs tim mem-bers",
+      "explanation": "This noun phrase refers to the individuals who are part of the team working on the LaTeX project. 'Team members' are people working together.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "through the GitHub sponsor program ",
+      "back": "a través del programa de patrocinio de GitHub / through the GitHub sponsor program ",
+      "ipa": "θruː ðə ˈɡɪthʌb ˈspɒnsər ˈproʊɡræm",
+      "spanish_ipa": "thru dha guit-hab spon-sor pro-gram",
+      "explanation": "'Through the GitHub sponsor program' specifies the platform and method used for sponsoring. 'Through' indicates the means by which something is accomplished.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "at the moment ",
+      "back": "en este momento / at the moment ",
+      "ipa": "æt ðə ˈmoʊmənt",
+      "spanish_ipa": "at dha mou-ment",
+      "explanation": "'At the moment' is an adverbial phrase meaning 'currently' or 'right now'. Use this to specify something happening in the present time.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "for Frank, David and Joseph. ",
+      "back": "para Frank, David y Joseph. / for Frank, David and Joseph. ",
+      "ipa": "fɔːr fræŋk, ˈdeɪvɪd ænd ˈdʒoʊzəf.",
+      "spanish_ipa": "for frank, dei-vid and you-sef.",
+      "explanation": "'For' here indicates the recipients of the sponsorship. This lists the specific individuals who can be sponsored.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "Your contribution ",
+      "back": "Tu contribución / Your contribution ",
+      "ipa": "jʊər ˌkɒntrɪˈbjuːʃən",
+      "spanish_ipa": "iur con-tri-biu-shion",
+      "explanation": "'Your contribution' refers to the money or effort you provide. 'Your' is a possessive adjective showing ownership.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "goes without any reductions ",
+      "back": "va sin ninguna reducción / goes without any reductions ",
+      "ipa": "ɡoʊz wɪˈðaʊt ˈɛni rɪˈdʌkʃənz",
+      "spanish_ipa": "gous with-aut en-i ri-duc-shions",
+      "explanation": "'Goes without any reductions' means that the full amount is transferred, with no money taken out or fees applied. 'Without any' emphasizes complete absence.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "by GitHub ",
+      "back": "por GitHub / by GitHub ",
+      "ipa": "baɪ ˈɡɪthʌb",
+      "spanish_ipa": "bai guit-hab",
+      "explanation": "'By GitHub' indicates the agent or entity performing the action (or in this case, not performing reductions). 'By' shows who is responsible.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "to the developers ",
+      "back": "a los desarrolladores / to the developers ",
+      "ipa": "tuː ðə dɪˈvɛləpərz",
+      "spanish_ipa": "tu dha de-vel-op-ers",
+      "explanation": "'To the developers' specifies the recipients of the contribution. 'Developers' are the people who create software.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "in support of ",
+      "back": "en apoyo de / in support of ",
+      "ipa": "ɪn səˈpɔːrt əv",
+      "spanish_ipa": "in su-port ov",
+      "explanation": "'In support of' is a phrase meaning 'to help' or 'to provide assistance for'. Use this to explain the purpose of an action, showing help for something.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    },
+    {
+      "front": "the project.",
+      "back": "el proyecto. / the project.",
+      "ipa": "ðə ˈprɒdʒɛkt.",
+      "spanish_ipa": "dha pro-yect.",
+      "explanation": "'The project' refers to the specific undertaking or initiative being discussed. The period ends the entire text.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1776027055552,
+        "status": "new"
+      }
+    }
+  ],
+  "createdAt": "4/12/2026",
+  "sourceText": "LaTeX is a high-quality typesetting system; it includes features designed for the production of technical and scientific documentation. LaTeX is the de facto standard for the communication and publication of scientific documents. LaTeX is available as free software.\n\nYou don't have to pay for using LaTeX, i.e., there are no license fees, etc. But you are, of course, invited to support the maintenance and development efforts through a donation to the TeX Users Group (choose LaTeX Project contribution) if you are satisfied with LaTeX.\n\nYou can also sponsor the work of LaTeX team members through the GitHub sponsor program at the moment for Frank, David and Joseph. Your contribution goes without any reductions by GitHub to the developers in support of the project.",
+  "sourceImages": [],
+  "cefrLevel": "B2"
+}

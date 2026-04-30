@@ -1,0 +1,569 @@
+{
+  "id": "1777307043961",
+  "name": "shape",
+  "cards": [
+    {
+      "front": "shape language",
+      "back": "lenguaje de las formas / shape language",
+      "ipa": "/ʃeɪp ˈlæŋɡwɪdʒ/",
+      "spanish_ipa": "/ˈleŋɡwahe ðe las ˈfɔrmas/",
+      "explanation": "Using shapes to tell a story or idea",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.35,
+        "nextReview": 1777307486644,
+        "status": "learning"
+      }
+    },
+    {
+      "front": "character designer",
+      "back": "diseñador de personajes / character designer",
+      "ipa": "/ˈkærəktər dɪˈzaɪnər/",
+      "spanish_ipa": "/di-se-nya-ˈdor de per-so-ˈna-hes/",
+      "explanation": "A person who creates how characters look",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "our first job",
+      "back": "nuestro primer trabajo / our first job",
+      "ipa": "/aʊər fɜːrst dʒɒb/",
+      "spanish_ipa": "/nues-ˈtro pri-ˈmer tra-ˈba-ho/",
+      "explanation": "The very first task we have to do",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "purpose to the audience",
+      "back": "propósito para la audiencia / purpose to the audience",
+      "ipa": "/ˈpɜːrpəs tu ðə ˈɔːdiəns/",
+      "spanish_ipa": "/pro-ˈpo-si-to pa-ra la au-ˈdien-sia/",
+      "explanation": "The reason why people watch or look at something",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "in order to",
+      "back": "para / in order to",
+      "ipa": "/ɪn ˈɔːrdər tu/",
+      "spanish_ipa": "/ˈpa-ra/",
+      "explanation": "Used to explain the reason for doing something",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "do that effectively",
+      "back": "hacer eso eficazmente / do that effectively",
+      "ipa": "/du ðæt ɪˈfɛktɪvli/",
+      "spanish_ipa": "/a-ˈser e-so e-fi-ˈkas-men-te/",
+      "explanation": "To do something in a good and successful way",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "it's important to",
+      "back": "es importante / it's important to",
+      "ipa": "/ɪts ɪmˈpɔːrtənt tu/",
+      "spanish_ipa": "/es im-por-ˈtan-te/",
+      "explanation": "Used to say that something is necessary or useful",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "be deliberate",
+      "back": "ser deliberado / be deliberate",
+      "ipa": "/bi dɪˈlɪbərət/",
+      "spanish_ipa": "/ser de-li-be-ˈra-do/",
+      "explanation": "To do something on purpose, not by accident",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "decisions we make",
+      "back": "decisiones que tomamos / decisions we make",
+      "ipa": "/dɪˈsɪʒənz wi meɪk/",
+      "spanish_ipa": "/de-si-ˈsyo-nes ke to-ˈma-mos/",
+      "explanation": "The choices that people choose to do",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "as artists",
+      "back": "como artistas / as artists",
+      "ipa": "/æz ˈɑːrtɪsts/",
+      "spanish_ipa": "/ˈko-mo ar-ˈtis-tas/",
+      "explanation": "In the role of people who create art",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "being able to",
+      "back": "ser capaz de / being able to",
+      "ipa": "/ˈbiːɪŋ ˈeɪbl tu/",
+      "spanish_ipa": "/ser ka-ˈpas de/",
+      "explanation": "Having the ability or skill to do something",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "communicate a particular idea",
+      "back": "comunicar una idea particular / communicate a particular idea",
+      "ipa": "/kəˈmjuːnɪkeɪt ə pərˈtɪkjələr aɪˈdiə/",
+      "spanish_ipa": "/ko-mu-ni-ˈkar u-na i-ˈde-a par-ti-ku-ˈlar/",
+      "explanation": "To tell people one specific thought",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "can be tricky",
+      "back": "puede ser difícil / can be tricky",
+      "ipa": "/kæn bi ˈtrɪki/",
+      "spanish_ipa": "/ˈpwe-de ser di-ˈfi-sil/",
+      "explanation": "Something that is a little bit difficult or complicated",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "requires more effort",
+      "back": "requiere más esfuerzo / requires more effort",
+      "ipa": "/rɪˈkwaɪərz mɔːr ˈɛfərt/",
+      "spanish_ipa": "/re-ˈkwi-e-re mas es-ˈfwer-so/",
+      "explanation": "To need more hard work",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "than most people might expect",
+      "back": "de lo que la mayoría podría esperar / than most people might expect",
+      "ipa": "/ðæn moʊst ˈpiːpl maɪt ɪkˈspɛkt/",
+      "spanish_ipa": "/de lo ke la ma-yo-ˈri-a po-ˈdri-a es-pe-ˈrar/",
+      "explanation": "More than what people think will happen",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "any form of communication",
+      "back": "cualquier forma de comunicación / any form of communication",
+      "ipa": "/ˈɛni fɔːrm əv kəˌmjuːnɪˈkeɪʃən/",
+      "spanish_ipa": "/kwal-ˈkyer for-ma de ko-mu-ni-ka-ˈsyon/",
+      "explanation": "All the different ways people share information",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "familiarity and mastery",
+      "back": "familiaridad y maestría / familiarity and mastery",
+      "ipa": "/fəˌmɪliˈærəti ænd ˈmæstəri/",
+      "spanish_ipa": "/fa-mi-li-a-ri-ˈdad i ma-es-ˈtri-a/",
+      "explanation": "Knowing something very well and being an expert",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "affects how well",
+      "back": "afecta qué tan bien / affects how well",
+      "ipa": "/əˈfɛkts haʊ wɛl/",
+      "spanish_ipa": "/a-ˈfek-ta ke tan byen/",
+      "explanation": "Changes the quality of how something is done",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "get our point across",
+      "back": "hacerse entender / get our point across",
+      "ipa": "/ɡɛt aʊər pɔɪnt əˈkrɒs/",
+      "spanish_ipa": "/a-ˈser-se en-ten-ˈder/",
+      "explanation": "To make people understand your idea clearly",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "the greater... the better",
+      "back": "cuanto más... mejor / the greater... the better",
+      "ipa": "/ðə ˈɡreɪtər... ðə ˈbɛtər/",
+      "spanish_ipa": "/ˈkwan-to mas... me-ˈhor/",
+      "explanation": "A way to say that more of one thing makes more of another",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "has its own language",
+      "back": "tiene su propio lenguaje / has its own language",
+      "ipa": "/hæz ɪts oʊn ˈlæŋɡwɪdʒ/",
+      "spanish_ipa": "/ˈtye-ne su ˈpro-pyo len-ˈgua-he/",
+      "explanation": "It uses its own special way to communicate",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "texture and value",
+      "back": "textura y valor / texture and value",
+      "ipa": "/ˈtɛkstʃər ænd ˈvæljuː/",
+      "spanish_ipa": "/tek-ˈstu-ra i ba-ˈlor/",
+      "explanation": "The feel of a surface and how light or dark it is",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "discussing shape language",
+      "back": "discutiendo el lenguaje de las formas / discussing shape language",
+      "ipa": "/dɪˈskʌsɪŋ ʃeɪp ˈlæŋɡwɪdʒ/",
+      "spanish_ipa": "/dis-ku-ˈtyen-do el len-ˈgua-he de las ˈfor-mas/",
+      "explanation": "Talking about how shapes communicate meaning",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "simply put",
+      "back": "en pocas palabras / simply put",
+      "ipa": "/ˈsɪmpli pʊt/",
+      "spanish_ipa": "/en ˈpo-kas pa-ˈbras/",
+      "explanation": "To say something in a very easy way",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "communicate meaning",
+      "back": "comunicar significado / communicate meaning",
+      "ipa": "/kəˈmjuːnɪkeɪt ˈmiːnɪŋ/",
+      "spanish_ipa": "/ko-mu-ni-ˈkar sig-ni-fi-ˈka-do/",
+      "explanation": "To show what something represents",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "provoke different reactions",
+      "back": "provocar diferentes reacciones / provoke different reactions",
+      "ipa": "/prəˈvoʊk ˈdɪfərənt riˈækʃənz/",
+      "spanish_ipa": "/pro-vo-ˈkar di-fe-ˈren-tes re-ak-ˈsyo-nes/",
+      "explanation": "To make people feel different things",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "within us",
+      "back": "dentro de nosotros / within us",
+      "ipa": "/wɪˈðɪn ʌs/",
+      "spanish_ipa": "/den-ˈtro de no-ˈso-tros/",
+      "explanation": "Inside our minds or bodies",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "causing us to associate",
+      "back": "haciendo que asociemos / causing us to associate",
+      "ipa": "/ˈkɔːzɪŋ ʌs tu əˈsoʊsieɪt/",
+      "spanish_ipa": "/a-ˈsyen-do ke a-so-ˈsye-mos/",
+      "explanation": "Making our brains connect two things",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "certain feelings or meanings",
+      "back": "ciertos sentimientos o significados / certain feelings or meanings",
+      "ipa": "/ˈsɜːrtən ˈfiːlɪŋz ɔːr ˈmiːnɪŋz/",
+      "spanish_ipa": "/ˈsyer-tos sen-ti-ˈmyen-tos o sig-ni-fi-ˈka-dos/",
+      "explanation": "Specific emotions or ideas",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "primary shapes",
+      "back": "formas primarias / primary shapes",
+      "ipa": "/ˈpraɪmɛri ʃeɪps/",
+      "spanish_ipa": "/ˈfor-mas pri-ˈma-ryas/",
+      "explanation": "The most basic, main shapes",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "just as there are",
+      "back": "así como hay / just as there are",
+      "ipa": "/dʒʌst æz ðɛər ɑːr/",
+      "spanish_ipa": "/a-ˈsi ko-mo ai/",
+      "explanation": "Similar to the way something else exists",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "primary colors",
+      "back": "colores primarios / primary colors",
+      "ipa": "/ˈpraɪmɛri ˈkʌlərz/",
+      "spanish_ipa": "/ko-ˈlo-res pri-ˈma-ryos/",
+      "explanation": "The main colors like red, blue, and yellow",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "strong associations",
+      "back": "asociaciones fuertes / strong associations",
+      "ipa": "/strɔːŋ əˌsoʊsiˈeɪʃənz/",
+      "spanish_ipa": "/a-so-sya-ˈsyo-nes ˈfwer-tes/",
+      "explanation": "Very clear connections in our minds",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "psychologically",
+      "back": "psicológicamente / psychologically",
+      "ipa": "/ˌsaɪkəˈlɒdʒɪkli/",
+      "spanish_ipa": "/psi-ko-lo-ˈhi-ka-men-te/",
+      "explanation": "Related to how the mind works",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "the most important ones",
+      "back": "los más importantes / the most important ones",
+      "ipa": "/ðə moʊst ɪmˈpɔːrtənt wʌnz/",
+      "spanish_ipa": "/los mas im-por-ˈtan-tes/",
+      "explanation": "The items that matter the most",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "represents physicality",
+      "back": "representa la fisicidad / represents physicality",
+      "ipa": "/ˌrɛprɪˈzɛnts ˌfɪzɪˈkæləti/",
+      "spanish_ipa": "/re-pre-ˈsen-ta la fi-si-si-ˈdad/",
+      "explanation": "To show strength or a real body",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "masculinity",
+      "back": "masculinidad / masculinity",
+      "ipa": "/ˌmæskjəˈlɪnəti/",
+      "spanish_ipa": "/mas-ku-li-ni-ˈdad/",
+      "explanation": "Qualities often associated with men",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "positivity",
+      "back": "positividad / positivity",
+      "ipa": "/ˌpɒzəˈtɪvəti/",
+      "spanish_ipa": "/po-si-ti-vi-ˈdad/",
+      "explanation": "Being happy, good, or bright",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "femininity",
+      "back": "feminidad / femininity",
+      "ipa": "/ˌfɛmɪˈnɪnəti/",
+      "spanish_ipa": "/fe-mi-ni-ˈdad/",
+      "explanation": "Qualities often associated with women",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    },
+    {
+      "front": "movement and sharpness",
+      "back": "movimiento y nitidez / movement and sharpness",
+      "ipa": "/ˈmuːvmənt ænd ˈʃɑːrpnəs/",
+      "spanish_ipa": "/mo-vi-ˈmyen-to i nar-ˈte-hes/",
+      "explanation": "Going from one place and being very pointy/clear",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1777307043961,
+        "status": "new"
+      }
+    }
+  ],
+  "createdAt": "4/27/2026",
+  "sourceText": "SHAPE LANGUAGE\nWITH RANDY BISHOP\ns a character designer, our first job\npurpose to the audience. In order\nto do that effectively, it's important to be deliberate in the decisions we make as artists. Being able to communicate a particular idea can be tricky and requires more effort than most people might expect.\nWith any form of communication, familiarity and mastery over the language affects how well we're able to get our point across.\nThe greater our mastery of the language, the better we're able to communicate.\n!\nColor has its own language, as does line, texture, value, etc. For this section of the book, we'll be discussing shape language.\nWhat is shape language?\nSimply put, shape language is using shape to communicate meaning. Different shapes provoke different reactions within us, causing us to associate the things we see with certain feelings or meanings.\nTHE PRIMARY SHAPES\nThere are three primary shapes, just as there are three primary colors. The primary shapes are the square, circle, and triangle. Each of these shapes has strong associations psychologically with certain meanings. The most important ones are these:\n• The square represents physicality and masculinity.\n• The circle represents positivity and femininity.\n• The triangle\nrepresents movement and sharpness.",
+  "sourceImages": []
+}

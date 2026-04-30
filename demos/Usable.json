@@ -1,0 +1,696 @@
+{
+  "id": "1771276881069",
+  "name": "Usable",
+  "cards": [
+    {
+      "front": "If a product",
+      "back": "Si un producto / If a product",
+      "ipa": "/ɪf ə ˈprɒdʌkt/",
+      "spanish_ipa": "if a pro-DUC-t",
+      "explanation": "This chunk starts a conditional sentence, introducing the subject 'a product' that will be described. It's a common way to set up a hypothetical situation.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " is usable,",
+      "back": " es utilizable, / is usable,",
+      "ipa": "/ɪz ˈjuːzəbəl,/",
+      "spanish_ipa": "is U-sa-bl,",
+      "explanation": "'is usable' describes a quality of the product. The comma indicates a pause before the consequence or further explanation in the sentence.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " it means",
+      "back": " significa / it means",
+      "ipa": "/ɪt miːnz/",
+      "spanish_ipa": "it miins",
+      "explanation": "This chunk introduces an explanation or definition. 'It' refers back to the previous idea. Use this to clarify what something implies.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " the design,",
+      "back": " el diseño, / the design,",
+      "ipa": "/ðə dɪˈzaɪn,/",
+      "spanish_ipa": "dha di-SIGHN,",
+      "explanation": "This chunk refers to the visual and structural plan of something. The definite article 'the' specifies a particular design, and the comma separates it in a list.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " structure, and",
+      "back": " estructura, y / structure, and",
+      "ipa": "/ˈstrʌktʃər, ænd/",
+      "spanish_ipa": "struc-CHER, and",
+      "explanation": "This chunk refers to how something is built or organized, linking it to the next item in a list using 'and'.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " purpose of",
+      "back": " propósito de / purpose of",
+      "ipa": "/ˈpɜːrpəs ɒv/",
+      "spanish_ipa": "PUR-pus ov",
+      "explanation": "This chunk refers to the reason for which something exists or is done. 'Of' connects the purpose to what it belongs to.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " the product",
+      "back": " el producto / the product",
+      "ipa": "/ðə ˈprɒdʌkt/",
+      "spanish_ipa": "dha pro-DUC-t",
+      "explanation": "This chunk refers to the item being discussed. 'The' specifies which product.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " is clear",
+      "back": " es claro / is clear",
+      "ipa": "/ɪz klɪər/",
+      "spanish_ipa": "is KLIIR",
+      "explanation": "This chunk describes something as easy to understand or see. 'Is' connects the quality to the subject.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " and easy",
+      "back": " y fácil / and easy",
+      "ipa": "/ænd ˈiːzi/",
+      "spanish_ipa": "and EE-zi",
+      "explanation": "This chunk connects two descriptive words (adjectives) using 'and' to show they both apply. 'Easy' means not difficult.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " to use.",
+      "back": " de usar. / to use.",
+      "ipa": "/tə juːz./",
+      "spanish_ipa": "to YUUS.",
+      "explanation": "This chunk is an infinitive phrase, showing the action or purpose related to the adjectives 'clear and easy'. The period ends the sentence.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " As you evaluate",
+      "back": " Al evaluar / As you evaluate",
+      "ipa": "/æz ju ɪˈvæljueɪt/",
+      "spanish_ipa": "as yu i-va-LYU-ayt",
+      "explanation": "This chunk introduces a dependent clause, meaning 'while you evaluate' or 'when you evaluate'. It sets the context for the main action.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " a product for",
+      "back": " un producto para / a product for",
+      "ipa": "/ə ˈprɒdʌkt fɔːr/",
+      "spanish_ipa": "a pro-DUC-t for",
+      "explanation": "This chunk specifies what is being evaluated ('a product') and introduces the reason or purpose ('for').",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " usability, you",
+      "back": " usabilidad, tú / usability, you",
+      "ipa": "/ˌjuːzəˈbɪləti, juː/",
+      "spanish_ipa": "yu-sa-BI-li-ti, yu",
+      "explanation": "'Usability' is the quality of being easy to use. The comma separates a phrase, and 'you' is the subject of the next action.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " can ask",
+      "back": " puedes preguntar / can ask",
+      "ipa": "/kæn ɑːsk/",
+      "spanish_ipa": "can ASk",
+      "explanation": "This chunk expresses ability or possibility ('can') to perform an action ('ask'). Use it when someone has the option or power to do something.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " questions like:",
+      "back": " preguntas como: / questions like:",
+      "ipa": "/ˈkwɛstʃənz laɪk:/",
+      "spanish_ipa": "QWES-tions layk:",
+      "explanation": "This chunk introduces a list of examples of questions. 'Like' means 'such as' or 'for example'. The colon precedes the list.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " Is everything",
+      "back": " ¿Está todo / Is everything",
+      "ipa": "/ɪz ˈɛvriθɪŋ/",
+      "spanish_ipa": "is EV-ri-thing",
+      "explanation": "This chunk starts a question asking about the presence or state of all items. 'Everything' refers to all things.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " in the design",
+      "back": " en el diseño / in the design",
+      "ipa": "/ɪn ðə dɪˈzaɪn/",
+      "spanish_ipa": "in dha di-SIGHN",
+      "explanation": "This chunk specifies the location or context of 'everything'. 'In' shows containment.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " easy to find?",
+      "back": " fácil de encontrar? / easy to find?",
+      "ipa": "/ˈiːzi tə faɪnd?/",
+      "spanish_ipa": "EE-zi to fahynd?",
+      "explanation": "This chunk asks if something is simple to locate. 'Easy' describes the difficulty, and 'to find' is the action. The question mark ends the question.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " Is the design’s",
+      "back": " ¿Es la funcionalidad del diseño / Is the design’s",
+      "ipa": "/ɪz ðə dɪˈzaɪnz/",
+      "spanish_ipa": "is dha di-SIGHNS",
+      "explanation": "This chunk starts a question and uses the possessive form ('design's') to refer to something belonging to the design.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " functionality easy",
+      "back": " facilidad de funcionalidad / functionality easy",
+      "ipa": "/ˌfʌŋkʃəˈnælɪti ˈiːzi/",
+      "spanish_ipa": "func-sha-NA-li-ti EE-zi",
+      "explanation": "This chunk describes the ease of use of a system's features. 'Functionality' means the range of operations it can perform.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " to understand?",
+      "back": " de entender? / to understand?",
+      "ipa": "/tə ˌʌndərˈstænd?/",
+      "spanish_ipa": "to un-der-STAND?",
+      "explanation": "This chunk asks if something is simple to comprehend. 'To understand' is the action. The question mark ends the question.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " Can users",
+      "back": " ¿Pueden los usuarios / Can users",
+      "ipa": "/kæn ˈjuːzərz/",
+      "spanish_ipa": "can YUU-zers",
+      "explanation": "This chunk starts a question about the ability or possibility for 'users' (people who use a system) to do something.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " accomplish specific",
+      "back": " lograr tareas específicas / accomplish specific",
+      "ipa": "/əˈkɒmplɪʃ spɪˈsɪfɪk/",
+      "spanish_ipa": "a-COM-plish spi-SI-fik",
+      "explanation": "This chunk means to successfully complete particular tasks. 'Accomplish' means to achieve, and 'specific' means particular or precise.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " tasks within",
+      "back": " tareas dentro de / tasks within",
+      "ipa": "/tɑːsks wɪˈðɪn/",
+      "spanish_ipa": "TASKS wi-THIN",
+      "explanation": "This chunk refers to jobs or assignments ('tasks') and specifies their location or boundary ('within').",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " the design?",
+      "back": " el diseño? / the design?",
+      "ipa": "/ðə dɪˈzaɪn?/",
+      "spanish_ipa": "dha di-SIGHN?",
+      "explanation": "This chunk refers to the specific plan or structure, completing the question about where tasks are accomplished. The question mark ends the question.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " As you evaluate,",
+      "back": " A medida que evalúas, / As you evaluate,",
+      "ipa": "/æz ju ɪˈvæljueɪt,/",
+      "spanish_ipa": "as yu i-va-LYU-ayt,",
+      "explanation": "This chunk introduces a dependent clause, meaning 'while you evaluate'. It sets a temporal context, and the comma indicates a pause.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " these questions",
+      "back": " estas preguntas / these questions",
+      "ipa": "/ðiːz ˈkwɛstʃənz/",
+      "spanish_ipa": "thiiz QWES-tions",
+      "explanation": "This chunk refers back to the list of questions just mentioned, using 'these' to point them out.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " can help you",
+      "back": " pueden ayudarte a / can help you",
+      "ipa": "/kæn hɛlp juː/",
+      "spanish_ipa": "can HELP yu",
+      "explanation": "This chunk expresses ability or possibility ('can') to provide assistance ('help') to someone ('you').",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " determine whether",
+      "back": " determinar si / determine whether",
+      "ipa": "/dɪˈtɜːrmɪn ˈwɛðər/",
+      "spanish_ipa": "di-TER-min WE-ther",
+      "explanation": "This chunk means to find out or decide if something is true or not. 'Whether' introduces an alternative or a choice.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " the design",
+      "back": " el diseño / the design",
+      "ipa": "/ðə dɪˈzaɪn/",
+      "spanish_ipa": "dha di-SIGHN",
+      "explanation": "This chunk refers to the specific plan or structure being discussed.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " delivers a",
+      "back": " ofrece una / delivers a",
+      "ipa": "/dɪˈlɪvərz ə/",
+      "spanish_ipa": "di-LI-verz a",
+      "explanation": "This chunk means to provide or give something. 'Delivers' implies bringing a result or service.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " usable experience.",
+      "back": " experiencia utilizable. / usable experience.",
+      "ipa": "/ˈjuːzəbəl ɪkˈspɪəriəns./",
+      "spanish_ipa": "U-sa-bl ix-PI-ri-ens.",
+      "explanation": "This chunk refers to an interaction that is easy and effective for the user. The period ends the sentence.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " Imagine you are",
+      "back": " Imagina que estás / Imagine you are",
+      "ipa": "/ɪˈmædʒɪn ju ɑːr/",
+      "spanish_ipa": "i-MA-jin yu ar",
+      "explanation": "This chunk is used to introduce a hypothetical situation or example. It tells the listener to create a picture in their mind.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " evaluating the usability",
+      "back": " evaluando la usabilidad / evaluating the usability",
+      "ipa": "/ɪˈvæljueɪtɪŋ ðə ˌjuːzəˈbɪləti/",
+      "spanish_ipa": "i-va-LYU-ay-ting dha yu-sa-BI-li-ti",
+      "explanation": "This chunk means assessing how easy something is to use. 'Evaluating' is the continuous action, and 'usability' is the quality being assessed.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " of an airline app.",
+      "back": " de una aplicación de aerolínea. / of an airline app.",
+      "ipa": "/ɒv æn ˈɛərlaɪn æp./",
+      "spanish_ipa": "ov an ER-lahyn ap.",
+      "explanation": "This chunk specifies what is being evaluated ('an airline app'). 'Of' shows possession or relation. The period ends the sentence.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " Assuming the primary",
+      "back": " Asumiendo que el propósito principal / Assuming the primary",
+      "ipa": "/əˈsuːmɪŋ ðə ˈpraɪməri/",
+      "spanish_ipa": "a-SU-ming dha PRAH-ma-ri",
+      "explanation": "This chunk introduces a condition or premise ('assuming') and identifies the main or most important aspect ('primary').",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " purpose of this app",
+      "back": " propósito de esta aplicación / purpose of this app",
+      "ipa": "/ˈpɜːrpəs ɒv ðɪs æp/",
+      "spanish_ipa": "PUR-pus ov this ap",
+      "explanation": "This chunk refers to the main reason for the existence of 'this app'. 'Purpose of' connects the goal to the item.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " is to book a flight,",
+      "back": " es reservar un vuelo, / is to book a flight,",
+      "ipa": "/ɪz tə bʊk ə flaɪt,/",
+      "spanish_ipa": "is to BUUK a flahyt,",
+      "explanation": "This chunk describes the main goal or function. 'To book a flight' is an infinitive phrase indicating the action. The comma indicates a pause.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " the design should provide",
+      "back": " el diseño debería proporcionar / the design should provide",
+      "ipa": "/ðə dɪˈzaɪn ʃʊd prəˈvaɪd/",
+      "spanish_ipa": "dha di-SIGHN shud pro-VAYD",
+      "explanation": "This chunk expresses a recommendation or expectation ('should provide') about what 'the design' needs to offer.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " a clear and easy way",
+      "back": " una manera clara y fácil / a clear and easy way",
+      "ipa": "/ə klɪər ænd ˈiːzi weɪ/",
+      "spanish_ipa": "a KLIIR and EE-zi way",
+      "explanation": "This chunk describes an approach that is simple to understand and follow. 'Clear' means understandable, 'easy' means not difficult.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " to complete that task.",
+      "back": " para completar esa tarea. / to complete that task.",
+      "ipa": "/tə kəmˈpliːt ðæt tɑːsk./",
+      "spanish_ipa": "to com-PLEET that TASK.",
+      "explanation": "This chunk is an infinitive phrase indicating the goal or purpose of the 'clear and easy way'. 'That task' refers to the specific action. The period ends the sentence.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " For example,",
+      "back": " Por ejemplo, / For example,",
+      "ipa": "/fɔːr ɪɡˈzæmpl,/",
+      "spanish_ipa": "for ig-ZAM-pl,",
+      "explanation": "This chunk introduces a specific instance or illustration of the preceding idea. The comma indicates a pause after the introductory phrase.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " a section where",
+      "back": " una sección donde / a section where",
+      "ipa": "/ə ˈsɛkʃən wɛər/",
+      "spanish_ipa": "a SEC-shun WAIR",
+      "explanation": "This chunk refers to a distinct part or area ('a section') and introduces a relative clause describing its location or purpose ('where').",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " you can easily",
+      "back": " puedes fácilmente / you can easily",
+      "ipa": "/ju kæn ˈiːzɪli/",
+      "spanish_ipa": "yu can EE-zi-li",
+      "explanation": "This chunk expresses the ability or possibility ('can') for 'you' to perform an action without difficulty ('easily').",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881068,
+        "status": "new"
+      }
+    },
+    {
+      "front": " enter travel and",
+      "back": " ingresar detalles de viaje y / enter travel and",
+      "ipa": "/ˈɛntər ˈtrævəl ænd/",
+      "spanish_ipa": "EN-ter TRA-vel and",
+      "explanation": "This chunk describes the action of inputting information related to a trip ('travel') and links it to other details.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881069,
+        "status": "new"
+      }
+    },
+    {
+      "front": " flight details on",
+      "back": " detalles de vuelo en / flight details on",
+      "ipa": "/flaɪt ˈdiːteɪlz ɒn/",
+      "spanish_ipa": "flahyt DI-tayls on",
+      "explanation": "This chunk refers to specific pieces of information about a plane journey ('flight details') and indicates their location ('on').",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881069,
+        "status": "new"
+      }
+    },
+    {
+      "front": " the homepage would be",
+      "back": " la página de inicio sería / the homepage would be",
+      "ipa": "/ðə ˈhoʊmpeɪdʒ wʊd biː/",
+      "spanish_ipa": "dha HOOM-payj wud bi",
+      "explanation": "This chunk refers to the main page of a website or app ('the homepage') and uses 'would be' to indicate a hypothetical example.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881069,
+        "status": "new"
+      }
+    },
+    {
+      "front": " an example of",
+      "back": " un ejemplo de / an example of",
+      "ipa": "/æn ɪɡˈzæmpl ɒv/",
+      "spanish_ipa": "an ig-ZAM-pl ov",
+      "explanation": "This chunk introduces a specific instance or model that illustrates a general idea. 'Of' connects the example to what it represents.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881069,
+        "status": "new"
+      }
+    },
+    {
+      "front": " good usability.",
+      "back": " buena usabilidad. / good usability.",
+      "ipa": "/ɡʊd ˌjuːzəˈbɪləti./",
+      "spanish_ipa": "guud yu-sa-BI-li-ti.",
+      "explanation": "This chunk describes a high quality of ease of use. 'Good' is a positive adjective, and 'usability' is the noun. The period ends the sentence.",
+      "srs": {
+        "interval": 0,
+        "repetition": 0,
+        "ef": 2.5,
+        "nextReview": 1771276881069,
+        "status": "new"
+      }
+    }
+  ],
+  "createdAt": "2/16/2026",
+  "sourceText": "If a product is usable, it means the design, structure, and purpose of the product is clear and easy to use. As you evaluate a product for usability, you can ask questions like: Is everything in the design easy to find? Is the design’s functionality easy to understand? Can users accomplish specific tasks within the design? As you evaluate, these questions can help you determine whether the design delivers a usable experience. \n\nImagine you are evaluating the usability of an airline app. Assuming the primary purpose of this app is to book a flight, the design should provide a clear and easy way to complete that task. For example, a section where you can easily enter travel and flight details on the homepage would be an example of good usability.",
+  "sourceImages": [],
+  "cefrLevel": "B2"
+}
