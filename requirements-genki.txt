@@ -1,0 +1,15 @@
+# requirements-genki.txt
+# Entorno base para Genki (Next.js + Genkit)
+# Uso: conda create -n genki -f requirements-genki.txt
+
+name: genki
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+    - genkit
+    - dotenv
+    - numpy>=1.24.0

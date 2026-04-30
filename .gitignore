@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+.next/
+.git/
+
+# Python
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# Modelos - descargar automáticamente desde HuggingFace
+models/
+tts/models/
+
+# macOS
+.DS_Store
+._*
+
+# Logs
+*.log
+
+# Env
+.env.local
+.env.*.local
+
+# Build
+dist/
+build/
+out/
+
+# Cache
+.cache/
+.pnpm-debug.log*
+.npm
