@@ -6,9 +6,10 @@ interface Settings {
   provider: 'local' | 'cloud';
   localModel: 'gemma' | 'voxtral';
   cloudModel: string;
-  ttsProvider: 'piper' | 'voxtral';
+  ttsProvider: 'piper' | 'voxtral' | 'kokoro';
   voice: string;
   lmstudioVoice: string;
+  kokoroVoice: string;
   playbackSpeed: number;
 }
 
@@ -25,6 +26,7 @@ const defaultSettings: Settings = {
   ttsProvider: 'piper',
   voice: 'en_GB-alan-medium',
   lmstudioVoice: 'en_us_aria',
+  kokoroVoice: 'af_bella',
   playbackSpeed: 1,
 };
 
@@ -56,6 +58,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           ttsProvider: data.ttsProvider || 'piper',
           voice: data.voice || 'en_GB-alan-medium',
           lmstudioVoice: data.lmstudioVoice || 'en_us_aria',
+          kokoroVoice: data.kokoroVoice || 'af_bella',
           playbackSpeed: data.playbackSpeed || 1,
         });
       }

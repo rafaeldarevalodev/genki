@@ -47,6 +47,7 @@ export function SettingsModal() {
   
   const [selectedVoice, setSelectedVoice] = useState('en_GB-alan-medium');
   const [selectedLMStudioVoice, setSelectedLMStudioVoice] = useState('en_us_aria');
+  const [selectedKokoroVoice, setSelectedKokoroVoice] = useState('af_bella');
   const [selectedPlaybackSpeed, setSelectedPlaybackSpeed] = useState(1);
   
   const [testingVoice, setTestingVoice] = useState<string | null>(null);
@@ -66,6 +67,7 @@ export function SettingsModal() {
         if (data.ttsProvider) setTtsProvider(data.ttsProvider);
         if (data.voice) setSelectedVoice(data.voice);
         if (data.lmstudioVoice) setSelectedLMStudioVoice(data.lmstudioVoice);
+        if (data.kokoroVoice) setSelectedKokoroVoice(data.kokoroVoice);
         if (data.playbackSpeed) setSelectedPlaybackSpeed(data.playbackSpeed);
       } catch (e) {
         console.error('Failed to load settings:', e);
@@ -94,6 +96,7 @@ export function SettingsModal() {
           ttsProvider,
           voice: selectedVoice,
           lmstudioVoice: selectedLMStudioVoice,
+          kokoroVoice: selectedKokoroVoice,
           playbackSpeed: selectedPlaybackSpeed,
         }),
       });
@@ -126,6 +129,11 @@ export function SettingsModal() {
       body = { input: 'Hello, this is a voice test.', voice: voxtralVoice };
     }
     
+    if (tts === 'kokoro') {
+      url = 'http://localhost:8880/v1/audio/speech';
+      body = { input: 'Hello, this is a voice test.', voice: voiceId, speed: 1.0 };
+    }
+    
     try {
       const response = await fetch(url, {
         method: 'POST',
@@ -151,6 +159,7 @@ export function SettingsModal() {
 
   const ttsProviders = [
     { id: 'piper', name: 'Piper', description: 'Local, fast, UK/US voices' },
+    { id: 'kokoro', name: 'Kokoro', description: 'High quality neural voices' },
     { id: 'voxtral', name: 'Voxtral', description: 'Fast AI voices' },
   ];
 
@@ -160,6 +169,19 @@ export function SettingsModal() {
     { id: 'en_US-lessac-high', name: 'Lessac (US Male)', language: 'English (US) - High' },
     { id: 'en_US-ryan-high', name: 'Ryan (US Male)', language: 'English (US) - High' },
     { id: 'en_US-lessac-medium', name: 'Lessac (US Male)', language: 'English (US) - Medium' },
+  ];
+
+  const kokoroVoices = [
+    { id: 'af_bella', name: 'Bella (Female)', accent: 'US' },
+    { id: 'af_heart', name: 'Heart (Female)', accent: 'US' },
+    { id: 'af_sky', name: 'Sky (Female)', accent: 'US' },
+    { id: 'af_sarah', name: 'Sarah (Female)', accent: 'US' },
+    { id: 'af_nova', name: 'Nova (Female)', accent: 'US' },
+    { id: 'am_adam', name: 'Adam (Male)', accent: 'US' },
+    { id: 'am_onyx', name: 'Onyx (Male)', accent: 'US' },
+    { id: 'am_puck', name: 'Puck (Male)', accent: 'US' },
+    { id: 'bm_george', name: 'George (Male)', accent: 'UK' },
+    { id: 'bm_lewis', name: 'Lewis (Male)', accent: 'UK' },
   ];
 
   const lmStudioVoices = [
@@ -352,6 +374,42 @@ export function SettingsModal() {
                       </button>
                       <button
                         onClick={() => testTtsVoice(voice.id, 'voxtral')}
+                        disabled={testingVoice !== null}
+                        className="text-xs bg-slate-200 px-2 py-1 rounded-lg disabled:opacity-50"
+                      >
+                        Test
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TTS Voice (Kokoro) */}
+          {ttsProvider === 'kokoro' && (
+            <div className="space-y-4">
+              <div>
+                <span className="text-sm font-medium text-slate-600 mb-2 block">Voice</span>
+                <div className="space-y-2">
+                  {kokoroVoices.map((voice) => (
+                    <div
+                      key={voice.id}
+                      className={`flex items-center justify-between p-3 rounded-xl ${
+                        selectedKokoroVoice === voice.id 
+                          ? 'bg-indigo-50 border-2 border-indigo-600' 
+                          : 'bg-slate-50 border-2 border-transparent'
+                      }`}
+                    >
+                      <button
+                        onClick={() => setSelectedKokoroVoice(voice.id)}
+                        className="flex-1 text-left"
+                      >
+                        <span className="font-bold text-sm">{voice.name}</span>
+                        <span className="text-xs text-slate-500 ml-2">{voice.accent}</span>
+                      </button>
+                      <button
+                        onClick={() => testTtsVoice(voice.id, 'kokoro')}
                         disabled={testingVoice !== null}
                         className="text-xs bg-slate-200 px-2 py-1 rounded-lg disabled:opacity-50"
                       >

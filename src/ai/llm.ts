@@ -29,7 +29,7 @@ function reloadEnv(): Record<string, string> {
 const ENV = loadEnv();
 
 export type LLMProvider = 'local' | 'cloud';
-export type TTSProvider = 'piper' | 'voxtral';
+export type TTSProvider = 'piper' | 'voxtral' | 'kokoro';
 export type LocalModelName = 'gemma' | 'voxtral';
 
 const LOCAL_MODEL_MAP: Record<LocalModelName, string> = {
@@ -98,11 +98,24 @@ export function getTTSConfig(): TTSConfig {
     };
   }
   
+  if (provider === 'kokoro') {
+    return getKokoroConfig();
+  }
+  
   return {
     provider: 'voxtral',
     endpoint: 'http://localhost:8000',
     voice: env.TTS_VOICE || 'en_GB-alan-medium',
     lmstudioVoice: env.TTS_VOXTRAL_VOICE || 'en_us_aria',
+  };
+}
+
+export function getKokoroConfig(): TTSConfig {
+  const env = reloadEnv();
+  return {
+    provider: 'kokoro',
+    endpoint: env.TTS_KOKORO_BASE_URL || 'http://localhost:8880',
+    voice: env.TTS_KOKORO_VOICE || 'af_bella',
   };
 }
 

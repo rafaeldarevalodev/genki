@@ -45,7 +45,11 @@ export default function TTSButton({ text, ipa }: TTSButtonProps) {
     setIsLoading(true);
 
     const provider = settings.ttsProvider;
-    const voice = provider === 'voxtral' ? settings.lmstudioVoice : settings.voice;
+    const voice = provider === 'voxtral' 
+      ? settings.lmstudioVoice 
+      : provider === 'kokoro' 
+        ? settings.kokoroVoice 
+        : settings.voice;
     
     console.log('[TTSButton] Using provider:', provider, 'voice:', voice);
     

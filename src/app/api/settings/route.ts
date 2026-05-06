@@ -8,9 +8,10 @@ interface SettingsData {
   provider?: 'local' | 'cloud';
   localModel?: 'gemma' | 'voxtral';
   cloudModel?: string;
-  ttsProvider?: 'piper' | 'voxtral';
+  ttsProvider?: 'piper' | 'voxtral' | 'kokoro';
   voice?: string;
   lmstudioVoice?: string;
+  kokoroVoice?: string;
   playbackSpeed?: number;
 }
 
@@ -48,6 +49,7 @@ export async function GET() {
       ttsProvider: env.TTS_PROVIDER || 'piper',
       voice: env.TTS_VOICE || 'en_GB-alan-medium',
       lmstudioVoice: env.TTS_VOXTRAL_VOICE || 'en_us_aria',
+      kokoroVoice: env.TTS_KOKORO_VOICE || 'af_bella',
       playbackSpeed: parseFloat(env.TTS_PLAYBACK_SPEED || '1'),
     });
   } catch (error) {
@@ -78,6 +80,9 @@ export async function POST(request: NextRequest) {
     }
     if (data.lmstudioVoice) {
       env.TTS_VOXTRAL_VOICE = data.lmstudioVoice;
+    }
+    if (data.kokoroVoice) {
+      env.TTS_KOKORO_VOICE = data.kokoroVoice;
     }
     if (data.playbackSpeed) {
       env.TTS_PLAYBACK_SPEED = data.playbackSpeed.toString();

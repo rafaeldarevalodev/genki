@@ -5,7 +5,7 @@ import { getTTSConfig } from '@/ai/llm';
 
 const TextToSpeechInputSchema = z.object({
   text: z.string(),
-  provider: z.enum(['piper', 'voxtral']).optional(),
+  provider: z.enum(['piper', 'voxtral', 'kokoro']).optional(),
   voice: z.string().optional(),
 });
 export type TextToSpeechInput = z.infer<typeof TextToSpeechInputSchema>;
@@ -26,6 +26,11 @@ export async function textToSpeech(input: TextToSpeechInput): Promise<TextToSpee
   if (provider === 'piper') {
     const voice = input?.voice || ttsConfig.voice || 'en_GB-alan-medium';
     return textToSpeechPiper(text, voice);
+  }
+  
+  if (provider === 'kokoro') {
+    const voice = input?.voice || ttsConfig.voice || 'af_bella';
+    return textToSpeechKokoro(text, voice);
   }
   
   // For Voxtral, use lmstudioVoice directly
@@ -115,6 +120,45 @@ async function textToSpeechVoxtral(text: string, voice: string): Promise<TextToS
     return { media: mediaUrl };
   } catch (error) {
     console.error('[textToSpeechVoxtral] Error:', error);
+    throw error;
+  }
+}
+
+async function textToSpeechKokoro(text: string, voice: string): Promise<TextToSpeechOutput> {
+  const ttsConfig = getTTSConfig();
+  console.log('[textToSpeechKokoro] Voice:', voice, 'Endpoint:', ttsConfig.endpoint);
+  
+  try {
+    const response = await fetch(`${ttsConfig.endpoint}/v1/audio/speech`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        input: text,
+        voice: voice,
+        speed: 1.0
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[textToSpeechKokoro] Error response:', errorText);
+      throw new Error(`Kokoro TTS failed: ${response.status} - ${errorText}`);
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
+    
+    let binary = '';
+    for (let i = 0; i < uint8Array.length; i++) {
+      binary += String.fromCharCode(uint8Array[i]);
+    }
+    const base64 = btoa(binary);
+    const mediaUrl = `data:audio/wav;base64,${base64}`;
+    
+    console.log('[textToSpeechKokoro] Generated:', arrayBuffer.byteLength, 'bytes');
+    return { media: mediaUrl };
+  } catch (error) {
+    console.error('[textToSpeechKokoro] Error:', error);
     throw error;
   }
 }

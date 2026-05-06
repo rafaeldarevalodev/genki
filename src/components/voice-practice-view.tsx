@@ -170,10 +170,15 @@ export default function VoicePracticeView({ deck, onSessionEnd }: VoicePracticeV
     // Get TTS config from settings
     const provider = settings.ttsProvider;
     const useVoxtral = provider === 'voxtral';
-    const baseUrl = useVoxtral ? 'http://localhost:8000' : 'http://localhost:8080';
+    const useKokoro = provider === 'kokoro';
+    const baseUrl = useVoxtral ? 'http://localhost:8000' : useKokoro ? 'http://localhost:8880' : 'http://localhost:8080';
     
-    // Get voice from settings ( Piper uses settings.voice, Voxtral uses settings.lmstudioVoice)
-    const voice = useVoxtral ? settings.lmstudioVoice : settings.voice;
+    // Get voice from settings
+    const voice = useVoxtral 
+      ? settings.lmstudioVoice 
+      : useKokoro 
+        ? settings.kokoroVoice 
+        : settings.voice;
     
     let apiUrl: string;
     let requestBody: Record<string, unknown>;
@@ -184,6 +189,13 @@ export default function VoicePracticeView({ deck, onSessionEnd }: VoicePracticeV
         input: currentCard.front,
         voice: voice,
         response_format: 'wav'
+      };
+    } else if (useKokoro) {
+      apiUrl = `${baseUrl}/v1/audio/speech`;
+      requestBody = {
+        input: currentCard.front,
+        voice: voice,
+        speed: 1.0
       };
     } else {
       apiUrl = `${baseUrl}/tts`;

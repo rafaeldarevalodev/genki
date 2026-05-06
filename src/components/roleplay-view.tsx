@@ -100,7 +100,11 @@ export default function RoleplayView({ deck }: RoleplayViewProps) {
         
         // Get TTS config from settings
         const provider = settings.ttsProvider;
-        const voice = provider === 'voxtral' ? settings.lmstudioVoice : settings.voice;
+        const voice = provider === 'voxtral' 
+          ? settings.lmstudioVoice 
+          : provider === 'kokoro' 
+            ? settings.kokoroVoice 
+            : settings.voice;
         const cacheKey = `genki_audio_roleplay_${provider}_${voice}_${btoa(unescape(encodeURIComponent(text))).slice(0, 32)}`;
         let audioDataUrl = localStorage.getItem(cacheKey);
 
