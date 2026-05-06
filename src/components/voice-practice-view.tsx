@@ -211,6 +211,7 @@ export default function VoicePracticeView({ deck, onSessionEnd }: VoicePracticeV
       
       const audio = new Audio(url);
       audioElementRef.current = audio;
+      audio.playbackRate = settings.playbackSpeed || 1;
       
       audio.onended = () => {
         setIsLoadingReference(false);

@@ -70,6 +70,7 @@ export default function TTSButton({ text, ipa }: TTSButtonProps) {
         
         const audio = new Audio(result.media);
         audioRef.current = audio;
+        audio.playbackRate = settings.playbackSpeed || 1;
         
         audio.onended = () => {
           setIsLoading(false);

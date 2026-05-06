@@ -11,6 +11,7 @@ interface SettingsData {
   ttsProvider?: 'piper' | 'voxtral';
   voice?: string;
   lmstudioVoice?: string;
+  playbackSpeed?: number;
 }
 
 function readEnvFile(): Record<string, string> {
@@ -47,6 +48,7 @@ export async function GET() {
       ttsProvider: env.TTS_PROVIDER || 'piper',
       voice: env.TTS_VOICE || 'en_GB-alan-medium',
       lmstudioVoice: env.TTS_VOXTRAL_VOICE || 'en_us_aria',
+      playbackSpeed: parseFloat(env.TTS_PLAYBACK_SPEED || '1'),
     });
   } catch (error) {
     console.error('Error reading settings:', error);
@@ -76,6 +78,9 @@ export async function POST(request: NextRequest) {
     }
     if (data.lmstudioVoice) {
       env.TTS_VOXTRAL_VOICE = data.lmstudioVoice;
+    }
+    if (data.playbackSpeed) {
+      env.TTS_PLAYBACK_SPEED = data.playbackSpeed.toString();
     }
     
     writeEnvFile(env);

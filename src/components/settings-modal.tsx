@@ -47,6 +47,7 @@ export function SettingsModal() {
   
   const [selectedVoice, setSelectedVoice] = useState('en_GB-alan-medium');
   const [selectedLMStudioVoice, setSelectedLMStudioVoice] = useState('en_us_aria');
+  const [selectedPlaybackSpeed, setSelectedPlaybackSpeed] = useState(1);
   
   const [testingVoice, setTestingVoice] = useState<string | null>(null);
   const [testAudio, setTestAudio] = useState<string | null>(null);
@@ -65,6 +66,7 @@ export function SettingsModal() {
         if (data.ttsProvider) setTtsProvider(data.ttsProvider);
         if (data.voice) setSelectedVoice(data.voice);
         if (data.lmstudioVoice) setSelectedLMStudioVoice(data.lmstudioVoice);
+        if (data.playbackSpeed) setSelectedPlaybackSpeed(data.playbackSpeed);
       } catch (e) {
         console.error('Failed to load settings:', e);
       }
@@ -92,6 +94,7 @@ export function SettingsModal() {
           ttsProvider,
           voice: selectedVoice,
           lmstudioVoice: selectedLMStudioVoice,
+          playbackSpeed: selectedPlaybackSpeed,
         }),
       });
       await refresh();  // Refresh settings in context
@@ -164,6 +167,8 @@ export function SettingsModal() {
     { id: 'en_us_zoe', name: 'Zoe (Female)', accent: 'US' },
     { id: 'en_us_james', name: 'James (Male)', accent: 'US' },
   ];
+
+  const PLAYBACK_SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -365,6 +370,29 @@ export function SettingsModal() {
               <audio controls className="w-full" src={testAudio} />
             </div>
           )}
+
+          {/* Audio Playback Speed */}
+          <div className="mt-6 pt-4 border-t border-slate-200">
+            <div className="flex items-center gap-2 mb-3">
+              <Volume2 size={18} className="text-indigo-600" />
+              <h3 className="font-bold text-slate-700">Audio Playback Speed</h3>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {PLAYBACK_SPEEDS.map((speed) => (
+                <button
+                  key={speed}
+                  onClick={() => setSelectedPlaybackSpeed(speed)}
+                  className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${
+                    selectedPlaybackSpeed === speed
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  {speed}x
+                </button>
+              ))}
+            </div>
+          </div>
 
           {/* Save Button */}
           <button

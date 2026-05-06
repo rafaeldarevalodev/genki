@@ -58,7 +58,7 @@ def generate_audio(text: str, voice: str = "neutral_male"):
         result = model.generate(
             text, 
             voice=voice_id,
-            temperature=0.3,
+            temperature=0.2,
             top_k=45,
             top_p=0.85,
             max_tokens=4096

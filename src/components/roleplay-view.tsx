@@ -114,6 +114,7 @@ export default function RoleplayView({ deck }: RoleplayViewProps) {
         
         if (audioDataUrl) {
             const audio = new Audio(audioDataUrl);
+            audio.playbackRate = settings.playbackSpeed || 1;
             audio.onended = () => setAudioLoading(null);
             audio.onerror = () => setAudioLoading(null);
             audio.play().catch(() => setAudioLoading(null));
