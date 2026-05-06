@@ -21,15 +21,17 @@ export async function textToSpeech(input: TextToSpeechInput): Promise<TextToSpee
   const text = typeof input === 'string' ? input : input.text;
   const provider = ttsConfig.provider;
   
-  console.log('[textToSpeech] Provider from config:', provider, 'Input:', text.substring(0, 50));
+  console.log('[textToSpeech] Provider from config:', provider);
+  console.log('[textToSpeech] TTS Config:', ttsConfig);
 
   if (provider === 'piper') {
     const voice = input?.voice || ttsConfig.voice || 'en_GB-alan-medium';
     return textToSpeechPiper(text, voice);
   }
   
-  const voice = input?.voice || ttsConfig.voice || 'en_us_aria';
-  const emotion = input?.emotion || 'neutral';
+  // For Voxtral, use lmstudioVoice
+  const voice = input?.voice || ttsConfig.lmstudioVoice || 'en_us_aria';
+  const emotion = input?.emotion || ttsConfig.emotion || 'neutral';
   return textToSpeechVoxtral(text, voice, emotion);
 }
 
@@ -71,15 +73,16 @@ async function textToSpeechVoxtral(text: string, voice: string, emotion: string 
   console.log('[textToSpeechVoxtral] Voice:', voice, 'Emotion:', emotion, 'Endpoint:', ttsConfig.endpoint);
   
   // Map frontend voice IDs to Voxtral voice embeddings
+  // These IDs come from settings-modal.tsx
   const voiceMap: Record<string, string> = {
     'en_us_aria': 'casual_female',
-    'en_us_zoe': 'caserful_female',
-    'en_gb_sophie': 'cheerful_female',
+    'en_us_zoe': 'cheerful_female',
     'en_us_james': 'casual_male',
+    'en_gb_sophie': 'cheerful_female',
     'en_gb_oliver': 'neutral_male',
   };
   
-  const voxtralVoice = voiceMap[voice] || 'neutral_male';
+  const voxtralVoice = voiceMap[voice] || 'casual_male';
   
   const model = 'voxtral-4b-tts-2603-mlx-4bit';
   

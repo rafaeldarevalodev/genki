@@ -45,10 +45,10 @@ export async function GET() {
       provider: env.LLM_PROVIDER || 'local',
       localModel: env.LOCAL_MODEL_NAME || 'gemma',
       cloudModel: env.CLOUD_MODEL || '',
-      ttsProvider: env.TTS_PROVIDER || 'voxtral',
-      voice: env.TTS_VOICE || '',
-      lmstudioVoice: '',
-      emotion: 'neutral',
+      ttsProvider: env.TTS_PROVIDER || 'piper',
+      voice: env.TTS_VOICE || 'en_GB-alan-medium',
+      lmstudioVoice: env.TTS_VOXTRAL_VOICE || 'en_us_aria',
+      emotion: env.TTS_EMOTION || 'neutral',
     });
   } catch (error) {
     console.error('Error reading settings:', error);
@@ -75,6 +75,9 @@ export async function POST(request: NextRequest) {
     }
     if (data.voice) {
       env.TTS_VOICE = data.voice;
+    }
+    if (data.lmstudioVoice) {
+      env.TTS_VOXTRAL_VOICE = data.lmstudioVoice;
     }
     if (data.emotion) {
       env.TTS_EMOTION = data.emotion;

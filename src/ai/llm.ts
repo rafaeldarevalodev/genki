@@ -15,6 +15,17 @@ function loadEnv(): Record<string, string> {
   return env;
 }
 
+// Reload env from file (for getting latest settings)
+function reloadEnv(): Record<string, string> {
+  const env: Record<string, string> = {};
+  if (existsSync(envPath)) {
+    const content = readFileSync(envPath, 'utf-8');
+    const parsed = parse(content);
+    Object.assign(env, parsed);
+  }
+  return env;
+}
+
 const ENV = loadEnv();
 
 export type LLMProvider = 'local' | 'cloud';
@@ -37,6 +48,8 @@ export interface TTSConfig {
   provider: TTSProvider;
   endpoint: string;
   voice: string;
+  lmstudioVoice?: string;
+  emotion?: string;
 }
 
 export interface LLMMessage {
@@ -52,41 +65,46 @@ export interface LLMOptions {
 }
 
 function getLLMConfig(): LLMConfig {
-  const provider = (ENV.LLM_PROVIDER || 'local') as LLMProvider;
-  const localModelName = (ENV.LOCAL_MODEL_NAME || 'gemma') as LocalModelName;
+  const env = reloadEnv();
+  const provider = (env.LLM_PROVIDER || 'local') as LLMProvider;
+  const localModelName = (env.LOCAL_MODEL_NAME || 'gemma') as LocalModelName;
   
   if (provider === 'cloud') {
     return {
       provider: 'cloud',
-      baseURL: ENV.CLOUD_BASE_URL || 'https://api.groq.com/openai/v1',
-      apiKey: ENV.CLOUD_API_KEY || ENV.OPENAI_API_KEY || 'no-key-required',
-      model: ENV.CLOUD_MODEL || 'z-ai/glm-5.1',
+      baseURL: env.CLOUD_BASE_URL || 'https://api.groq.com/openai/v1',
+      apiKey: env.CLOUD_API_KEY || env.OPENAI_API_KEY || 'no-key-required',
+      model: env.CLOUD_MODEL || 'llama-3.3-70b-versatile',
     };
   }
   
   return {
     provider: 'local',
-    baseURL: ENV.OPENAI_BASE_URL || 'http://localhost:1234/v1',
+    baseURL: env.OPENAI_BASE_URL || 'http://localhost:1234/v1',
     apiKey: 'no-key-required',
     model: LOCAL_MODEL_MAP[localModelName],
   };
 }
 
 export function getTTSConfig(): TTSConfig {
-  const provider = (ENV.TTS_PROVIDER || 'piper') as TTSProvider;
+  // Reload from file to get latest settings
+  const env = reloadEnv();
+  const provider = (env.TTS_PROVIDER || 'piper') as TTSProvider;
   
   if (provider === 'piper') {
     return {
       provider: 'piper',
-      endpoint: ENV.TTS_ENDPOINT || 'http://localhost:8080',
-      voice: ENV.TTS_VOICE || 'en_GB-alan-medium',
+      endpoint: env.TTS_ENDPOINT || 'http://localhost:8080',
+      voice: env.TTS_VOICE || 'en_GB-alan-medium',
     };
   }
   
   return {
     provider: 'voxtral',
     endpoint: 'http://localhost:8000',
-    voice: 'en_us_aria',
+    voice: env.TTS_VOICE || 'en_GB-alan-medium',
+    lmstudioVoice: env.TTS_VOXTRAL_VOICE || 'en_us_aria',
+    emotion: env.TTS_EMOTION || 'neutral',
   };
 }
 
