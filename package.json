@@ -55,6 +55,7 @@
     "tailwindcss-animate": "^1.0.7",
     "tone": "^15.0.4",
     "wav": "^1.0.2",
+    "wavesurfer.js": "^7.12.6",
     "zod": "^3.24.2"
   },
   "devDependencies": {

@@ -1,16 +1,16 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { Loader2, MessageSquare, LineChart, Trophy, CheckCircle2, Send, Volume2 } from 'lucide-react';
-import type { Deck } from '@/lib/types';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import FormattedText from './formatted-text';
-import { startRoleplayAction, continueRoleplayAction, evaluateRoleplayAction } from '@/app/actions';
-import { getTTSAudio } from '@/app/actions';
+import { useState, useRef, useEffect } from 'react';
+import { Send, MessageSquare, LineChart, Trophy, Volume2, Loader2 } from 'lucide-react';
+import { startRoleplayAction, continueRoleplayAction, evaluateRoleplayAction, getTTSAudio } from '@/app/actions';
+import { useSettings } from '@/hooks/use-settings';
 import { useDecks } from '@/hooks/use-decks';
 import { useToast } from '@/hooks/use-toast';
-import { useSettings } from '@/hooks/use-settings';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import FormattedText from '@/components/formatted-text';
+import AudioPlayer from '@/components/audio-player';
+import type { Deck } from '@/lib/types';
 
 interface RoleplayViewProps {
   deck: Deck;
@@ -27,6 +27,8 @@ export default function RoleplayView({ deck }: RoleplayViewProps) {
   const [aiEvaluation, setAiEvaluation] = useState<Evaluation | null>(null);
   const [loading, setLoading] = useState(true);
   const [audioLoading, setAudioLoading] = useState<string | null>(null);
+  const [playingAudio, setPlayingAudio] = useState<string | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const { addXp } = useDecks();
   const { toast } = useToast();
@@ -96,6 +98,14 @@ export default function RoleplayView({ deck }: RoleplayViewProps) {
   
     const handleTTSAction = async (text: string, id: string) => {
         if (!text || audioLoading || !settingsLoaded || !settings) return;
+        
+        // If clicking same audio, toggle play/pause
+        if (playingAudio === id && audioUrl) {
+            setPlayingAudio(null);
+            setAudioUrl(null);
+            return;
+        }
+        
         setAudioLoading(id);
         
         // Get TTS config from settings
@@ -117,14 +127,10 @@ export default function RoleplayView({ deck }: RoleplayViewProps) {
         }
         
         if (audioDataUrl) {
-            const audio = new Audio(audioDataUrl);
-            audio.playbackRate = settings.playbackSpeed || 1;
-            audio.onended = () => setAudioLoading(null);
-            audio.onerror = () => setAudioLoading(null);
-            audio.play().catch(() => setAudioLoading(null));
-        } else {
-            setAudioLoading(null);
+            setAudioUrl(audioDataUrl);
+            setPlayingAudio(id);
         }
+        setAudioLoading(null);
     };
 
   return (
@@ -146,7 +152,17 @@ export default function RoleplayView({ deck }: RoleplayViewProps) {
                 <div className={`p-7 rounded-[2.5rem] font-medium text-lg shadow-sm leading-relaxed ${msg.role === 'user' ? 'bg-indigo-600 text-white rounded-tr-none shadow-indigo-100' : 'bg-white text-slate-700 rounded-tl-none border border-slate-100'}`}>
                   {msg.role === 'assistant' ? <FormattedText text={msg.text} /> : msg.text}
                 </div>
-                 {msg.role === 'assistant' && <button onClick={() => handleTTSAction(msg.text, `msg-${i}`)} className="flex items-center gap-2 text-[10px] font-black text-slate-300 hover:text-indigo-500 transition-colors uppercase tracking-widest ml-4">{audioLoading === `msg-${i}` ? <Loader2 size={12} className="animate-spin" /> : <Volume2 size={12} />} Listen</button>}
+                {msg.role === 'assistant' && (
+                  <>
+                    <button onClick={() => handleTTSAction(msg.text, `msg-${i}`)} className="flex items-center gap-2 text-[10px] font-black text-slate-300 hover:text-indigo-500 transition-colors uppercase tracking-widest ml-4">
+                      {audioLoading === `msg-${i}` ? <Loader2 size={12} className="animate-spin" /> : <Volume2 size={12} />} 
+                      {playingAudio === `msg-${i}` ? 'Playing' : 'Listen'}
+                    </button>
+                    {playingAudio === `msg-${i}` && audioUrl && (
+                      <AudioPlayer audioUrl={audioUrl} onClose={() => { setPlayingAudio(null); setAudioUrl(null); }} />
+                    )}
+                  </>
+                )}
               </div>
             </div>
           ))}
