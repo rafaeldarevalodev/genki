@@ -47,7 +47,6 @@ export function SettingsModal() {
   
   const [selectedVoice, setSelectedVoice] = useState('en_GB-alan-medium');
   const [selectedLMStudioVoice, setSelectedLMStudioVoice] = useState('en_us_aria');
-  const [selectedEmotion, setSelectedEmotion] = useState('neutral');
   
   const [testingVoice, setTestingVoice] = useState<string | null>(null);
   const [testAudio, setTestAudio] = useState<string | null>(null);
@@ -66,7 +65,6 @@ export function SettingsModal() {
         if (data.ttsProvider) setTtsProvider(data.ttsProvider);
         if (data.voice) setSelectedVoice(data.voice);
         if (data.lmstudioVoice) setSelectedLMStudioVoice(data.lmstudioVoice);
-        if (data.emotion) setSelectedEmotion(data.emotion);
       } catch (e) {
         console.error('Failed to load settings:', e);
       }
@@ -94,7 +92,6 @@ export function SettingsModal() {
           ttsProvider,
           voice: selectedVoice,
           lmstudioVoice: selectedLMStudioVoice,
-          emotion: selectedEmotion,
         }),
       });
       await refresh();  // Refresh settings in context
@@ -106,16 +103,24 @@ export function SettingsModal() {
     }
   };
 
-  const testTtsVoice = async (voiceId: string, tts: string, emotion?: string) => {
+  const testTtsVoice = async (voiceId: string, tts: string) => {
     setTestingVoice(voiceId);
     setTestAudio(null);
+
+    // Map frontend voice IDs to Voxtral voice embeddings
+    const voiceMap: Record<string, string> = {
+      'en_us_aria': 'casual_female',
+      'en_us_zoe': 'cheerful_female',
+      'en_us_james': 'casual_male',
+    };
 
     let url = 'http://localhost:8080/tts';
     let body: Record<string, string> = { text: 'Hello, this is a voice test.', voice: voiceId };
 
     if (tts === 'voxtral') {
       url = 'http://localhost:8000/v1/audio/speech';
-      body = { input: 'Hello, this is a voice test.', voice: voiceId, emotion: emotion || 'neutral' };
+      const voxtralVoice = voiceMap[voiceId] || 'casual_male';
+      body = { input: 'Hello, this is a voice test.', voice: voxtralVoice };
     }
     
     try {
@@ -143,7 +148,7 @@ export function SettingsModal() {
 
   const ttsProviders = [
     { id: 'piper', name: 'Piper', description: 'Local, fast, UK/US voices' },
-    { id: 'voxtral', name: 'Voxtral', description: 'AI voices with emotion' },
+    { id: 'voxtral', name: 'Voxtral', description: 'Fast AI voices' },
   ];
 
   const piperVoices = [
@@ -158,12 +163,6 @@ export function SettingsModal() {
     { id: 'en_us_aria', name: 'Aria (Female)', accent: 'US' },
     { id: 'en_us_zoe', name: 'Zoe (Female)', accent: 'US' },
     { id: 'en_us_james', name: 'James (Male)', accent: 'US' },
-  ];
-
-  const emotions = [
-    { id: 'neutral', name: 'Neutral' },
-    { id: 'cheerful', name: 'Cheerful' },
-    { id: 'empathetic', name: 'Empathetic' },
   ];
 
   return (
@@ -347,32 +346,13 @@ export function SettingsModal() {
                         <span className="text-xs text-slate-500 ml-2">{voice.accent}</span>
                       </button>
                       <button
-                        onClick={() => testTtsVoice(voice.id, 'voxtral', selectedEmotion)}
+                        onClick={() => testTtsVoice(voice.id, 'voxtral')}
                         disabled={testingVoice !== null}
                         className="text-xs bg-slate-200 px-2 py-1 rounded-lg disabled:opacity-50"
                       >
                         Test
                       </button>
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <span className="text-sm font-medium text-slate-600 mb-2 block">Emotion</span>
-                <div className="flex flex-wrap gap-2">
-                  {emotions.map((emotion) => (
-                    <button
-                      key={emotion.id}
-                      onClick={() => setSelectedEmotion(emotion.id)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium ${
-                        selectedEmotion === emotion.id
-                          ? 'bg-indigo-600 text-white'
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                      }`}
-                    >
-                      {emotion.name}
-                    </button>
                   ))}
                 </div>
               </div>

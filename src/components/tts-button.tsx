@@ -7,11 +7,10 @@ import { useSettings } from '@/hooks/use-settings';
 
 interface TTSButtonProps {
   text: string;
-  ipa: string;
-  emotion?: 'neutral' | 'cheerful' | 'empathetic' | 'excited';
+  ipa?: string;
 }
 
-export default function TTSButton({ text, ipa, emotion: propEmotion }: TTSButtonProps) {
+export default function TTSButton({ text, ipa }: TTSButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const currentRequestRef = useRef(0);
@@ -47,14 +46,13 @@ export default function TTSButton({ text, ipa, emotion: propEmotion }: TTSButton
 
     const provider = settings.ttsProvider;
     const voice = provider === 'voxtral' ? settings.lmstudioVoice : settings.voice;
-    const emotion = provider === 'voxtral' ? (propEmotion || settings.emotion) : 'neutral';
     
-    console.log('[TTSButton] Using provider:', provider, 'voice:', voice, 'emotion:', emotion);
+    console.log('[TTSButton] Using provider:', provider, 'voice:', voice);
     
     const requestId = ++currentRequestRef.current;
     
     try {
-      const result = await getTTSAudio(text, voice, provider, emotion);
+      const result = await getTTSAudio(text, voice, provider);
       
       if (requestId !== currentRequestRef.current) {
         return;
@@ -63,7 +61,7 @@ export default function TTSButton({ text, ipa, emotion: propEmotion }: TTSButton
       if (result?.media) {
         try {
           if (result.media.length < 4 * 1024 * 1024) {
-            const cacheKey = `genki_audio_${provider}_${voice}_${emotion}_${btoa(unescape(encodeURIComponent(text))).slice(0, 32)}`;
+            const cacheKey = `genki_audio_${provider}_${voice}_${btoa(unescape(encodeURIComponent(text))).slice(0, 32)}`;
             localStorage.setItem(cacheKey, result.media);
           }
         } catch {
@@ -100,7 +98,7 @@ export default function TTSButton({ text, ipa, emotion: propEmotion }: TTSButton
       onClick={handlePlay}
       className="flex items-center gap-4 bg-slate-50 px-6 py-3 rounded-2xl border border-slate-100 transition-all hover:bg-slate-100 cursor-pointer"
     >
-      <span className="text-indigo-400 font-bold font-code tracking-tight">{ipa}</span>
+      {ipa && <span className="text-indigo-400 font-bold font-code tracking-tight">{ipa}</span>}
       <div
         className={`p-2 rounded-full ${
           isLoading

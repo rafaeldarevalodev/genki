@@ -49,7 +49,6 @@ export interface TTSConfig {
   endpoint: string;
   voice: string;
   lmstudioVoice?: string;
-  emotion?: string;
 }
 
 export interface LLMMessage {
@@ -104,7 +103,6 @@ export function getTTSConfig(): TTSConfig {
     endpoint: 'http://localhost:8000',
     voice: env.TTS_VOICE || 'en_GB-alan-medium',
     lmstudioVoice: env.TTS_VOXTRAL_VOICE || 'en_us_aria',
-    emotion: env.TTS_EMOTION || 'neutral',
   };
 }
 

@@ -7,7 +7,6 @@ const TextToSpeechInputSchema = z.object({
   text: z.string(),
   provider: z.enum(['piper', 'voxtral']).optional(),
   voice: z.string().optional(),
-  emotion: z.string().optional(),
 });
 export type TextToSpeechInput = z.infer<typeof TextToSpeechInputSchema>;
 
@@ -29,10 +28,9 @@ export async function textToSpeech(input: TextToSpeechInput): Promise<TextToSpee
     return textToSpeechPiper(text, voice);
   }
   
-  // For Voxtral, use lmstudioVoice
+  // For Voxtral, use lmstudioVoice directly
   const voice = input?.voice || ttsConfig.lmstudioVoice || 'en_us_aria';
-  const emotion = input?.emotion || ttsConfig.emotion || 'neutral';
-  return textToSpeechVoxtral(text, voice, emotion);
+  return textToSpeechVoxtral(text, voice);
 }
 
 async function textToSpeechPiper(text: string, voice: string): Promise<TextToSpeechOutput> {
@@ -68,12 +66,11 @@ async function textToSpeechPiper(text: string, voice: string): Promise<TextToSpe
   }
 }
 
-async function textToSpeechVoxtral(text: string, voice: string, emotion: string = 'neutral'): Promise<TextToSpeechOutput> {
+async function textToSpeechVoxtral(text: string, voice: string): Promise<TextToSpeechOutput> {
   const ttsConfig = getTTSConfig();
-  console.log('[textToSpeechVoxtral] Voice:', voice, 'Emotion:', emotion, 'Endpoint:', ttsConfig.endpoint);
+  console.log('[textToSpeechVoxtral] Voice:', voice, 'Endpoint:', ttsConfig.endpoint);
   
   // Map frontend voice IDs to Voxtral voice embeddings
-  // These IDs come from settings-modal.tsx
   const voiceMap: Record<string, string> = {
     'en_us_aria': 'casual_female',
     'en_us_zoe': 'cheerful_female',
@@ -94,7 +91,6 @@ async function textToSpeechVoxtral(text: string, voice: string, emotion: string 
         model: model,
         input: text,
         voice: voxtralVoice,
-        emotion: emotion,
         response_format: 'wav'
       })
     });

@@ -174,7 +174,6 @@ export default function VoicePracticeView({ deck, onSessionEnd }: VoicePracticeV
     
     // Get voice from settings ( Piper uses settings.voice, Voxtral uses settings.lmstudioVoice)
     const voice = useVoxtral ? settings.lmstudioVoice : settings.voice;
-    const emotion = useVoxtral ? settings.emotion : 'neutral';
     
     let apiUrl: string;
     let requestBody: Record<string, unknown>;
@@ -184,7 +183,6 @@ export default function VoicePracticeView({ deck, onSessionEnd }: VoicePracticeV
       requestBody = {
         input: currentCard.front,
         voice: voice,
-        emotion: emotion,
         response_format: 'wav'
       };
     } else {

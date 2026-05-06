@@ -136,11 +136,11 @@ export async function evaluateRoleplayAction(
   }
 }
 
-export async function getTTSAudio(text: string, voice?: string, provider?: string, emotion?: string): Promise<{media: string} | null> {
+export async function getTTSAudio(text: string, voice?: string, provider?: string): Promise<{media: string} | null> {
   try {
     // Normalize provider: 'voxtral' or 'piper'
     const validProvider = (provider === 'voxtral' ? 'voxtral' : 'piper');
-    const input = { text, provider: validProvider, voice: voice, emotion: emotion };
+    const input = { text, provider: validProvider, voice: voice };
     const result = await textToSpeech(input);
     return result;
   } catch (err) {

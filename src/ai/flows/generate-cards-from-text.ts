@@ -17,7 +17,6 @@ const GenerateCardsFromTextOutputSchema = z.object({
     spanish_ipa: z.string(),
     explanation: z.string(),
     voice: z.string().optional(),
-    emotion: z.string().optional(),
   })),
 });
 export type GenerateCardsFromTextOutput = z.infer<typeof GenerateCardsFromTextOutputSchema>;
@@ -25,19 +24,16 @@ export type GenerateCardsFromTextOutput = z.infer<typeof GenerateCardsFromTextOu
 const VOXTRAL_VOICES = ['neutral_male', 'casual_female', 'cheerful_female', 'casual_male'];
 const PIPER_VOICES = ['en_GB-alan-medium', 'en_US-lessac-medium', 'en_US-ryan-high'];
 
-function getVoiceForCard(): { voice: string; emotion: string } {
-  // Always use neutral voice based on random selection for variety between cards
+function getVoiceForCard(): { voice: string } {
   const useVoxtral = Math.random() > 0.5;
 
   if (useVoxtral) {
     return {
       voice: VOXTRAL_VOICES[Math.floor(Math.random() * VOXTRAL_VOICES.length)],
-      emotion: 'neutral'
     };
   } else {
     return {
       voice: PIPER_VOICES[Math.floor(Math.random() * PIPER_VOICES.length)],
-      emotion: 'neutral'
     };
   }
 }
@@ -112,7 +108,7 @@ export async function generateCardsFromText(input: GenerateCardsFromTextInput): 
     }
 
     const validatedCards = cards.map((card: any) => {
-      const { voice, emotion } = getVoiceForCard();
+      const { voice } = getVoiceForCard();
       return {
         front: String(card.front || '').trim(),
         back: String(card.back || '').trim(),
@@ -120,7 +116,6 @@ export async function generateCardsFromText(input: GenerateCardsFromTextInput): 
         spanish_ipa: String(card.spanish_ipa || '').trim(),
         explanation: String(card.explanation || '').trim(),
         voice,
-        emotion
       };
     }).filter((card: any) => card.front && card.back);
 

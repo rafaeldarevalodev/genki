@@ -14,7 +14,6 @@ export interface Card {
   explanation: string;
   srs: SrsData;
   voice?: string;
-  emotion?: string;
 }
 
 export interface Deck {

@@ -9,7 +9,6 @@ interface Settings {
   ttsProvider: 'piper' | 'voxtral';
   voice: string;
   lmstudioVoice: string;
-  emotion: string;
 }
 
 interface SettingsContextType {
@@ -25,7 +24,6 @@ const defaultSettings: Settings = {
   ttsProvider: 'piper',
   voice: 'en_GB-alan-medium',
   lmstudioVoice: 'en_us_aria',
-  emotion: 'neutral',
 };
 
 const defaultContextValue: SettingsContextType = {
@@ -56,7 +54,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           ttsProvider: data.ttsProvider || 'piper',
           voice: data.voice || 'en_GB-alan-medium',
           lmstudioVoice: data.lmstudioVoice || 'en_us_aria',
-          emotion: data.emotion || 'neutral',
         });
       }
     } catch (e) {

@@ -105,7 +105,7 @@ export default function RoleplayView({ deck }: RoleplayViewProps) {
         let audioDataUrl = localStorage.getItem(cacheKey);
 
         if (!audioDataUrl) {
-            const fetchedAudioData = await getTTSAudio(text, voice, provider, settings.emotion);
+            const fetchedAudioData = await getTTSAudio(text, voice, provider);
             if (fetchedAudioData && fetchedAudioData.media) {
                 audioDataUrl = fetchedAudioData.media;
                 try { localStorage.setItem(cacheKey, audioDataUrl); } catch (e) { console.warn("Failed to cache audio") }

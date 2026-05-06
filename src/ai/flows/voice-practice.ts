@@ -41,18 +41,18 @@ const VOICE_EMOTION_MAP: Record<string, string> = {
   empathetic: 'casual_female',
 };
 
-function getRandomVoice(): { voice: string; emotion: string } {
+function getRandomVoice(): { voice: string } {
   const voices = [
-    { voice: 'casual_male', emotion: 'neutral' },
-    { voice: 'casual_female', emotion: 'cheerful' },
-    { voice: 'neutral_male', emotion: 'neutral' },
-    { voice: 'cheerful_female', emotion: 'excited' },
+    { voice: 'casual_male' },
+    { voice: 'casual_female' },
+    { voice: 'neutral_male' },
+    { voice: 'cheerful_female' },
   ];
   return voices[Math.floor(Math.random() * voices.length)];
 }
 
 export async function generateReferenceAudio(text: string): Promise<string> {
-  const { voice, emotion } = getRandomVoice();
+  const { voice } = getRandomVoice();
   
   const response = await fetch(`${VOXTRAL_TTS_BASE}/audio/speech`, {
     method: 'POST',
@@ -60,7 +60,6 @@ export async function generateReferenceAudio(text: string): Promise<string> {
     body: JSON.stringify({
       input: text,
       voice: voice,
-      emotion: emotion,
       response_format: 'wav'
     })
   });
