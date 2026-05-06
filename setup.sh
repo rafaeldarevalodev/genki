@@ -57,7 +57,7 @@ install_node_deps() {
 }
 
 install_conda_envs() {
-    log_step "2" "5" "Creando entornos Conda..."
+    log_step "2" "6" "Creando entornos Conda..."
     
     # Entorno genki
     if conda env list | grep -q "^genki "; then
@@ -79,14 +79,25 @@ install_conda_envs() {
         pip install mlx-audio "mistral-common[audio]" numpy -q
     fi
     
+    # Entorno voice_eval
+    if conda env list | grep -q "^voice_eval "; then
+        log_info "Entorno 'voice_eval' ya existe"
+    else
+        log_info "Creando entorno 'voice_eval'..."
+        conda create -n voice_eval python=3.11 -y -q
+        conda activate voice_eval
+        pip install fastapi uvicorn python-multipart soundfile sounddevice httpx pydantic voxmlx numpy -q
+    fi
+    
     log_info "Entornos Conda listos"
 }
 
 download_models() {
-    log_step "3" "5" "Descargando modelos de TTS..."
+    log_step "3" "6" "Descargando modelos de TTS..."
     
-    # Crear directorio de modelos
+    # Crear directorios de modelos
     mkdir -p models
+    mkdir -p tts/models
     
     # Descargar Voxtral TTS si no existe
     if [ -d "models/Voxtral-4B-TTS" ]; then
@@ -105,13 +116,36 @@ download_models() {
         fi
     fi
     
+    # Descargar modelos Piper
+    if ls tts/models/*.onnx 2>/dev/null | head -1 | grep -q .; then
+        log_info "Modelos Piper ya existen"
+    else
+        log_info "Descargando modelos Piper..."
+        cd tts/models
+        
+        # Descargar modelos en_US-lessac-medium
+        if [ ! -f "en_US-lessac-medium.onnx" ]; then
+            echo "Descargando en_US-lessac-medium..."
+            # Agregar aquí descarga si se quiere automática
+        fi
+        
+        cd "$SCRIPT_DIR"
+        log_info "Para descargar más modelos Piper, ver:"
+        echo "  https://github.com/rhasspy/piper/tree/master/src/python_run"
+    fi
+    
+    log_info "Modelos listos"
+}
+        fi
+    fi
+    
     # Los modelos de Piper se pueden descargar manualmente
     # https://github.com/rhasspy/piper
     log_info "Modelos listos"
 }
 
 build_app() {
-    log_step "4" "5" "Build de producción..."
+    log_step "4" "6" "Build de producción..."
     
     npm run build || {
         log_warn "Build falló, usando modo desarrollo"
@@ -121,7 +155,7 @@ build_app() {
 }
 
 start_servers() {
-    log_step "5" "5" "Iniciando servidores..."
+    log_step "5" "6" "Iniciando servidores..."
     
     # Usar start-servers.sh
     chmod +x start-servers.sh

@@ -10,6 +10,7 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 # Puertos
 VOXTRAL_PORT=8000
 PIPER_PORT=8080
+VOICE_EVAL_PORT=10301
 LMSTUDIO_PORT=1234
 NEXT_PORT=9002
 
@@ -106,7 +107,34 @@ start_next() {
     if check_port $NEXT_PORT; then
         log_info "Next.js iniciado (PID: $NEXT_PID)"
     else
-        log_error "Error iniciando Next.js. Ver /tmp/nextjs.log"
+        log_error "Error initiating Next.js. Ver /tmp/nextjs.log"
+    fi
+}
+
+start_voice_eval() {
+    if check_port $VOICE_EVAL_PORT; then
+        log_warn "Voice Eval ya corre en puerto $VOICE_EVAL_PORT"
+        return
+    fi
+    
+    log_info "Iniciando Voice Eval (puerto $VOICE_EVAL_PORT)..."
+    
+    cd "$PROJECT_DIR/voice-eval"
+    
+    conda activate voice_eval 2>/dev/null || {
+        log_error "Entorno voice_eval no existe"
+        exit 1
+    }
+    
+    nohup python main_api.py --port $VOICE_EVAL_PORT --eval voxmlx > /tmp/voice-eval.log 2>&1 &
+    VOICE_EVAL_PID=$!
+    
+    sleep 3
+    
+    if check_port $VOICE_EVAL_PORT; then
+        log_info "Voice Eval iniciado (PID: $VOICE_EVAL_PID)"
+    else
+        log_error "Error initiating Voice Eval. Ver /tmp/voice-eval.log"
     fi
 }
 
@@ -114,7 +142,7 @@ stop_all() {
     log_info "Deteniendo servidores..."
     
     # Matar procesos por puerto
-    for port in $VOXTRAL_PORT $PIPER_PORT $NEXT_PORT; do
+    for port in $VOXTRAL_PORT $PIPER_PORT $VOICE_EVAL_PORT $NEXT_PORT; do
         PIDS=$(lsof -ti :$port 2>/dev/null) || continue
         if [ -n "$PIDS" ]; then
             echo "$PIDS" | xargs kill -9 2>/dev/null || true
@@ -127,7 +155,7 @@ status_all() {
     echo "=== Estado de Servicios ==="
     echo ""
     
-    for port in $VOXTRAL_PORT $PIPER_PORT $LMSTUDIO_PORT $NEXT_PORT; do
+    for port in $VOXTRAL_PORT $PIPER_PORT $VOICE_EVAL_PORT $LMSTUDIO_PORT $NEXT_PORT; do
         if check_port $port; then
             echo -e "${GREEN}✓${NC} Puerto $port: ACTIVO"
         else
@@ -152,6 +180,7 @@ case "${1:-start}" in
         log_info "Iniciando servidores Genki Sensei..."
         start_voxtral
         start_piper
+        start_voice_eval
         # start_next  # Descomenta si quieres iniciar Next.js también
         echo ""
         status_all

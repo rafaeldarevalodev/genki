@@ -1,5 +1,7 @@
+'use server';
+
 import { z } from 'genkit';
-import { callAIWithContextFallback } from '@/ai/lib/llm-client';
+import { callAIWithContextFallback } from '@/ai/llm';
 
 const EvaluateRoleplayPerformanceInputSchema = z.object({
   userInput: z.string(),
@@ -44,7 +46,8 @@ Return JSON: {"score": 0-100, "feedback": "detailed", "tips": ["tip1", "tip2", "
       tips: Array.isArray(parsed.tips) ? parsed.tips.slice(0, 3) : ['Keep practicing!']
     };
   } catch (error) {
-    console.error('[evaluateRoleplayPerformance] Error:', error);
-    throw new Error(`AI failed to evaluate: ${error.message}`);
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('[evaluateRoleplayPerformance] Error:', message);
+    throw new Error(`AI failed to evaluate: ${message}`);
   }
 }

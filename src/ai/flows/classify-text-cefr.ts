@@ -1,5 +1,7 @@
+'use server';
+
 import { z } from 'genkit';
-import { callAIWithContextFallback } from '@/ai/lib/llm-client';
+import { callAIWithContextFallback } from '@/ai/llm';
 
 const ClassifyTextCefrInputSchema = z.object({
   text: z.string().describe('The text to be classified.'),
@@ -36,7 +38,8 @@ Return JSON: {"cefrLevel": "A1|A2|B1|B2|C1|C2", "justification": "reason"}`;
       justification: parsed.justification || 'Standard English'
     };
   } catch (error) {
-    console.error('[classifyTextCefr] Error:', error);
-    throw new Error(`AI failed to classify: ${error.message}`);
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('[classifyTextCefr] Error:', message);
+    throw new Error(`AI failed to classify: ${message}`);
   }
 }

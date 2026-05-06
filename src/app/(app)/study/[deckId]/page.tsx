@@ -15,8 +15,9 @@ import QuizView from '@/components/quiz-view';
 import RoleplayView from '@/components/roleplay-view';
 import GlossaryView from '@/components/glossary-view';
 import ReadingView from '@/components/reading-view';
+import VoicePracticeView from '@/components/voice-practice-view';
 
-type StudyMode = 'menu' | 'flashcards' | 'quiz' | 'roleplay' | 'glossary' | 'reading';
+type StudyMode = 'menu' | 'flashcards' | 'quiz' | 'roleplay' | 'glossary' | 'reading' | 'voice';
 
 export default function StudyPage() {
   const router = useRouter();
@@ -79,6 +80,8 @@ export default function StudyPage() {
         return <GlossaryView deck={activeDeck} />;
       case 'reading':
         return <ReadingView deck={activeDeck} />;
+      case 'voice':
+        return <VoicePracticeView deck={activeDeck} onSessionEnd={() => setMode('menu')} />;
       case 'menu':
       default:
         return <StudyMenu deck={activeDeck} onSelectMode={setMode} />;

@@ -35,11 +35,11 @@
 
 ## 1. Introducción
 
-Genki Sensei es una aplicación web para aprender japonés mediante flashcards intelligentas, generadas por IA. Utiliza modelos de lenguaje locales a través de LM Studio y servidores TTS locales (Piper y Voxtral) para la pronunciación.
+Genki Sensei es una aplicación web para aprender idiomas mediante flashcards intelligentas, generadas por IA. Utiliza modelos de lenguaje locales a través de LM Studio y servidores TTS locales (Piper y Voxtral) para la pronunciación.
 
 ### Características Principales
 
-- **Generación de Cards**: IA crea tarjetas SRS desde cualquier texto en japonés
+- **Generación de Cards**: IA crea tarjetas SRS desde cualquier texto en idiomas
 - **Quiz Interactivo**: Practice con preguntas generadas por IA
 - **Roleplay**: Conversaciónsimulada con la IA
 - **TTS**: Pronunciación nativa con Voxtral/Piper
@@ -79,6 +79,7 @@ Genki Sensei es una aplicación web para aprender japonés mediante flashcards i
 | LM Studio | 1234 | API de Chat-compatible |
 | Piper TTS | 8080 | TTS fallback |
 | Voxtral TTS | 8000 | TTS principal |
+| Voice Eval | 10301 | Evaluación de voz |
 
 ---
 
@@ -159,6 +160,21 @@ pip install mlx-audio
 
 # Instalar también mistral-common si hay errores
 pip install "mistral-common[audio]"
+```
+
+### 4.3. Entorno Voice Evaluation
+
+Este entorno se usa para evaluar pronunciación del usuario.
+
+```bash
+# Crear entorno con Python 3.11
+conda create -n voice_eval python=3.11 -y
+
+# Activar
+conda activate voice_eval
+
+# Instalar dependencias
+pip install fastapi uvicorn python-multipart soundfile sounddevice httpx pydantic voxmlx numpy
 ```
 
 ---
@@ -259,10 +275,16 @@ conda activate voxtral_audio
 python audio_server.py > /tmp/voxtral.log 2>&1 &
 echo "Voxtral TTS iniciado (PID: $!)"
 
+# Iniciar Voice Evaluation (fondo)
+conda activate voice_eval
+python voice_eval/server.py > /tmp/voice_eval.log 2>&1 &
+echo "Voice Eval iniciado (PID: $!)"
+
 # Esperar y verificar
 sleep 5
 curl -s http://localhost:8080/health | jq .status
 curl -s http://localhost:8000/health | jq .status
+curl -s http://localhost:10301/health | jq .status
 ```
 
 ---
@@ -578,6 +600,6 @@ rm -rf /Volumes/Rafa\ HD/Freelances/genki/.next
 
 ---
 
-**¡Listo!** Ahora tienes un sistema completo de aprendizaje de japonés con IA local. 🚀
+**¡Listo!** Ahora tienes un sistema completo de aprendizaje de idiomas con IA local. 🚀
 
 Para dúvidas adicionales, consulta las secciones relevantes de este manual o Abre un issue en el repositorio.

@@ -10,15 +10,17 @@ import { startRoleplayAction, continueRoleplayAction, evaluateRoleplayAction } f
 import { getTTSAudio } from '@/app/actions';
 import { useDecks } from '@/hooks/use-decks';
 import { useToast } from '@/hooks/use-toast';
+import { useSettings } from '@/hooks/use-settings';
 
 interface RoleplayViewProps {
   deck: Deck;
 }
 
-type ChatMessage = { role: 'user' | 'ai'; text: string };
+type ChatMessage = { role: 'user' | 'assistant'; text: string };
 type Evaluation = { score: number; feedback: string; tips: string[] };
 
 export default function RoleplayView({ deck }: RoleplayViewProps) {
+  const { settings, isLoaded: settingsLoaded } = useSettings();
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [userMsg, setUserMsg] = useState('');
   const [roleplayContext, setRoleplayContext] = useState<string | null>(null);
@@ -41,7 +43,7 @@ export default function RoleplayView({ deck }: RoleplayViewProps) {
         });
       } else {
         setRoleplayContext(result.scenario);
-        setChatHistory([{ role: 'ai', text: result.first_message }]);
+        setChatHistory([{ role: 'assistant', text: result.first_message }]);
       }
       setLoading(false);
     };
@@ -70,7 +72,7 @@ export default function RoleplayView({ deck }: RoleplayViewProps) {
         variant: 'destructive',
       });
     } else {
-      setChatHistory([...newHistory, { role: 'ai', text: result.text }]);
+      setChatHistory([...newHistory, { role: 'assistant', text: result.text }]);
     }
     setLoading(false);
   };
@@ -93,14 +95,17 @@ export default function RoleplayView({ deck }: RoleplayViewProps) {
   };
   
     const handleTTSAction = async (text: string, id: string) => {
-        if (!text || audioLoading) return;
+        if (!text || audioLoading || !settingsLoaded || !settings) return;
         setAudioLoading(id);
-        const voice = localStorage.getItem('tts-voice') || 'en_GB-alan-medium';
-        const cacheKey = `genki_audio_roleplay_${voice}_${btoa(unescape(encodeURIComponent(text))).slice(0, 32)}`;
+        
+        // Get TTS config from settings
+        const provider = settings.ttsProvider;
+        const voice = provider === 'voxtral' ? settings.lmstudioVoice : settings.voice;
+        const cacheKey = `genki_audio_roleplay_${provider}_${voice}_${btoa(unescape(encodeURIComponent(text))).slice(0, 32)}`;
         let audioDataUrl = localStorage.getItem(cacheKey);
 
         if (!audioDataUrl) {
-            const fetchedAudioData = await getTTSAudio(text, voice);
+            const fetchedAudioData = await getTTSAudio(text, voice, provider, settings.emotion);
             if (fetchedAudioData && fetchedAudioData.media) {
                 audioDataUrl = fetchedAudioData.media;
                 try { localStorage.setItem(cacheKey, audioDataUrl); } catch (e) { console.warn("Failed to cache audio") }
@@ -134,9 +139,9 @@ export default function RoleplayView({ deck }: RoleplayViewProps) {
             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in slide-in-from-bottom-4 duration-300`}>
               <div className="flex flex-col gap-2 max-w-[85%] group">
                 <div className={`p-7 rounded-[2.5rem] font-medium text-lg shadow-sm leading-relaxed ${msg.role === 'user' ? 'bg-indigo-600 text-white rounded-tr-none shadow-indigo-100' : 'bg-white text-slate-700 rounded-tl-none border border-slate-100'}`}>
-                  {msg.role === 'ai' ? <FormattedText text={msg.text} /> : msg.text}
+                  {msg.role === 'assistant' ? <FormattedText text={msg.text} /> : msg.text}
                 </div>
-                 {msg.role === 'ai' && <button onClick={() => handleTTSAction(msg.text, `msg-${i}`)} className="flex items-center gap-2 text-[10px] font-black text-slate-300 hover:text-indigo-500 transition-colors uppercase tracking-widest ml-4">{audioLoading === `msg-${i}` ? <Loader2 size={12} className="animate-spin" /> : <Volume2 size={12} />} Listen</button>}
+                 {msg.role === 'assistant' && <button onClick={() => handleTTSAction(msg.text, `msg-${i}`)} className="flex items-center gap-2 text-[10px] font-black text-slate-300 hover:text-indigo-500 transition-colors uppercase tracking-widest ml-4">{audioLoading === `msg-${i}` ? <Loader2 size={12} className="animate-spin" /> : <Volume2 size={12} />} Listen</button>}
               </div>
             </div>
           ))}

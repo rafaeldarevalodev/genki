@@ -1,0 +1,18 @@
+name: voice-eval-env
+channels:
+  - conda-forge
+  - apple
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+    - mlx>=0.20.0
+    - pydantic>=2.0
+    - httpx>=0.27.0
+    - fastapi>=0.115.0
+    - uvicorn>=0.30.0
+    - python-multipart>=0.0.9
+    - soundfile>=0.12.0
+    - sounddevice>=0.5.0
+    - numpy>=1.24.0

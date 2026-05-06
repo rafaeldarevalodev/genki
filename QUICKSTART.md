@@ -21,9 +21,9 @@ cd genki
 
 Esto automáticamente:
 - ✅ Instala dependencias Node
-- ✅ Crea entornos Conda (genki, voxtral_audio)
+- ✅ Crea entornos Conda (genki, voxtral_audio, voice_eval)
 - ✅ Descarga modelos TTS
-- ✅-compila la app
+- ✅ Compila la app
 - ✅ Inicia servidores
 
 ## Quick Commands
@@ -46,6 +46,7 @@ Esto automáticamente:
 | Next.js | 9002 | - |
 | Voxtral TTS | 8000 | `/health` |
 | Piper TTS | 8080 | `/health` |
+| Voice Eval | 10301 | `/health` |
 | LM Studio | 1234 | `/v1/models` |
 
 ## Problemas Comunes

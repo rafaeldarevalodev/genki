@@ -1,5 +1,5 @@
 import { z } from 'genkit';
-import { callAIWithContextFallback, type LLMMessage } from '@/ai/lib/llm-client';
+import { callAIWithContextFallback, type LLMMessage } from '@/ai/llm';
 
 const SimulateLanguageRoleplayInputSchema = z.object({
   vocabulary: z.array(z.string()),
@@ -40,7 +40,8 @@ export async function simulateLanguageRoleplay(
 
     return { aiResponse: result.content };
   } catch (error) {
-    console.error('[simulateLanguageRoleplay] Error:', error);
-    throw new Error(`AI failed to generate roleplay response: ${error.message}`);
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('[simulateLanguageRoleplay] Error:', message);
+    throw new Error(`AI failed to generate roleplay response: ${message}`);
   }
 }

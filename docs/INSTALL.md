@@ -371,28 +371,92 @@ file test.wav
 
 ---
 
-## Parte 4: Uso de la Aplicación
+## Parte 4: Voice Evaluation (Evaluación de Voz)
 
-### 4.1 Iniciar Todo
+### 4.1 ¿Qué es Voice Evaluation?
 
-**Terminal 1 - Servidor TTS:**
+Voice Evaluation es un servicio que evalúa tu pronunciación comparando tu grabación con el texto esperado. Usa IA local para determinar qué tan bien pronunciaste.
+
+### 4.2 Entorno Conda
+
 ```bash
+# Crear entorno voice_eval
+conda create -n voice_eval python=3.11 -y
+conda activate voice_eval
+
+# Instalar dependencias
+pip install fastapi uvicorn python-multipart soundfile sounddevice httpx pydantic voxmlx numpy
+```
+
+### 4.3 Iniciar el Servidor
+
+```bash
+conda activate voice_eval
+cd voice_eval
+python server.py
+# Servidor disponible en http://localhost:10301
+```
+
+### 4.4 Verificar
+
+```bash
+curl http://localhost:10301/health
+```
+
+---
+
+## Parte 5: Uso de la Aplicación
+
+### 5.1 Iniciar Todo
+
+**Terminal 1 - Voz (Voxtral o Piper):**
+```bash
+# Voxtral
+conda activate voxtral_audio
+python audio_server.py
+
+# O Piper (alternativo)
+conda activate genki
 cd tts
 python server.py -p 8080
 ```
 
-**Terminal 2 - App Next.js:**
+**Terminal 2 - Voice Eval:**
+```bash
+conda activate voice_eval
+python voice_eval/server.py
+```
+
+**Terminal 3 - App Next.js:**
 ```bash
 cd genki
 npm run dev
 ```
 
-### 4.2 Flujo de Uso
+### 5.2 Flujo de Uso
 
 1. Abrir http://localhost:9002/library
 2. Ir a "Create" para crear un nuevo deck
 3. Ingresar texto y generar tarjetas
 4. Ir a Study para estudiar
+5. Usar el botón de audio para escuchar pronunciación
+6. Marcar las tarjetas según dificultad (SRS)
+
+---
+
+## Parte 6: Solución de Problemas
+
+### TTS no funciona
+```bash
+# Verificar que el servidor esté corriendo
+lsof -i :8080
+
+# Verificar Voxtral
+lsof -i :8000
+
+# Si no está, iniciarlo
+cd tts && python server.py
+```
 5. Usar el botón de audio para escuchar pronunciación
 6. Marcar las tarjetas según dificultad (SRS)
 
@@ -432,18 +496,33 @@ lsof -i :1234
 # Iniciar app Next.js
 npm run dev
 
-# Iniciar TTS servidor
+# Iniciar Voxtral TTS (puerto 8000)
+conda activate voxtral_audio
+python audio_server.py
+
+# Iniciar Piper TTS (puerto 8080)
 cd tts && python server.py -p 8080
+
+# Iniciar Voice Eval (puerto 10301)
+conda activate voice_eval
+python voice_eval/server.py
 
 # Ver servicios corriendo
 lsof -i :9002  # Next.js
-lsof -i :8080  # TTS
+lsof -i :8000  # Voxtral TTS
+lsof -i :8080  # Piper TTS
+lsof -i :10301 # Voice Eval
 lsof -i :1234  # LM Studio
 
 # Test TTS directo
 curl -X POST http://localhost:8080/tts \
   -H "Content-Type: application/json" \
   -d '{"text": "Hello"}'
+
+# Test Voxtral directo
+curl -X POST http://localhost:8000/v1/audio/speech \
+  -H "Content-Type: application/json" \
+  -d '{"input": "Hello", "voice": "en_us_aria"}'
 
 # Test LM Studio directo
 curl http://localhost:1234/v1/models

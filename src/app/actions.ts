@@ -8,6 +8,7 @@ import { evaluateRoleplayPerformance } from '@/ai/flows/evaluate-roleplay-perfor
 import { textToSpeech } from '@/ai/flows/text-to-speech';
 import { explorePhrase } from '@/ai/flows/explore-phrase';
 import { classifyTextCefr } from '@/ai/flows/classify-text-cefr';
+import { voicePractice, generateReferenceAudio } from '@/ai/flows/voice-practice';
 import type { Card, Deck } from '@/lib/types';
 
 /**
@@ -98,7 +99,7 @@ export async function startRoleplayAction(cards: Card[]) {
 }
 
 export async function continueRoleplayAction(
-    chatHistory: { role: 'user' | 'ai', text: string }[],
+    chatHistory: { role: 'user' | 'assistant', text: string }[],
     userMessage: string,
     scenarioContext: string,
     vocabulary: string[]
@@ -117,7 +118,7 @@ export async function continueRoleplayAction(
 }
 
 export async function evaluateRoleplayAction(
-  chatHistory: { role: 'user' | 'ai', text: string }[],
+  chatHistory: { role: 'user' | 'assistant', text: string }[],
   scenarioContext: string
 ) {
   const userInput = chatHistory.filter(m => m.role === 'user').map(m => m.text).join('\n');
@@ -137,10 +138,9 @@ export async function evaluateRoleplayAction(
 
 export async function getTTSAudio(text: string, voice?: string, provider?: string, emotion?: string): Promise<{media: string} | null> {
   try {
-    const input = typeof text === 'string' 
-      ? { text, provider: provider || 'piper', voice: voice, emotion: emotion }
-      : text;
-    console.log('[getTTSAudio] Calling with:', { provider: input.provider, voice: input.voice, emotion: input.emotion });
+    // Normalize provider: 'voxtral' or 'piper'
+    const validProvider = (provider === 'voxtral' ? 'voxtral' : 'piper');
+    const input = { text, provider: validProvider, voice: voice, emotion: emotion };
     const result = await textToSpeech(input);
     return result;
   } catch (err) {
@@ -156,5 +156,15 @@ export async function explorePhraseAction(chunk: string, userSentence: string) {
   } catch (error) {
     console.error(error);
     return { error: 'Failed to get feedback from AI.' };
+  }
+}
+
+export async function evaluateVoicePractice(text: string, audioBase64: string, language?: string) {
+  try {
+    const result = await voicePractice({ text, audio: audioBase64, language: language || 'en' });
+    return result;
+  } catch (error) {
+    console.error('[evaluateVoicePractice]', error);
+    return { error: 'Failed to evaluate pronunciation', score: 0 };
   }
 }

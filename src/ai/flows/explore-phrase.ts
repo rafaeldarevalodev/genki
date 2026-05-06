@@ -1,7 +1,7 @@
 'use server';
 
 import { z } from 'genkit';
-import { callAIWithContext } from '@/ai/lib/llm-client';
+import { callAIWithContext } from '@/ai/llm';
 
 const ExplorePhraseInputSchema = z.object({
   chunk: z.string(),
@@ -41,7 +41,8 @@ Return JSON: {"isCorrect": true/false, "feedback": "message", "annotatedSentence
       annotatedSentence: parsed.annotatedSentence ?? input.userSentence
     };
   } catch (error) {
-    console.error('[explorePhrase] Error:', error);
-    throw new Error(`AI failed to evaluate phrase: ${error.message}`);
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('[explorePhrase] Error:', message);
+    throw new Error(`AI failed to evaluate phrase: ${message}`);
   }
 }

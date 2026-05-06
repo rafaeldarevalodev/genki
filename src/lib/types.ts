@@ -13,6 +13,8 @@ export interface Card {
   spanish_ipa: string;
   explanation: string;
   srs: SrsData;
+  voice?: string;
+  emotion?: string;
 }
 
 export interface Deck {

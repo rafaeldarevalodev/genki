@@ -11,7 +11,7 @@ interface DecksContextType {
   isLoaded: boolean;
   addDeck: (deck: Deck) => void;
   deleteDeck: (deckId: string) => void;
-  updateCardSrs: (deckId: string, cardIndex: number, quality: number) => Card;
+  updateCardSrs: (deckId: string, cardIndex: number, quality: number) => Card | null;
   importDecks: (newDecks: Deck[]) => void;
   userProfile: UserProfile;
   addXp: (points: number) => void;
@@ -64,25 +64,23 @@ export const DecksProvider = ({ children }: { children: ReactNode }) => {
     setDecks((prev) => prev.filter((d) => d.id !== deckId));
   }, []);
 
-  const updateCardSrs = useCallback((deckId: string, cardIndex: number, quality: number) => {
-    let foundDeck: Deck | null = null;
-    let updatedCard: Card | null = null;
+  const updateCardSrs = useCallback((deckId: string, cardIndex: number, quality: number): Card => {
+    let resultCard: Card | undefined;
     
     setDecks((prev) => {
       const newDecks = [...prev];
       const deckIdx = newDecks.findIndex(d => d.id === deckId);
       
       if (deckIdx === -1) {
-        console.error('[updateCardSrs] Deck not found:', deckId, 'Available decks:', prev.map(d => d.id));
+        console.error('[updateCardSrs] Deck not found:', deckId);
         return prev;
       }
       
-      foundDeck = newDecks[deckIdx];
+      const foundDeck = newDecks[deckIdx];
       const cardCount = foundDeck.cards.length;
       
       if (cardIndex < 0 || cardIndex >= cardCount) {
-        console.error('[updateCardSrs] Card index out of bounds:', cardIndex, 'deck cards:', cardCount);
-        // Don't crash, just return the deck as-is
+        console.error('[updateCardSrs] Card index out of bounds:', cardIndex);
         return prev;
       }
       
@@ -92,17 +90,17 @@ export const DecksProvider = ({ children }: { children: ReactNode }) => {
         return prev;
       }
       
-      updatedCard = calculateSm2(cardToUpdate, quality);
+      const updatedCard = calculateSm2(cardToUpdate, quality);
       const newCards = [...foundDeck.cards];
       newCards[cardIndex] = updatedCard;
       newDecks[deckIdx] = { ...foundDeck, cards: newCards };
       
-      console.log('[updateCardSrs] Updated card:', cardIndex, 'quality:', quality, 'nextReview:', updatedCard.srs.nextReview);
-      
+      resultCard = updatedCard;
       return newDecks;
     });
     
-    return updatedCard;
+    // TypeScript doesn't know that setDecks runs synchronously, but it does
+    return resultCard!;
   }, []);
   
   const addXp = useCallback((points: number) => {

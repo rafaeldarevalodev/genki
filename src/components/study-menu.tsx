@@ -1,10 +1,10 @@
 'use client';
 
-import { CalendarCheck, RotateCcw, Target, MessageSquare, List, Clock, FileText } from 'lucide-react';
+import { CalendarCheck, RotateCcw, Target, MessageSquare, List, Clock, FileText, Mic } from 'lucide-react';
 import type { Deck } from '@/lib/types';
 import { getDueCount } from '@/lib/srs';
 
-type StudyMode = 'menu' | 'flashcards' | 'quiz' | 'roleplay' | 'glossary' | 'reading';
+type StudyMode = 'menu' | 'flashcards' | 'quiz' | 'roleplay' | 'glossary' | 'reading' | 'voice';
 
 interface StudyMenuProps {
   deck: Deck;
@@ -19,6 +19,7 @@ export default function StudyMenu({ deck, onSelectMode }: StudyMenuProps) {
     { id: 'roleplay', title: 'Roleplay', icon: MessageSquare },
     { id: 'glossary', title: 'Glossary', icon: List },
     { id: 'reading', title: 'Reading', icon: FileText },
+    { id: 'voice', title: 'Voice Practice', icon: Mic },
   ];
 
   return (

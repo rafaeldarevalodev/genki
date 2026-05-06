@@ -1,5 +1,7 @@
+'use server';
+
 import { z } from 'genkit';
-import { callAIWithContextFallback } from '@/ai/lib/llm-client';
+import { callAIWithContextFallback } from '@/ai/llm';
 
 const QuizGenerationInputSchema = z.object({
   deckId: z.string(),
@@ -38,7 +40,8 @@ Return JSON: {"question": "text", "distractors": ["w1", "w2", "w3"]}`;
       distractors: Array.isArray(parsed.distractors) ? parsed.distractors.slice(0, 3) : []
     };
   } catch (error) {
-    console.error('[generateQuizQuestions] Error:', error);
-    throw new Error(`AI failed to generate questions: ${error.message}`);
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('[generateQuizQuestions] Error:', message);
+    throw new Error(`AI failed to generate questions: ${message}`);
   }
 }
