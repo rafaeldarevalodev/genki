@@ -5,29 +5,13 @@
 1. [Introducción](#introducción)
 2. [Arquitectura del Sistema](#arquitectura-del-sistema)
 3. [Instalaciones Básicas](#instalaciones-básicas)
-   - 3.1. Requisitos del Sistema
-   - 3.2. Node.js y npm
-   - 3.3. Python y Conda
 4. [Entornos Conda](#entornos-conda)
-   - 4.1. Entorno Base (genki)
-   - 4.2. Entorno Voxtral Audio
-5. [Servidores TTS (Text-to-Speech)](#servidores-tts)
-   - 5.1. Piper TTS (Fallback)
-   - 5.2. Voxtral TTS (Principal)
-   - 5.3. Iniciarlos Automáticamente
+5. [Servidores TTS](#servidores-tts)
 6. [LM Studio - Modelos Locales](#lm-studio---modelos-locales)
-   - 6.1. Instalación de LM Studio
-   - 6.2. Modelos Recomendados
-   - 6.3. Configuración de API Local
 7. [Ejecución de la Aplicación](#ejecución-de-la-aplicación)
-   - 7.1. Desarrollo (dev)
-   - 7.2. Producción (build)
-8. [Configuración de Modelos IA](#configuración-de-modelos-ia)
-   - 8.1. Voxtral Small (Principal)
-   - 8.2. Gemma 4B (Fallback)
-   - 8.3. Cambiar entre Modelos
-9. [APIs y Endpoints](#apis-y-endpoints)
-10. [Tips y Optimizaciones](#tips-y-optimizaciones)
+8. [APIs y Endpoints](#apis-y-endpoints)
+9. [Features IA](#features-ia)
+10. [Configuración de Entorno](#configuración-de-entorno)
 11. [Errores Comunes](#errores-comunes)
 12. [Estructura del Proyecto](#estructura-del-proyecto)
 
@@ -35,15 +19,18 @@
 
 ## 1. Introducción
 
-Genki Sensei es una aplicación web para aprender idiomas mediante flashcards intelligentas, generadas por IA. Utiliza modelos de lenguaje locales a través de LM Studio y servidores TTS locales (Piper y Voxtral) para la pronunciación.
+Genki Sensei es una aplicación web para aprender idiomas mediante flashcards inteligentes generadas por IA. Utiliza modelos de lenguaje locales a través de LM Studio y servidores TTS locales para pronunciación nativa.
 
 ### Características Principales
 
-- **Generación de Cards**: IA crea tarjetas SRS desde cualquier texto en idiomas
-- **Quiz Interactivo**: Practice con preguntas generadas por IA
-- **Roleplay**: Conversaciónsimulada con la IA
-- **TTS**: Pronunciación nativa con Voxtral/Piper
-- **100% Local**: Sin dependencias de APIs externas
+- **Generación de Cards**: IA crea tarjetas SRS desde cualquier texto
+- **Quiz Interactivo**: Práctica con preguntas generadas por IA
+- **Roleplay**: Conversación simulada con la IA (tutor Dr. Sarah Chen)
+- **Voice Practice**: Evaluación de pronunciación fonema por fonema
+- **TTS**: Pronunciación nativa con Voxtral/Piper/Kokoro
+- **CEFR Classification**: Clasificación automática de nivel (A1-C2)
+- **Phrase Explorer**: Feedback educativo sobre uso de vocabulario
+- **100% Local**: Sin dependencias de APIs externas (opcional cloud)
 
 ---
 
@@ -62,11 +49,12 @@ Genki Sensei es una aplicación web para aprender idiomas mediante flashcards in
 │  └──────────────┘    └──────────────┘    └──────────────┘      │
 │         │                     │                                   │
 │         ▼                    ▼                                   │
-│  ┌──────────────┐    ┌──────────────┐                          │
-│  │ Piper TTS    │    │ Voxtral TTS   │                          │
-│  │  :8080      │    │   :8000     │                          │
-│  │  (Fallback) │    │ (Principal) │                          │
-│  └──────────────┘    └──────────────┘                          │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐      │
+│  │ localStorage │    │   TTS        │    │ Voice Eval   │      │
+│  │ (Decks,     │    │  Servers     │    │  :10301     │      │
+│  │  Profile)   │    │  8000/8080/  │    │ (VoxMLX/MFA)│      │
+│  └──────────────┘    │   8880      │    └──────────────┘      │
+│                      └──────────────┘                          │
 │                                                                  │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -77,9 +65,10 @@ Genki Sensei es una aplicación web para aprender idiomas mediante flashcards in
 |----------|--------|-------------|
 | Next.js Dev | 9002 | Servidor de desarrollo |
 | LM Studio | 1234 | API de Chat-compatible |
+| Voxtral TTS | 8000 | TTS principal (Apple Silicon) |
 | Piper TTS | 8080 | TTS fallback |
-| Voxtral TTS | 8000 | TTS principal |
-| Voice Eval | 10301 | Evaluación de voz |
+| Kokoro TTS | 8880 | TTS alternativo |
+| Voice Eval | 10301 | Evaluación de pronunciación |
 
 ---
 
@@ -102,7 +91,7 @@ nvm use 20
 
 # Verificar instalación
 node --version  # debe ser v20.x.x
-npm --version  # debe ser 10.x.x
+npm --version   # debe ser 10.x.x
 ```
 
 ### 3.3. Python y Conda
@@ -125,166 +114,124 @@ source ~/.zshrc
 
 ## 4. Entornos Conda
 
-### 4.1. Entorno Base (genki)
-
-Este entorno se usa para la aplicación Next.js y funciones de IA.
+### Crear todos los entornos automáticamente
 
 ```bash
-# Crear entorno
+conda env create -f environment.yml
+```
+
+### Entornos individuales
+
+#### genki (Base)
+Para Piper TTS y funciones básicas de IA.
+
+```bash
 conda create -n genki python=3.11 -y
-
-# Activar
 conda activate genki
-
-# Instalar dependencias
-cd /Volumes/Rafa\ HD/Freelances/genki
-npm install
-
-# Paquetes Python necesarios
 pip install genkit dotenv
 ```
 
-### 4.2. Entorno Voxtral Audio
-
-Este entorno es para el servidor TTS de Voxtral. Requiere `mlx-audio`.
+#### voxtral_audio
+Para Voxtral TTS (requiere Apple Silicon con mlx-audio).
 
 ```bash
-# Crear entorno con Python 3.12
 conda create -n voxtral_audio python=3.12 -y
-
-# Activar
 conda activate voxtral_audio
-
-# Instalar mlx-audio (requiere mistral-common)
-pip install mlx-audio
-
-# Instalar también mistral-common si hay errores
-pip install "mistral-common[audio]"
+pip install mlx-audio "mistral-common[audio]" numpy
 ```
 
-### 4.3. Entorno Voice Evaluation
-
-Este entorno se usa para evaluar pronunciación del usuario.
+#### voice_eval
+Para evaluación de pronunciación (VoxMLX o Montreal Forced Aligner).
 
 ```bash
-# Crear entorno con Python 3.11
 conda create -n voice_eval python=3.11 -y
-
-# Activar
 conda activate voice_eval
-
-# Instalar dependencias
 pip install fastapi uvicorn python-multipart soundfile sounddevice httpx pydantic voxmlx numpy
 ```
 
 ---
 
-## 5. Servidores TTS (Text-to-Speech)
+## 5. Servidores TTS
 
-### 5.1. Piper TTS (Fallback)
+### 5.1. Voxtral TTS (Principal - Apple Silicon)
 
-Piper es un TTS rápido y ligero. Se usa cuando Voxtral no está disponible.
-
-#### Instalación
+Voxtral es un TTS de alta calidad de Mistral, optimizado para Apple Silicon.
 
 ```bash
-# Instalar piper-phonemize
-conda activate genki
-pip install piper-phonemize numpy
-
-# Descargar modelos (ejemplo)
-cd /Volumes/Rafa\ HD/Freelances/genki/tts/models
-# Descargar desde https://github.com/rhasspy/piper/tree/master/src/python_run
-```
-
-#### Ejecutar Servidor
-
-```bash
-cd /Volumes/Rafa\ HD/Freelances/genki/tts
-python server.py
-# Servidor disponible en http://localhost:8080
-```
-
-#### API
-
-```
-POST http://localhost:8080/tts
-Content-Type: application/json
-
-{"text": "Hola mundo", "voice": "en_US-lessac-medium"}
-```
-
-### 5.2. Voxtral TTS (Principal)
-
-Voxtral es un TTS de alta calidad de Mistral, pero requiere parches especiales.
-
-> **Problema Conocido**: El error `There is no Stream(gpu, 0) in current thread` ocurre porque MLX intenta usar la GPU en el hilo incorrecto.
-
-#### Solución: Servidor con Generación por Subproceso
-
-El servidor `audio_server.py` usa un subproceso para generar audio, evitando el error de GPU:
-
-```bash
-cd /Volumes/Rafa\ HD/Freelances/genki
 conda activate voxtral_audio
 python audio_server.py
 # Servidor disponible en http://localhost:8000
 ```
 
-#### API
-
+**API:**
 ```
 POST http://localhost:8000/v1/audio/speech
-Content-Type: application/json
-
 {
   "input": "Hello world",
   "voice": "en_us_aria",
-  "emotion": "neutral"
+  "response_format": "wav"
 }
 ```
 
-#### Voces Disponibles
+**Voces Disponibles:**
 
-| Voz Internal | Descripción |
-|-------------|-------------|
-| `casual_female` | Aria - estadounidense, amigable |
-| `casual_male` | James - estadounidense, natural |
-| `cheerful_female` | Zoe - estadounidense, alegre |
-| `neutral_female` | Sophie - británico, elegante |
-| `neutral_male` | Oliver - británico, formal |
+| Voz Internal | Embedding | Descripción |
+|-------------|-----------|-------------|
+| `en_us_aria` | `casual_female` | Estadounidense, amigable |
+| `en_us_zoe` | `cheerful_female` | Estadounidense, alegre |
+| `en_us_james` | `casual_male` | Estadounidense, natural |
+| `en_gb_sophie` | `neutral_female` | Británico, elegante |
+| `en_gb_oliver` | `neutral_male` | Británico, formal |
 
-### 5.3. Iniciarlos Automáticamente
+### 5.2. Piper TTS (Fallback)
 
-Crear script de inicio:
+Piper es un TTS rápido y ligero. Se usa cuando Voxtral no está disponible.
 
 ```bash
-# /Volumes/Rafa HD/Freelances/genki/start_servers.sh
-
-#!/bin/bash
-cd /Volumes/Rafa\ HD/Freelances/genki
-
-# Iniciar Piper TTS (fondo)
-source ~/miniforge3/etc/profile.d/conda.sh
 conda activate genki
-python tts/server.py > /tmp/piper.log 2>&1 &
-echo "Piper TTS iniciado (PID: $!)"
+cd tts
+python server.py
+# Servidor disponible en http://localhost:8080
+```
 
-# Iniciar Voxtral TTS (fondo)
-conda activate voxtral_audio
-python audio_server.py > /tmp/voxtral.log 2>&1 &
-echo "Voxtral TTS iniciado (PID: $!)"
+**API:**
+```
+POST http://localhost:8080/tts
+{"text": "Hello world", "voice": "en_GB-alan-medium"}
+```
 
-# Iniciar Voice Evaluation (fondo)
-conda activate voice_eval
-python voice_eval/server.py > /tmp/voice_eval.log 2>&1 &
-echo "Voice Eval iniciado (PID: $!)"
+**Voces Disponibles:**
 
-# Esperar y verificar
-sleep 5
-curl -s http://localhost:8080/health | jq .status
-curl -s http://localhost:8000/health | jq .status
-curl -s http://localhost:10301/health | jq .status
+| Voz | Descripción |
+|-----|-------------|
+| `en_GB-alan-medium` | Británico, varón |
+| `en_US-lessac-medium` | Estadounidense, varón |
+| `en_US-ryan-high` | Estadounidense, varón (agudo) |
+
+### 5.3. Kokoro TTS (Alternativo)
+
+TTS basado en Kokoro con múltiples voces.
+
+```bash
+conda activate genki
+python kokoro_server.py
+# Servidor disponible en http://localhost:8880
+```
+
+**Voces Disponibles:**
+- `af_bella`, `af_nicole`, `af_sarah`, `af_sky`
+- `am_adam`, `am_eric`, `am_fen`, `am_michael`
+- Y muchas más...
+
+### 5.4. Iniciar Todos los Servidores
+
+```bash
+./start-servers.sh start
+```
+
+Verificar estado:
+```bash
+./start-servers.sh status
 ```
 
 ---
@@ -314,24 +261,10 @@ curl -s http://localhost:10301/health | jq .status
 
 ### 6.3. Configuración de API Local
 
-LM Studio expone una API compatible con OpenAI:
-
 1. Ir a **Settings** > **API**
 2. Habilitar **Local Server**
 3. Puerto: `1234`
 4. Cargar modelo y hacer click en **Start Server**
-
-La API está disponible en:
-
-```
-POST http://localhost:1234/v1/chat/completions
-Content-Type: application/json
-
-{
-  "model": "mistralai_voxtral-small-24b-2507",
-  "messages": [{"role": "user", "content": "Hola"}]
-}
-```
 
 ---
 
@@ -340,11 +273,8 @@ Content-Type: application/json
 ### 7.1. Desarrollo (dev)
 
 ```bash
-cd /Volumes/Rafa\ HD/Freelances/genki
-
 # Asegurar que los servidores TTS están corriendo
-curl -s http://localhost:8000/health || python audio_server.py &
-curl -s http://localhost:8080/health || python tts/server.py &
+./start-servers.sh start
 
 # Iniciar Next.js
 npm run dev
@@ -354,103 +284,188 @@ npm run dev
 ### 7.2. Producción (build)
 
 ```bash
-cd /Volumes/Rafa\ HD/Freelances/genki
-
-# Build de producción
 npm run build
-
-# Iniciar servidor
 npm start
 # App disponible en http://localhost:3000
 ```
 
 ---
 
-## 8. Configuración de Modelos IA
-
-### 8.1. Voxtral Small (Principal)
-
-El modelo Voxtral Small es el principal para chat y generación.
-
-**Prompt para opencode:**
-
-> Configura LM Studio para usar Voxtral Small 24B como modelo principal. Asegúrate de que el servidor local esté corriendo en el puerto 1234 con el modelo `mistralai_voxtral-small-24b-2507` cargado.
-
-### 8.2. Gemma 4B (Fallback)
-
-Gemma 4B es más rápido y se usa cuando Voxtral no está disponible.
-
-**Prompt para opencode:**
-
-> Configura un fallback a Gemma 4B en LM Studio. Cuando Voxtral no esté disponible, usar `google/gemma-4-4b-it` en el puerto 1234.
-
-### 8.3. Cambiar entre Modelos
-
-El cambio de modelo se maneja automáticamente en `src/ai/lib/llm-client.ts`:
-
-```typescript
-// prio: Voxtral → Gemma
-const response = await fetch(`http://localhost:${PORT}/v1/chat/completions`, ...)
-```
-
-Puedes cambiar el modelo desde la configuración en Settings.
-
----
-
-## 9. APIs y Endpoints
+## 8. APIs y Endpoints
 
 ### Genki App (Next.js)
 
 | Endpoint | Método | Descripción |
 |----------|--------|-------------|
-| `/` | GET | Página principal |
+| `/` | GET | Redirect a /library |
 | `/library` | GET | Biblioteca de decks |
-| `/creator` | GET | Creador de contenido |
-| `/study/[deckId]` | GET | Estudio de deck |
-
-### API de Acciones (Server Actions)
-
-| Función | Descripción |
-|---------|-------------|
-| `generateCardsAction` | Generar cards desde texto |
-| `generateQuizAction` | Generar preguntas quiz |
-| `startRoleplayAction` | Iniciar roleplay |
-| `getTTSAudio` | Obtener audio TTS |
+| `/creator` | GET | Creador de contenido con IA |
+| `/study/[deckId]` | GET | Sesión de estudio |
 
 ### TTS Endpoints
 
 | Servicio | Puerto | Endpoint | Formato |
 |----------|--------|----------|---------|
-| Piper | 8080 | `/tts` | `{"text": "..."}` |
 | Voxtral | 8000 | `/v1/audio/speech` | `{"input": "..."}` |
+| Piper | 8080 | `/tts` | `{"text": "...", "voice": "..."}` |
+| Kokoro | 8880 | `/v1/audio/speech` | `{"input": "...", "voice": "..."}` |
+
+### Voice Evaluation API
+
+| Endpoint | Método | Descripción |
+|----------|--------|-------------|
+| `/health` | GET | Estado del servicio |
+| `/evaluators` | GET | Listar evaluadores disponibles |
+| `/evaluate` | POST | Evaluar pronunciación |
+
+**Evaluadores disponibles:**
+
+| Evaluador | Descripción |
+|-----------|-------------|
+| `voxmlx` | VoxMLX - Alineador fonético |
+| `mfa` | Montreal Forced Aligner |
 
 ---
 
-## 10. Tips y Optimizaciones
+## 9. Features IA
 
-### Rendimiento
+### 9.1. Generación de Flashcards
 
-1. **Usar LLMs cuantizados**: Q4_K_M o Q6_K_L consume menos RAM
-2. **Cargar modelos solo cuando se usan**: Descargar al terminar sesión
-3. **Cache de audio**: Los audios TTS se guardan en localStorage (hasta 4MB)
-4. **Usar Voxtral como principal**: Mejor calidad de voz
+**Flow:** `src/ai/flows/generate-cards-from-text.ts`
 
-### Organización
+Extrae vocabulario de cualquier texto en inglés y genera flashcards con:
+- `front`: Chunk en inglés
+- `back`: Traducción español / original
+- `ipa`: Pronunciación IPA estándar
+- `spanish_ipa`: Fonética amigable para hispanohablantes
+- `explanation`: Explicación gramatical en español
+- `voice`: Voz TTS asignada aleatoriamente
 
-1. **Mantener modelos en SSD rápido**: Los carga más rápido
-2. **Limpiar cache de Next.js**: `rm -rf .next`
-3. **Monitorear memoria**: `Activity Monitor` o `htop`
+### 9.2. Quiz Interactivo
 
-### Debugging
+**Flow:** `src/ai/flows/generate-quiz-questions.ts`
 
-1. **Ver logs de TTS**: `/tmp/voxtral.log` y `/tmp/piper.log`
-2. **Verificar puertos**: `lsof -i :8000 -i :8080 -i :1234`
-3. **Health checks**:
-   ```bash
-   curl http://localhost:8000/health
-   curl http://localhost:8080/health
-   curl http://localhost:1234/v1/models
-   ```
+Genera preguntas de opción múltiple con:
+- 1 respuesta correcta
+- 3 distractores plausibles
+- Orden aleatorio
+
+### 9.3. Roleplay Conversacional
+
+**Flow:** `src/ai/flows/simulate-language-roleplay.ts`
+
+- **Tutor:** Dr. Sarah Chen (tutor conversacional senior)
+- Usa vocabulario objetivo naturalmente
+- Correcciones indirectas con `[tutor note]`
+- Mantiene historial de conversación
+
+### 9.4. Evaluación de Roleplay
+
+**Flow:** `src/ai/flows/evaluate-roleplay-performance.ts`
+
+Después de una sesión de roleplay:
+- Calificación 0-100
+- Feedback detallado
+- 3 tips de mejora
+
+### 9.5. Voice Practice (Pronunciación)
+
+**Flow:** `src/ai/flows/voice-practice.ts`
+
+Sistema completo de práctica de pronunciación:
+1. Genera audio de referencia (Voxtral TTS)
+2. Graba pronunciación del usuario
+3. Evalúa fonema por fonema
+4. Devuelve:
+   - `score`: Puntuación global
+   - `transcription`: Lo que el usuario dijo
+   - `phoneme_details`: Estado por fonema (correct/warning/error)
+   - `feedback_text`: Feedback detallado
+
+**Mapeo de emociones:**
+| Emoción | Voz TTS |
+|---------|---------|
+| neutral | neutral_male |
+| cheerful | cheerful_female |
+| excited | casual_male |
+| empathetic | casual_female |
+
+### 9.6. Clasificación CEFR
+
+**Flow:** `src/ai/flows/classify-text-cefr.ts`
+
+Clasifica textos automáticamente en niveles CEFR:
+- **A1**: Principiante básico
+- **A2**: Principiante elementary
+- **B1**: Intermediate
+- **B2**: Upper intermediate
+- **C1**: Advanced
+- **C2**: Proficiency
+
+Incluye justificación de la clasificación.
+
+### 9.7. Phrase Explorer (Feedback de Frases)
+
+**Flow:** `src/ai/flows/explore-phrase.ts`
+
+Evalúa uso de vocabulario en frases del usuario:
+- **Tutor:** Dr. James Morrison (tutor de inglés senior)
+- Verifica uso correcto del chunk
+- Proporciona feedback educativo
+- Corrige y annotationa la frase
+
+### 9.8. Text-to-Speech
+
+**Flow:** `src/ai/flows/text-to-speech.ts`
+
+Soporta múltiples proveedores TTS:
+- **Voxtral** (principal, Apple Silicon)
+- **Piper** (fallback, ligero)
+- **Kokoro** (alternativo, múltiples voces)
+
+Devuelve audio en formato base64 (data URL).
+
+---
+
+## 10. Configuración de Entorno
+
+### Variables de entorno (`.env.local`)
+
+```bash
+# LLM Configuration
+LLM_PROVIDER=local          # 'local' o 'cloud'
+LOCAL_MODEL_NAME=voxtral    # 'gemma' o 'voxtral'
+CLOUD_MODEL=llama-3.3-70b-versatile
+CLOUD_API_KEY=your-key
+CLOUD_BASE_URL=https://api.groq.com/openai/v1
+
+# TTS Configuration
+TTS_PROVIDER=voxtral        # 'piper', 'voxtral', o 'kokoro'
+TTS_ENDPOINT=http://localhost:8080
+TTS_VOICE=en_GB-alan-medium
+TTS_VOXTRAL_VOICE=en_us_aria
+TTS_KOKORO_VOICE=af_bella
+TTS_PLAYBACK_SPEED=1
+```
+
+### Proveedores LLM
+
+#### Local (LM Studio)
+
+```bash
+# Configurar en .env.local
+LLM_PROVIDER=local
+LOCAL_MODEL_NAME=voxtral    # o 'gemma'
+```
+
+#### Cloud (Groq - Recomendado para desarrollo)
+
+```bash
+LLM_PROVIDER=cloud
+CLOUD_MODEL=llama-3.3-70b-versatile
+CLOUD_BASE_URL=https://api.groq.com/openai/v1
+CLOUD_API_KEY=tu-api-key
+```
 
 ---
 
@@ -460,53 +475,39 @@ Puedes cambiar el modelo desde la configuración en Settings.
 
 **Causa**: Ya hay un proceso usando el puerto.
 
-**Solución**:
-
+**Solución:**
 ```bash
 # Encontrar proceso
 lsof -i :8000
 
 # Matar proceso
 kill -9 <PID>
-
-# O matar todos los procesos de python en ese puerto
-lsof -ti :8000 | xargs kill -9
 ```
 
 ### Error: `There is no Stream(gpu, 0) in current thread`
 
 **Causa**: MLX intenta usar GPU en el hilo incorrecto.
 
-**Solución**: Usar el servidor con generación por subproceso (`audio_server.py`) que ya tiene el parche.
+**Solución**: Usar `audio_server.py` con generación por subproceso.
 
 ### Error: `QuotaExceededError` en localStorage
 
 **Causa**: storage del navegador llena.
 
-**Solución**: La app ahora limpia automáticamente cache antiguo. También puedes:
-
+**Solución**: La app limpia automáticamente cache antiguo. También:
 ```javascript
-// Limpiar manualmente en consola del navegador
 Object.keys(localStorage).forEach(k => localStorage.removeItem(k))
 ```
 
-### Error: `Cannot read properties of undefined (reading 'query')`
-
-**Causa**: Probably extensión del navegador.
-
-**Solución**: Abrir en incógnito o desactivar extensiones.
-
 ### Error: AudioContext no iniciado
 
-**Causa**: Navegador blocks audio antes de interacción.
+**Causa**: Navegador bloquea audio antes de interacción.
 
-**Solución**: Click en el botón TTS - se resuelve automáticamente con el gesto del usuario.
+**Solución**: Click en botón TTS - se resuelve automáticamente.
 
 ### Error: LM Studio no responde
 
-**Causa**: Modelo no cargado o servidor no iniciado.
-
-**Solución**:
+**Solución:**
 1. Cargar modelo en LM Studio
 2. Hacer click en "Start Server"
 3. Verificar con `curl http://localhost:1234/v1/models`
@@ -518,42 +519,67 @@ Object.keys(localStorage).forEach(k => localStorage.removeItem(k))
 ```
 genki/
 ├── .env.local              # Variables de entorno
-├── audio_server.py       # Servidor Voxtral TTS
-├── README.md           # Este manual
-├── package.json         # Dependencias Node
-├── next.config.ts     # Config Next.js
+├── audio_server.py        # Servidor Voxtral TTS
+├── kokoro_server.py       # Servidor Kokoro TTS
+├── README.md              # Este manual
+├── QUICKSTART.md          # Guía rápida
+├── environment.yml        # Entornos Conda
+├── start-servers.sh       # Script de inicio
+├── setup.sh               # Setup completo
 │
 ├── src/
 │   ├── ai/
-│   │   ├── flows/           # Flows Genkit
-│   │   │   ├── text-to-speech.ts
-│   │   │   ├── generate-cards-from-text.ts
-│   │   │   └── ...
-│   │   ├── lib/
-│   │   │   └── llm-client.ts  # Cliente LLM con fallback
-│   │   └── prompts/         # System prompts
+│   │   ├── flows/              # Genkit AI flows
+│   │   │   ├── generate-cards-from-text.ts      # Flashcard generation
+│   │   │   ├── generate-quiz-questions.ts      # Quiz generation
+│   │   │   ├── text-to-speech.ts              # TTS (multi-provider)
+│   │   │   ├── voice-practice.ts             # Pronunciation eval
+│   │   │   ├── simulate-language-roleplay.ts # Conversation roleplay
+│   │   │   ├── evaluate-roleplay-performance.ts # Roleplay feedback
+│   │   │   ├── explore-phrase.ts             # Phrase feedback
+│   │   │   └── classify-text-cefr.ts         # CEFR classification
+│   │   │
+│   │   └── llm.ts          # LLM client con fallback
 │   │
 │   ├── app/
-│   │   ├── actions.ts      # Server actions
-│   │   ├── layout.tsx     # Layout raíz
+│   │   ├── actions.ts      # Server Actions
+│   │   ├── layout.tsx     # Root layout
 │   │   └── (app)/         # Páginas
 │   │       ├── library/
 │   │       ├── creator/
 │   │       └── study/
 │   │
 │   ├── components/        # Componentes React
+│   │   ├── flashcard-view.tsx
+│   │   ├── quiz-view.tsx
+│   │   ├── roleplay-view.tsx
+│   │   ├── voice-practice-view.tsx
 │   │   ├── tts-button.tsx
-│   │   ├── settings-modal.tsx
-│   │   └── ...
+│   │   └── ui/            # shadcn/ui components
 │   │
-│   ├── contexts/         # React contexts
-│   └── hooks/          # Custom hooks
+│   ├── contexts/          # React contexts
+│   ├── hooks/             # Custom hooks
+│   └── lib/
+│       ├── types.ts       # TypeScript interfaces
+│       ├── srs.ts        # SM-2 algorithm
+│       └── utils.ts
 │
-├── tts/                  # Servidor Piper
-│   ├── server.py
-│   └── models/
+├── tts/                   # Servidor Piper
+│   └── server.py
 │
-└── models/               # Modelos descargados
+├── voice-eval/            # Voice Evaluation API
+│   ├── main_api.py        # FastAPI server
+│   ├── voxmlx_server.py
+│   └── src/
+│       └── ai/
+│           ├── types.py
+│           └── evaluators/
+│               ├── base.py
+│               ├── factory.py
+│               ├── mfa_eval.py
+│               └── voxmlx_eval.py
+│
+└── models/                # Modelos descargados
     └── Voxtral-4B-TTS/
 ```
 
@@ -567,39 +593,81 @@ genki/
 # 1. Activar conda
 source ~/miniforge3/etc/profile.d/conda.sh
 
-# 2. Iniciar servidores TTS
-conda activate voxtral_audio
-python /Volumes/Rafa\ HD/Freelances/genki/audio_server.py &
-conda activate genki
-python /Volumes/Rafa\ HD/Freelances/genki/tts/server.py &
+# 2. Crear entornos
+conda env create -f environment.yml
 
-# 3. Asegurar LM Studio corriendo en :1234
+# 3. Iniciar servidores TTS
+./start-servers.sh start
 
-# 4. Iniciar Genki
-cd /Volumes/Rafa\ HD/Freelances/genki
+# 4. Asegurar LM Studio corriendo en :1234
+#    (o usar LLM_PROVIDER=cloud en .env.local)
+
+# 5. Iniciar Genki
 npm run dev
+# App: http://localhost:9002
 
 # ===== COMANDOS ÚTILES =====
 
 # Ver puertos en uso
-lsof -i :8000 -i :8080 -i :1234 -i :9002
+lsof -i :8000 -i :8080 -i :8880 -i :10301 -i :1234 -i :9002
 
-# Reiniciar servidor TTS
-pkill -f audio_server
-conda activate voxtral_audio
-python audio_server.py
+# Estado de servidores
+./start-servers.sh status
 
-# Verificar servicios
+# Reiniciar servidores
+./start-servers.sh restart
+
+# Ver logs
+tail -f /tmp/voxtral.log
+tail -f /tmp/piper.log
+tail -f /tmp/voice-eval.log
+
+# Health checks
 curl http://localhost:8000/health   # Voxtral
 curl http://localhost:8080/health   # Piper
-curl http://localhost:1234/v1/models  # LM Studio
+curl http://localhost:8880/health   # Kokoro
+curl http://localhost:10301/health  # Voice Eval
+curl http://localhost:1234/v1/models # LM Studio
+```
 
-# Limpiar cache Next.js
-rm -rf /Volumes/Rafa\ HD/Freelances/genki/.next
+---
+
+## Data Models
+
+### Card
+```typescript
+interface Card {
+  front: string;        // English chunk
+  back: string;         // Spanish translation / original
+  ipa: string;          // IPA pronunciation
+  spanish_ipa: string; // Spanish-friendly phonetic
+  explanation: string;  // Grammar explanation (Spanish)
+  srs: SrsData;         // Spaced repetition data
+  voice?: string;       // TTS voice assignment
+}
+```
+
+### Deck
+```typescript
+interface Deck {
+  id: string;
+  name: string;
+  cards: Card[];
+  createdAt: string;
+  sourceText: string;
+  sourceImages?: string[];
+  cefrLevel?: string;   // A1-C2 classification
+}
+```
+
+### UserProfile
+```typescript
+interface UserProfile {
+  level: number;
+  xp: number;
+}
 ```
 
 ---
 
 **¡Listo!** Ahora tienes un sistema completo de aprendizaje de idiomas con IA local. 🚀
-
-Para dúvidas adicionales, consulta las secciones relevantes de este manual o Abre un issue en el repositorio.
