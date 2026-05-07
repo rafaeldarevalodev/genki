@@ -7,6 +7,7 @@ import { getDueCount } from '@/lib/srs';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useSettings } from '@/hooks/use-settings';
+import AudioPlayer from './audio-player';
 
 interface VoicePracticeViewProps {
   deck: Deck;
@@ -55,6 +56,7 @@ export default function VoicePracticeView({ deck, onSessionEnd }: VoicePracticeV
   const [currentCard, setCurrentCard] = useState<Card | null>(null);
   const [referenceAudioUrl, setReferenceAudioUrl] = useState<string | null>(null);
   const [recordedAudioUrl, setRecordedAudioUrl] = useState<string | null>(null);
+  const [playingRecorded, setPlayingRecorded] = useState(false);
   const [isLoadingReference, setIsLoadingReference] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isEvaluating, setIsEvaluating] = useState(false);
@@ -146,6 +148,18 @@ export default function VoicePracticeView({ deck, onSessionEnd }: VoicePracticeV
       return;
     }
     
+    // Si settings no loaded, usar valores por defecto en lugar de mostrar error
+    const provider = settings?.ttsProvider || 'piper';
+    const voice = provider === 'voxtral' 
+      ? settings?.lmstudioVoice || 'en_us_aria'
+      : provider === 'kokoro'
+        ? settings?.kokoroVoice || 'af_bella'
+        : settings?.voice || 'en_GB-alan-medium';
+    const baseUrl = provider === 'voxtral' ? 'http://localhost:8000' 
+                : provider === 'kokoro' ? 'http://localhost:8880' 
+                : 'http://localhost:8080';
+    const playbackSpeed = settings?.playbackSpeed || 1;
+    
     setIsLoadingReference(true);
     setError(null);
     
@@ -161,24 +175,9 @@ export default function VoicePracticeView({ deck, onSessionEnd }: VoicePracticeV
       setReferenceAudioUrl(null);
     }
     
-    // Wait for settings to load
-    if (!settingsLoaded || !settings) {
-      setError('Settings not loaded');
-      return;
-    }
-    
-    // Get TTS config from settings
-    const provider = settings.ttsProvider;
+    // Get TTS config from settings (fallback values)
     const useVoxtral = provider === 'voxtral';
     const useKokoro = provider === 'kokoro';
-    const baseUrl = useVoxtral ? 'http://localhost:8000' : useKokoro ? 'http://localhost:8880' : 'http://localhost:8080';
-    
-    // Get voice from settings
-    const voice = useVoxtral 
-      ? settings.lmstudioVoice 
-      : useKokoro 
-        ? settings.kokoroVoice 
-        : settings.voice;
     
     let apiUrl: string;
     let requestBody: Record<string, unknown>;
@@ -569,53 +568,28 @@ export default function VoicePracticeView({ deck, onSessionEnd }: VoicePracticeV
 
             {/* Play recorded audio button */}
             {recordedAudioUrl && !isRecording && !result && (
-              <button
-                onClick={() => {
-                  if (audioPlaybackRef.current) {
-                    audioPlaybackRef.current.play();
-                  }
-                }}
-                className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center hover:bg-emerald-200 transition-all"
-                title="Play your recording"
-              >
-                <Volume2 size={24} />
-              </button>
+              <div className="mt-4">
+                <AudioPlayer 
+                  audioUrl={recordedAudioUrl} 
+                  onClose={() => setPlayingRecorded(false)}
+                />
+              </div>
             )}
           </div>
-
-          {/* Hidden audio player for recording playback */}
-          {recordedAudioUrl && (
-            <audio 
-              ref={audioPlaybackRef} 
-              src={recordedAudioUrl} 
-              controls 
-              className="hidden"
-            />
-          )}
 
           {/* Result */}
           {result && result.score !== undefined && (
             <div className="space-y-6 animate-in fade-in">
-              {/* Recording playback button */}
+              {/* Audio player for recording */}
               {recordedAudioUrl && (
-                <div className="flex justify-center">
-                  <button
-                    onClick={() => audioPlaybackRef.current?.play()}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-100 text-emerald-700 rounded-full hover:bg-emerald-200 transition-all font-bold"
-                  >
-                    <Volume2 size={20} />
-                    Reproducir mi grabación
-                  </button>
+                <div className="mt-4">
+                  <AudioPlayer 
+                    audioUrl={recordedAudioUrl} 
+                    onClose={() => setPlayingRecorded(false)}
+                  />
                 </div>
               )}
               
-              <audio 
-                ref={audioPlaybackRef} 
-                src={recordedAudioUrl || undefined} 
-                className="hidden"
-              />
-              
-              {/* Score display */}
               <div className={cn('text-center space-y-2', getScoreColor(result.score))}>
                 <div className="text-6xl font-black">
                   {result.score}%

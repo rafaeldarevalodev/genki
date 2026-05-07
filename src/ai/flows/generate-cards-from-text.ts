@@ -89,7 +89,7 @@ export async function generateCardsFromText(input: GenerateCardsFromTextInput): 
   try {
     const result = await callAI(prompt, {
       temperature: 0.7,
-      maxTokens: 64000
+      maxTokens: 16000
     });
 
     const content = result || '';

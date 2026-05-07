@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useCallback, useState } from 'react';
-import { Play, Pause, Download, Volume2, Loader2 } from 'lucide-react';
+import { Play, Pause, Download, Loader2 } from 'lucide-react';
 import WaveSurfer from 'wavesurfer.js';
 
 interface AudioPlayerProps {
@@ -20,6 +20,7 @@ export default function AudioPlayer({ audioUrl, onClose }: AudioPlayerProps) {
   useEffect(() => {
     if (!containerRef.current || !audioUrl) return;
 
+    let isMounted = true;
     setIsLoading(true);
 
     const ws = WaveSurfer.create({
@@ -30,22 +31,24 @@ export default function AudioPlayer({ audioUrl, onClose }: AudioPlayerProps) {
       barWidth: 2,
       barRadius: 2,
       height: 50,
-      responsive: true,
       normalize: true,
     });
 
     ws.load(audioUrl);
 
     ws.on('ready', () => {
+      if (!isMounted) return;
       setIsLoading(false);
       setDuration(ws.getDuration());
     });
 
-    ws.on('audioprocess', () => {
+    ws.on('timeupdate', () => {
+      if (!isMounted) return;
       setCurrentTime(ws.getCurrentTime());
     });
 
-    ws.on('seek', () => {
+    ws.on('seeking', () => {
+      if (!isMounted) return;
       setCurrentTime(ws.getCurrentTime());
     });
 
@@ -59,7 +62,8 @@ export default function AudioPlayer({ audioUrl, onClose }: AudioPlayerProps) {
     wavesurferRef.current = ws;
 
     return () => {
-      ws.destroy();
+      isMounted = false;
+      wavesurferRef.current = null;
     };
   }, [audioUrl]);
 
