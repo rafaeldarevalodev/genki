@@ -19,7 +19,8 @@ import type { Card, Deck } from '@/lib/types';
 export async function generateCardsAction(
   deckName: string,
   text: string,
-  images: string[]
+  images: string[],
+  mode: 'words' | 'chunks' = 'chunks'
 ): Promise<Deck | { error: string }> {
   try {
     let cefrLevel: string | undefined = undefined;
@@ -32,7 +33,7 @@ export async function generateCardsAction(
       }
     }
 
-    const result = await generateCardsFromText({ text, images });
+    const result = await generateCardsFromText({ text, images, mode });
 
     if (!result || !result.cards || result.cards.length === 0) {
       throw new Error('AI failed to generate cards or the result was empty.');

@@ -6,6 +6,7 @@ import { callAIWithContext } from '@/ai/llm';
 const GenerateCardsFromTextInputSchema = z.object({
   text: z.string(),
   images: z.array(z.string()).optional(),
+  mode: z.enum(['words', 'chunks']).optional().default('chunks'),
 });
 export type GenerateCardsFromTextInput = z.infer<typeof GenerateCardsFromTextInputSchema>;
 
@@ -82,12 +83,58 @@ Output:
   }
 ]`;
 
+const WORDS_SYSTEM_PROMPT = `Eres un experto en extracción de vocabulario para estudiantes hispanohablantes.
+
+### INSTRUCCIONES:
+1. Extrae SOLO palabras individuales - NO frases, NO expresiones de múltiples palabras.
+2. Cada entrada debe ser una sola palabra en inglés.
+3. El campo "spanish_phonetic" debe representar cómo suena la palabra en inglés usando fonética española (NO la traducción).
+4. Los campos "back" y "explanation" deben estar en español.
+
+### FORMATO DE SALIDA:
+Retorna SOLO un array JSON de objetos. Sin texto conversacional.
+Estructura:
+[
+  {
+    "front": "word",
+    "back": "traducción / word",
+    "ipa": "/pronunciación IPA/",
+    "spanish_phonetic": "como suena en español",
+    "explanation": "breve explicación en español"
+  }
+]
+
+### EJEMPLO:
+Input: "The weather is nice today"
+Output:
+[
+  {
+    "front": "weather",
+    "back": "clima / weather",
+    "ipa": "/ˈweðər/",
+    "spanish_phonetic": "wéder",
+    "explanation": "Estado de la atmósfera en un momento dado."
+  },
+  {
+    "front": "nice",
+    "back": "bueno / nice",
+    "ipa": "/naɪs/",
+    "spanish_phonetic": "náis",
+    "explanation": "Algo agradable, agradable a los sentidos."
+  }
+]`;
+
 
 export async function generateCardsFromText(input: GenerateCardsFromTextInput): Promise<GenerateCardsFromTextOutput> {
-  const prompt = `Extract vocabulary from:\n\n${input.text}\n\nReturn JSON array: [{"front": "word", "back": "traducción / word", "ipa": "/pronunciation...", "spanish_ipa": "/pron...", "explanation": "meaning"}]`;
+  const mode = input.mode || 'chunks';
+  const systemPrompt = mode === 'words' ? WORDS_SYSTEM_PROMPT : SYSTEM_PROMPT;
+  
+  const prompt = mode === 'words'
+    ? `Extrae vocabulario del siguiente texto:\n\n${input.text}\n\nRetorna JSON array: [{"front": "word", "back": "traducción / word", "ipa": "/...", "spanish_ipa": "...", "explanation": "..."}]`
+    : `Extract vocabulary from:\n\n${input.text}\n\nReturn JSON array: [{"front": "word", "back": "traducción / word", "ipa": "/pronunciation...", "spanish_ipa": "/pron...", "explanation": "meaning"}]`;
 
   try {
-    const result = await callAIWithContext(SYSTEM_PROMPT, prompt, {
+    const result = await callAIWithContext(systemPrompt, prompt, {
       temperature: 0.7,
       maxTokens: 16000
     });
