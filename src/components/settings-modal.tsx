@@ -236,6 +236,8 @@ export function SettingsModal() {
     { id: 'en-Frank_man', name: 'Frank (Male)', accent: 'US', source: 'preset' },
     { id: 'en-Sara_woman', name: 'Sara (Female)', accent: 'Custom', source: 'preset' },
     { id: 'en-Max_man', name: 'Max (Male)', accent: 'Custom', source: 'preset' },
+    { id: 'en-July_Sexy_woman', name: 'July (Female)', accent: 'US', source: 'preset' },
+    { id: 'en-Jane_woman', name: 'Jane (Female)', accent: 'US', source: 'preset' },
   ];
 
   const lmStudioVoices = [

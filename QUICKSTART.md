@@ -6,7 +6,7 @@
 - Node.js 20+
 - Python 3.11+
 - Conda (Miniforge3)
-- LM Studio (para modelos IA locales, opcional)
+- Cloud LLM API (Groq/Mistral) - opcional para local
 
 ## Instalación Rápida
 
@@ -41,6 +41,18 @@ npm run dev
 # Editar .env.local y configurar:
 # LLM_PROVIDER=cloud
 # CLOUD_API_KEY=tu-api-key
+# TTS_PROVIDER=vibevoice7b
+```
+
+**VibeVoice 7B (Voice Cloning):**
+```bash
+# Activar entorno
+conda activate vibevoice7b
+
+# Iniciar servidor (puerto 8091)
+python vibevoice7b_server.py
+
+# Agregar voces custom desde Settings > TTS
 ```
 
 ## Comandos
@@ -67,18 +79,20 @@ npm run dev
 | Voxtral TTS | 8000 | `/health` |
 | Piper TTS | 8080 | `/health` |
 | VibeVoice TTS | 8090 | `/health` |
+| VibeVoice 7B TTS | 8091 | `/health` |
 | Kokoro TTS | 8880 | `/health` |
 | Voice Eval | 10301 | `/health` |
-| LM Studio | 1234 | `/v1/models` |
+| Cloud LLM | 443 | - |
 
 ## Features TTS
 
-| Proveedor | Puerto | Modelo | Latencia | Voces |
-|----------|--------|--------|----------|-------|
-| Voxtral | 8000 | Voxtral-4B | ~2s | 5 |
-| VibeVoice | 8090 | VibeVoice-0.5B | ~300ms | 10 |
-| Kokoro | 8880 | Kokoro-7B | ~1s | 10+ |
-| Piper | 8080 | Piper | ~0.5s | 3 |
+| Proveedor | Puerto | Modelo | Latencia | Voces | Voice Cloning |
+|----------|--------|--------|----------|-------|---------------|
+| VibeVoice 7B | 8091 | VibeVoice-7B | ~1s | 8+ | ✅ Yes |
+| Voxtral | 8000 | Voxtral-4B | ~2s | 5 | ❌ No |
+| VibeVoice | 8090 | VibeVoice-0.5B | ~300ms | 10 | ❌ No |
+| Kokoro | 8880 | Kokoro-7B | ~1s | 10+ | ❌ No |
+| Piper | 8080 | Piper | ~0.5s | 3 | ❌ No |
 
 ## Problemas Comunes
 

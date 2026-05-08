@@ -1,7 +1,7 @@
 'use server';
 
 import { z } from 'genkit';
-import { callAI } from '@/ai/llm';
+import { callAIWithContext } from '@/ai/llm';
 
 const GenerateCardsFromTextInputSchema = z.object({
   text: z.string(),
@@ -87,7 +87,7 @@ export async function generateCardsFromText(input: GenerateCardsFromTextInput): 
   const prompt = `Extract vocabulary from:\n\n${input.text}\n\nReturn JSON array: [{"front": "word", "back": "traducción / word", "ipa": "/pronunciation...", "spanish_ipa": "/pron...", "explanation": "meaning"}]`;
 
   try {
-    const result = await callAI(prompt, {
+    const result = await callAIWithContext(SYSTEM_PROMPT, prompt, {
       temperature: 0.7,
       maxTokens: 16000
     });

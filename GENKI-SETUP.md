@@ -233,6 +233,11 @@ pip install mlx-audio "mistral-common[audio]"
 conda create -n voice_eval python=3.11 -y
 conda activate voice_eval
 pip install fastapi uvicorn python-multipart soundfile sounddevice httpx pydantic voxmlx numpy
+
+# 7. Crear entorno para VibeVoice 7B (voice cloning, ~22GB RAM)
+conda create -n vibevoice7b python=3.13 -y
+conda activate vibevoice7b
+pip install mlx huggingface_hub[hf_xet] soundfile numpy
 ```
 
 🔍 **Verificación:** Ejecuta `conda env list` y debes ver:
@@ -240,6 +245,7 @@ pip install fastapi uvicorn python-multipart soundfile sounddevice httpx pydanti
 genki
 voxtral_audio
 voice_eval
+vibevoice7b
 base
 ```
 
@@ -287,9 +293,9 @@ curl -L -o en_GB-alan-medium.onnx.json "https://huggingface.co/rhasspy/piper-voi
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                      │
 │  ┌────────────────┐         ┌────────────────┐                    │
-│  │   NAVEGADOR    │         │  LM STUDIO     │                    │
-│  │   (Chrome)    │◄───────►│   (IA)        │                    │
-│  │  :9002         │         │   :1234        │                    │
+│  │   NAVEGADOR    │         │  CLOUD API    │                    │
+│  │   (Chrome)    │◄───────►│ (Groq/Mistral)│                    │
+│  │  :9002         │         │   :443         │                    │
 │  └───────┬────────┘         └────────┬───────┘                    │
 │          │                            │                              │
 │          │ HTTP                      │ HTTP                         │
@@ -303,9 +309,9 @@ curl -L -o en_GB-alan-medium.onnx.json "https://huggingface.co/rhasspy/piper-voi
 │          │                 │                 │                  │
 │          ▼                 ▼                 ▼                  │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐          │
-│  │   VOXTRAL  │  │   PIPER    │  │  VOICE      │          │
-│  │   TTS      │  │   TTS      │  │  EVAL       │          │
-│  │   :8000    │  │   :8080    │  │  :10301     │          │
+│  │   VOXTRAL  │  │  VIBEVOICE  │  │   KOKORO   │          │
+│  │   TTS      │  │   7B        │  │   TTS      │          │
+│  │   :8000    │  │   :8091     │  │   :8880    │          │
 │  └─────────────┘  └─────────────┘  └─────────────┘          │
 │                                                                      │
 └──────────────────────────────────────────────────────────────────────┘
@@ -316,9 +322,12 @@ curl -L -o en_GB-alan-medium.onnx.json "https://huggingface.co/rhasspy/piper-voi
 | Puerto | Servicio | ¿Para qué sirve? |
 |--------|----------|-------------------|
 | **9002** | Next.js | La aplicación web que ves en el navegador |
-| **1234** | LM Studio | El modelo de IA que entiende y genera texto |
-| **8000** | Voxtral TTS | Generación de voz (más realista) |
+| **443** | Cloud LLM API | Modelos de IA en la nube (Groq/Mistral) |
+| **8000** | Voxtral TTS | Generación de voz (Apple Silicon) |
 | **8080** | Piper TTS | Generación de voz (más rápido, backup) |
+| **8880** | Kokoro TTS | Generación de voz (alternativo) |
+| **8090** | VibeVoice TTS | TTS realtime (Microsoft 0.5B, ~300ms) |
+| **8091** | VibeVoice 7B TTS | TTS con voice cloning (Microsoft 7B) |
 | **10301** | Voice Eval | Evalúa tu pronunciación |
 
 ### 💡 Analogía
@@ -329,8 +338,8 @@ Imagina que es un restaurante:
 |------------|----------------------|
 | **Navegador** | El cliente que hace el pedido |
 | **Next.js (:9002)** | El mesero que recibe el pedido |
-| **LM Studio (:1234)** | El chef que prepara la comida (piensa) |
-| **Voxtral/Piper (:8000/:8080)** | El anfitrión que habla (voz) |
+| **Cloud LLM API (:443)** | El chef que prepara la comida (piensa) |
+| **VibeVoice 7B (:8091)** | El anfitrión que habla (voz con cloning) |
 | **Voice Eval (:10301)** | El profesor que escucha tu práctica |
 
 ---
@@ -403,6 +412,7 @@ source ~/miniforge3/etc/profile.d/conda.sh
 ```
 [INFO] Starting Voxtral TTS...
 [INFO] Starting Piper TTS...
+[INFO] Starting VibeVoice 7B TTS...
 [INFO] Starting Voice Eval...
 ```
 
@@ -414,7 +424,7 @@ Para verificar que todo esté funcionando, ejecuta:
 
 ```bash
 # Ver todos los puertos
-lsof -i :8000 -i :8080 -i :9002 -i :10301 -i :1234
+lsof -i :8000 -i :8080 -i :8880 -i :8090 -i :8091 -i :9002 -i :10301
 ```
 
 Deberías ver algo como:
@@ -424,8 +434,10 @@ COMMAND   PID   USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
 node    12345  rafael    IPv4 0x...  localhost:9002 (LISTEN)
 python  12346  rafael    IPv4 0x...  localhost:8000 (LISTEN)
 python  12347  rafael    IPv4 0x...  localhost:8080 (LISTEN)
-python  12348  rafael    IPv4 0x...  localhost:10301 (LISTEN)
-LM\x20  12349  rafael    IPv4 0x...  localhost:1234 (LISTEN)
+python  12348  rafael    IPv4 0x...  localhost:8880 (LISTEN)
+python  12349  rafael    IPv4 0x...  localhost:8090 (LISTEN)
+python  12350  rafael    IPv4 0x...  localhost:8091 (LISTEN)
+python  12351  rafael    IPv4 0x...  localhost:10301 (LISTEN)
 ```
 
 ---

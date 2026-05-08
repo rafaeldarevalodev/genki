@@ -35,6 +35,7 @@ VOICES = [
     "en-Grace_woman",
     "en-Mike_man",
     "en-Frank_man",
+    "en-July_Sexy_woman"
 ]
 
 # Estado global
