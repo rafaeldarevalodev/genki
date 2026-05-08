@@ -138,9 +138,31 @@ export async function evaluateRoleplayAction(
 
 export async function getTTSAudio(text: string, voice?: string, provider?: string): Promise<{media: string} | null> {
   try {
-    // Normalize provider: 'voxtral' or 'piper'
-    const validProvider = (provider === 'voxtral' ? 'voxtral' : 'piper');
-    const input = { text, provider: validProvider, voice: voice };
+    // Normalize provider
+    const validProvider = (provider === 'voxtral' || provider === 'piper' || provider === 'kokoro' || provider === 'vibevoice' || provider === 'vibevoice7b')
+      ? provider as 'piper' | 'voxtral' | 'kokoro' | 'vibevoice' | 'vibevoice7b'
+      : 'kokoro';
+
+    // For vibevoice7b, check if it's a user voice and get reference audio data
+    let referenceAudioData: string | undefined;
+    if (validProvider === 'vibevoice7b' && voice?.startsWith('user_')) {
+      if (typeof window !== 'undefined') {
+        try {
+          const stored = localStorage.getItem('vibevoice7b_user_voices');
+          if (stored) {
+            const userVoices = JSON.parse(stored);
+            const userVoice = userVoices.find((v: {id: string, data: string}) => v.id === voice);
+            if (userVoice) {
+              referenceAudioData = userVoice.data;
+            }
+          }
+        } catch (e) {
+          console.error('Failed to load user voice from localStorage:', e);
+        }
+      }
+    }
+
+    const input = { text, provider: validProvider, voice, referenceAudioData };
     const result = await textToSpeech(input);
     return result;
   } catch (err) {

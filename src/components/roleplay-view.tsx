@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Send, MessageSquare, LineChart, Trophy, Volume2, Loader2 } from 'lucide-react';
+import { Send, MessageSquare, LineChart, Trophy, Volume2, Loader2, CheckCircle2 } from 'lucide-react';
 import { startRoleplayAction, continueRoleplayAction, evaluateRoleplayAction, getTTSAudio } from '@/app/actions';
 import { useSettings } from '@/hooks/use-settings';
 import { useDecks } from '@/hooks/use-decks';
@@ -112,9 +112,13 @@ export default function RoleplayView({ deck }: RoleplayViewProps) {
         const provider = settings.ttsProvider;
         const voice = provider === 'voxtral' 
           ? settings.lmstudioVoice 
-          : provider === 'kokoro' 
-            ? settings.kokoroVoice 
-            : settings.voice;
+          : provider === 'kokoro'
+            ? settings.kokoroVoice
+            : provider === 'vibevoice'
+              ? settings.vibevoiceVoice
+              : provider === 'vibevoice7b'
+                ? settings.vibevoice7bVoice
+                : settings.voice;
         const cacheKey = `genki_audio_roleplay_${provider}_${voice}_${btoa(unescape(encodeURIComponent(text))).slice(0, 32)}`;
         let audioDataUrl = localStorage.getItem(cacheKey);
 

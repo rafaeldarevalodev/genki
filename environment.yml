@@ -44,3 +44,30 @@ dependencies:
     - pydantic>=2.0
     - voxmlx>=0.0.2
     - numpy>=1.24.0
+
+---
+name: vibevoice
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+    - mlx-audio
+    - "mistral-common[audio]"
+    - numpy>=1.24.0
+
+---
+name: vibevoice7b
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+    - mlx
+    - huggingface_hub[hf_xet]
+    - numpy>=1.24.0
+    - soundfile>=0.12.0

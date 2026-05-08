@@ -66,21 +66,19 @@ npm run dev
 | Next.js | 9002 | - |
 | Voxtral TTS | 8000 | `/health` |
 | Piper TTS | 8080 | `/health` |
+| VibeVoice TTS | 8090 | `/health` |
 | Kokoro TTS | 8880 | `/health` |
 | Voice Eval | 10301 | `/health` |
 | LM Studio | 1234 | `/v1/models` |
 
-## Features IA
+## Features TTS
 
-| Feature | Descripción |
-|---------|-------------|
-| Flashcard Generation | Extrae vocabulario de texto |
-| Quiz | Preguntas de opción múltiple |
-| Roleplay | Conversación con tutor IA |
-| Voice Practice | Evaluación de pronunciación |
-| CEFR Classification | Clasificación de nivel (A1-C2) |
-| Phrase Explorer | Feedback educativo |
-| TTS | Pronunciación nativa (3 proveedores) |
+| Proveedor | Puerto | Modelo | Latencia | Voces |
+|----------|--------|--------|----------|-------|
+| Voxtral | 8000 | Voxtral-4B | ~2s | 5 |
+| VibeVoice | 8090 | VibeVoice-0.5B | ~300ms | 10 |
+| Kokoro | 8880 | Kokoro-7B | ~1s | 10+ |
+| Piper | 8080 | Piper | ~0.5s | 3 |
 
 ## Problemas Comunes
 

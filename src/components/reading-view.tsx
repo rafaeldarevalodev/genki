@@ -32,10 +32,14 @@ export default function ReadingView({ deck }: ReadingViewProps) {
     try {
       const provider = settings.ttsProvider;
       const voice = provider === 'kokoro' 
-        ? settings.kokoroVoice 
-        : provider === 'voxtral' 
-          ? settings.lmstudioVoice 
-          : settings.voice;
+        ? settings.kokoroVoice
+        : provider === 'voxtral'
+          ? settings.lmstudioVoice
+          : provider === 'vibevoice'
+            ? settings.vibevoiceVoice
+            : provider === 'vibevoice7b'
+              ? settings.vibevoice7bVoice
+              : settings.voice;
       
       const result = await getTTSAudio(deck.sourceText, voice, provider);
       

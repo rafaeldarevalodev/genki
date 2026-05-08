@@ -29,7 +29,7 @@ function reloadEnv(): Record<string, string> {
 const ENV = loadEnv();
 
 export type LLMProvider = 'local' | 'cloud';
-export type TTSProvider = 'piper' | 'voxtral' | 'kokoro';
+export type TTSProvider = 'piper' | 'voxtral' | 'kokoro' | 'vibevoice' | 'vibevoice7b';
 export type LocalModelName = 'gemma' | 'voxtral';
 
 const LOCAL_MODEL_MAP: Record<LocalModelName, string> = {
@@ -101,7 +101,15 @@ export function getTTSConfig(): TTSConfig {
   if (provider === 'kokoro') {
     return getKokoroConfig();
   }
-  
+
+  if (provider === 'vibevoice') {
+    return getVibeVoiceConfig();
+  }
+
+  if (provider === 'vibevoice7b') {
+    return getVibeVoice7BConfig();
+  }
+
   return {
     provider: 'voxtral',
     endpoint: 'http://localhost:8000',
@@ -116,6 +124,24 @@ export function getKokoroConfig(): TTSConfig {
     provider: 'kokoro',
     endpoint: env.TTS_KOKORO_BASE_URL || 'http://localhost:8880',
     voice: env.TTS_KOKORO_VOICE || 'af_bella',
+  };
+}
+
+export function getVibeVoiceConfig(): TTSConfig {
+  const env = reloadEnv();
+  return {
+    provider: 'vibevoice',
+    endpoint: env.TTS_VIBEVOICE_BASE_URL || 'http://localhost:8090',
+    voice: env.TTS_VIBEVOICE_VOICE || 'en-Emma_woman',
+  };
+}
+
+export function getVibeVoice7BConfig(): TTSConfig {
+  const env = reloadEnv();
+  return {
+    provider: 'vibevoice7b',
+    endpoint: env.TTS_VIBEVOICE7B_BASE_URL || 'http://localhost:8091',
+    voice: env.TTS_VIBEVOICE7B_VOICE || 'en-Emma_woman',
   };
 }
 

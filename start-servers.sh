@@ -5,11 +5,14 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+PROJECT_DIR="$SCRIPT_DIR"
 
 # Puertos
 VOXTRAL_PORT=8000
 PIPER_PORT=8080
+KOKORO_PORT=8880
+VIBEVOICE_PORT=8090
+VIBEVOICE7B_PORT=8091
 VOICE_EVAL_PORT=10301
 LMSTUDIO_PORT=1234
 NEXT_PORT=9002
@@ -138,11 +141,68 @@ start_voice_eval() {
     fi
 }
 
+start_vibevoice() {
+    if check_port $VIBEVOICE_PORT; then
+        log_warn "VibeVoice ya corre en puerto $VIBEVOICE_PORT"
+        return
+    fi
+    
+    log_info "Iniciando VibeVoice TTS (puerto $VIBEVOICE_PORT)..."
+    
+    cd "$PROJECT_DIR"
+    
+    conda activate voxtral_audio 2>/dev/null || {
+        log_warn "Entorno voxtral_audio no existe, usando genki"
+        conda activate genki 2>/dev/null || {
+            log_error "No hay entorno conda disponible"
+            exit 1
+        }
+    }
+    
+    nohup python vibevoice_server.py > /tmp/vibevoice.log 2>&1 &
+    VIBEVOICE_PID=$!
+    
+    sleep 3
+    
+    if check_port $VIBEVOICE_PORT; then
+        log_info "VibeVoice iniciado (PID: $VIBEVOICE_PID)"
+    else
+        log_error "Error initiating VibeVoice. Ver /tmp/vibevoice.log"
+    fi
+}
+
+start_vibevoice7b() {
+    if check_port $VIBEVOICE7B_PORT; then
+        log_warn "VibeVoice-7B ya corre en puerto $VIBEVOICE7B_PORT"
+        return
+    fi
+
+    log_info "Iniciando VibeVoice-7B TTS (puerto $VIBEVOICE7B_PORT)..."
+
+    cd "$PROJECT_DIR"
+
+    conda activate vibevoice7b 2>/dev/null || {
+        log_error "Entorno vibevoice7b no existe. Crear con:"
+        echo "  conda env create -f environment.yml"
+        return
+    }
+
+    nohup python vibevoice7b_server.py > /tmp/vibevoice7b.log 2>&1 &
+    VIBEVOICE7B_PID=$!
+
+    sleep 5
+
+    if check_port $VIBEVOICE7B_PORT; then
+        log_info "VibeVoice-7B iniciado (PID: $VIBEVOICE7B_PID)"
+    else
+        log_error "Error initiating VibeVoice-7B. Ver /tmp/vibevoice7b.log"
+    fi
+}
+
 stop_all() {
     log_info "Deteniendo servidores..."
-    
-    # Matar procesos por puerto
-    for port in $VOXTRAL_PORT $PIPER_PORT $VOICE_EVAL_PORT $NEXT_PORT; do
+
+    for port in $VOXTRAL_PORT $PIPER_PORT $KOKORO_PORT $VIBEVOICE_PORT $VIBEVOICE7B_PORT $VOICE_EVAL_PORT $NEXT_PORT; do
         PIDS=$(lsof -ti :$port 2>/dev/null) || continue
         if [ -n "$PIDS" ]; then
             echo "$PIDS" | xargs kill -9 2>/dev/null || true
@@ -155,7 +215,7 @@ status_all() {
     echo "=== Estado de Servicios ==="
     echo ""
     
-    for port in $VOXTRAL_PORT $PIPER_PORT $VOICE_EVAL_PORT $LMSTUDIO_PORT $NEXT_PORT; do
+    for port in $VOXTRAL_PORT $PIPER_PORT $KOKORO_PORT $VIBEVOICE_PORT $VIBEVOICE7B_PORT $VOICE_EVAL_PORT $LMSTUDIO_PORT $NEXT_PORT; do
         if check_port $port; then
             echo -e "${GREEN}✓${NC} Puerto $port: ACTIVO"
         else
@@ -180,6 +240,8 @@ case "${1:-start}" in
         log_info "Iniciando servidores Genki Sensei..."
         start_voxtral
         start_piper
+        start_vibevoice
+        start_vibevoice7b
         start_voice_eval
         # start_next  # Descomenta si quieres iniciar Next.js también
         echo ""

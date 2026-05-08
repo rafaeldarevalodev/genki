@@ -5,8 +5,9 @@ import { getTTSConfig } from '@/ai/llm';
 
 const TextToSpeechInputSchema = z.object({
   text: z.string(),
-  provider: z.enum(['piper', 'voxtral', 'kokoro']).optional(),
+  provider: z.enum(['piper', 'voxtral', 'kokoro', 'vibevoice', 'vibevoice7b']).optional(),
   voice: z.string().optional(),
+  referenceAudioData: z.string().optional(),
 });
 export type TextToSpeechInput = z.infer<typeof TextToSpeechInputSchema>;
 
@@ -31,6 +32,17 @@ export async function textToSpeech(input: TextToSpeechInput): Promise<TextToSpee
   if (provider === 'kokoro') {
     const voice = input?.voice || ttsConfig.voice || 'af_bella';
     return textToSpeechKokoro(text, voice);
+  }
+
+  if (provider === 'vibevoice') {
+    const voice = input?.voice || ttsConfig.voice || 'en-Emma_woman';
+    return textToSpeechVibeVoice(text, voice);
+  }
+
+  if (provider === 'vibevoice7b') {
+    const voice = input?.voice || ttsConfig.voice || 'en-Emma_woman';
+    const referenceAudioData = input?.referenceAudioData;
+    return textToSpeechVibeVoice7B(text, voice, referenceAudioData);
   }
   
   // For Voxtral, use lmstudioVoice directly
@@ -159,6 +171,90 @@ async function textToSpeechKokoro(text: string, voice: string): Promise<TextToSp
     return { media: mediaUrl };
   } catch (error) {
     console.error('[textToSpeechKokoro] Error:', error);
+    throw error;
+  }
+}
+
+async function textToSpeechVibeVoice(text: string, voice: string): Promise<TextToSpeechOutput> {
+  const ttsConfig = getTTSConfig();
+  console.log('[textToSpeechVibeVoice] Voice:', voice, 'Endpoint:', ttsConfig.endpoint);
+
+  try {
+    const response = await fetch(`${ttsConfig.endpoint}/v1/audio/speech`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        input: text,
+        voice: voice,
+        response_format: 'wav'
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[textToSpeechVibeVoice] Error response:', errorText);
+      throw new Error(`VibeVoice TTS failed: ${response.status} - ${errorText}`);
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
+
+    let binary = '';
+    for (let i = 0; i < uint8Array.length; i++) {
+      binary += String.fromCharCode(uint8Array[i]);
+    }
+    const base64 = btoa(binary);
+    const mediaUrl = `data:audio/wav;base64,${base64}`;
+
+    console.log('[textToSpeechVibeVoice] Generated:', arrayBuffer.byteLength, 'bytes');
+    return { media: mediaUrl };
+  } catch (error) {
+    console.error('[textToSpeechVibeVoice] Error:', error);
+    throw error;
+  }
+}
+
+async function textToSpeechVibeVoice7B(text: string, voice: string, referenceAudioData?: string): Promise<TextToSpeechOutput> {
+  const ttsConfig = getTTSConfig();
+  console.log('[textToSpeechVibeVoice7B] Voice:', voice, 'Endpoint:', ttsConfig.endpoint);
+
+  const requestBody: Record<string, unknown> = {
+    input: text,
+    voice: voice,
+    response_format: 'wav'
+  };
+
+  if (referenceAudioData) {
+    requestBody.reference_audio_data = referenceAudioData;
+  }
+
+  try {
+    const response = await fetch(`${ttsConfig.endpoint}/v1/audio/speech`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(requestBody)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[textToSpeechVibeVoice7B] Error response:', errorText);
+      throw new Error(`VibeVoice-7B TTS failed: ${response.status} - ${errorText}`);
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
+
+    let binary = '';
+    for (let i = 0; i < uint8Array.length; i++) {
+      binary += String.fromCharCode(uint8Array[i]);
+    }
+    const base64 = btoa(binary);
+    const mediaUrl = `data:audio/wav;base64,${base64}`;
+
+    console.log('[textToSpeechVibeVoice7B] Generated:', arrayBuffer.byteLength, 'bytes');
+    return { media: mediaUrl };
+  } catch (error) {
+    console.error('[textToSpeechVibeVoice7B] Error:', error);
     throw error;
   }
 }

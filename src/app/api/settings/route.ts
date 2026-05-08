@@ -8,10 +8,12 @@ interface SettingsData {
   provider?: 'local' | 'cloud';
   localModel?: 'gemma' | 'voxtral';
   cloudModel?: string;
-  ttsProvider?: 'piper' | 'voxtral' | 'kokoro';
+  ttsProvider?: 'piper' | 'voxtral' | 'kokoro' | 'vibevoice' | 'vibevoice7b';
   voice?: string;
   lmstudioVoice?: string;
   kokoroVoice?: string;
+  vibevoiceVoice?: string;
+  vibevoice7bVoice?: string;
   playbackSpeed?: number;
 }
 
@@ -46,10 +48,12 @@ export async function GET() {
       provider: env.LLM_PROVIDER || 'local',
       localModel: env.LOCAL_MODEL_NAME || 'gemma',
       cloudModel: env.CLOUD_MODEL || '',
-      ttsProvider: env.TTS_PROVIDER || 'piper',
+      ttsProvider: env.TTS_PROVIDER || 'kokoro',
       voice: env.TTS_VOICE || 'en_GB-alan-medium',
       lmstudioVoice: env.TTS_VOXTRAL_VOICE || 'en_us_aria',
       kokoroVoice: env.TTS_KOKORO_VOICE || 'af_bella',
+      vibevoiceVoice: env.TTS_VIBEVOICE_VOICE || 'en-Emma_woman',
+      vibevoice7bVoice: env.TTS_VIBEVOICE7B_VOICE || 'en-Emma_woman',
       playbackSpeed: parseFloat(env.TTS_PLAYBACK_SPEED || '1'),
     });
   } catch (error) {
@@ -83,6 +87,12 @@ export async function POST(request: NextRequest) {
     }
     if (data.kokoroVoice) {
       env.TTS_KOKORO_VOICE = data.kokoroVoice;
+    }
+    if (data.vibevoiceVoice) {
+      env.TTS_VIBEVOICE_VOICE = data.vibevoiceVoice;
+    }
+    if (data.vibevoice7bVoice) {
+      env.TTS_VIBEVOICE7B_VOICE = data.vibevoice7bVoice;
     }
     if (data.playbackSpeed) {
       env.TTS_PLAYBACK_SPEED = data.playbackSpeed.toString();

@@ -68,6 +68,7 @@ Genki Sensei es una aplicación web para aprender idiomas mediante flashcards in
 | Voxtral TTS | 8000 | TTS principal (Apple Silicon) |
 | Piper TTS | 8080 | TTS fallback |
 | Kokoro TTS | 8880 | TTS alternativo |
+| VibeVoice TTS | 8090 | TTS realtime (Microsoft) |
 | Voice Eval | 10301 | Evaluación de pronunciación |
 
 ---
@@ -223,7 +224,50 @@ python kokoro_server.py
 - `am_adam`, `am_eric`, `am_fen`, `am_michael`
 - Y muchas más...
 
-### 5.4. Iniciar Todos los Servidores
+### 5.4. VibeVoice TTS (Realtime)
+
+VibeVoice-Realtime es un modelo de síntesis de voz de Microsoft, optimizado para latencia ultra-baja (~300ms).
+
+**Modelo:** `mlx-community/VibeVoice-Realtime-0.5B-4bit` (1.2 GB, MLX)
+
+```bash
+conda activate voxtral_audio
+python vibevoice_server.py
+# Servidor disponible en http://localhost:8090
+```
+
+**API:**
+```
+POST http://localhost:8090/v1/audio/speech
+{
+  "input": "Hello world",
+  "voice": "en-Emma_woman"
+}
+```
+
+**Voces Disponibles:**
+
+| Voz | Descripción |
+|-----|-------------|
+| `en-Emma_woman` | Estadounidense, mujer |
+| `en-Davis_man` | Estadounidense, varón |
+| `en-Carter_man` | Estadounidense, varón formal |
+| `en-Grace_woman` | Estadounidense, mujer joven |
+| `en-Mike_man` | Estadounidense, varón casual |
+| `en-Samuel_man` | Estadounidense, varón |
+| `en-Ashley_woman` | Estadounidense, mujer |
+| `en-Floyd_man` | Estadounidense, varón |
+| `en-Roger_man` | Estadounidense, varón |
+| `en-Sara_woman` | Estadounidense, mujer |
+
+**Características:**
+- Latencia ~300ms (first audio chunk)
+- Single-speaker
+- Max ~10 minutos de audio
+- Soporte MLX (Apple Silicon)
+- English only
+
+### 5.5. Iniciar Todos los Servidores
 
 ```bash
 ./start-servers.sh start
@@ -309,6 +353,7 @@ npm start
 | Voxtral | 8000 | `/v1/audio/speech` | `{"input": "..."}` |
 | Piper | 8080 | `/tts` | `{"text": "...", "voice": "..."}` |
 | Kokoro | 8880 | `/v1/audio/speech` | `{"input": "...", "voice": "..."}` |
+| VibeVoice | 8090 | `/v1/audio/speech` | `{"input": "...", "voice": "..."}` |
 
 ### Voice Evaluation API
 
@@ -419,9 +464,10 @@ Evalúa uso de vocabulario en frases del usuario:
 **Flow:** `src/ai/flows/text-to-speech.ts`
 
 Soporta múltiples proveedores TTS:
-- **Voxtral** (principal, Apple Silicon)
+- **Voxtral** (principal, Apple Silicon, mlx-audio)
 - **Piper** (fallback, ligero)
 - **Kokoro** (alternativo, múltiples voces)
+- **VibeVoice** (realtime, Microsoft, ~300ms latency)
 
 Devuelve audio en formato base64 (data URL).
 
@@ -440,11 +486,13 @@ CLOUD_API_KEY=your-key
 CLOUD_BASE_URL=https://api.groq.com/openai/v1
 
 # TTS Configuration
-TTS_PROVIDER=voxtral        # 'piper', 'voxtral', o 'kokoro'
+TTS_PROVIDER=voxtral        # 'piper', 'voxtral', 'kokoro', o 'vibevoice'
 TTS_ENDPOINT=http://localhost:8080
 TTS_VOICE=en_GB-alan-medium
 TTS_VOXTRAL_VOICE=en_us_aria
 TTS_KOKORO_VOICE=af_bella
+TTS_VIBEVOICE_BASE_URL=http://localhost:8090
+TTS_VIBEVOICE_VOICE=en-Emma_woman
 TTS_PLAYBACK_SPEED=1
 ```
 
@@ -521,6 +569,7 @@ genki/
 ├── .env.local              # Variables de entorno
 ├── audio_server.py        # Servidor Voxtral TTS
 ├── kokoro_server.py       # Servidor Kokoro TTS
+├── vibevoice_server.py    # Servidor VibeVoice TTS
 ├── README.md              # Este manual
 ├── QUICKSTART.md          # Guía rápida
 ├── environment.yml        # Entornos Conda
@@ -620,11 +669,13 @@ lsof -i :8000 -i :8080 -i :8880 -i :10301 -i :1234 -i :9002
 # Ver logs
 tail -f /tmp/voxtral.log
 tail -f /tmp/piper.log
+tail -f /tmp/vibevoice.log
 tail -f /tmp/voice-eval.log
 
 # Health checks
 curl http://localhost:8000/health   # Voxtral
 curl http://localhost:8080/health   # Piper
+curl http://localhost:8090/health   # VibeVoice
 curl http://localhost:8880/health   # Kokoro
 curl http://localhost:10301/health  # Voice Eval
 curl http://localhost:1234/v1/models # LM Studio

@@ -6,10 +6,12 @@ interface Settings {
   provider: 'local' | 'cloud';
   localModel: 'gemma' | 'voxtral';
   cloudModel: string;
-  ttsProvider: 'piper' | 'voxtral' | 'kokoro';
+  ttsProvider: 'piper' | 'voxtral' | 'kokoro' | 'vibevoice' | 'vibevoice7b';
   voice: string;
   lmstudioVoice: string;
   kokoroVoice: string;
+  vibevoiceVoice: string;
+  vibevoice7bVoice: string;
   playbackSpeed: number;
 }
 
@@ -23,10 +25,12 @@ const defaultSettings: Settings = {
   provider: 'local',
   localModel: 'gemma',
   cloudModel: 'llama-3.3-70b-versatile',
-  ttsProvider: 'piper',
+  ttsProvider: 'kokoro',
   voice: 'en_GB-alan-medium',
   lmstudioVoice: 'en_us_aria',
   kokoroVoice: 'af_bella',
+  vibevoiceVoice: 'en-Emma_woman',
+  vibevoice7bVoice: 'en-Emma_woman',
   playbackSpeed: 1,
 };
 
@@ -55,10 +59,12 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           provider: data.provider || 'local',
           localModel: data.localModel || 'gemma',
           cloudModel: data.cloudModel || '',
-          ttsProvider: data.ttsProvider || 'piper',
+          ttsProvider: data.ttsProvider || 'kokoro',
           voice: data.voice || 'en_GB-alan-medium',
           lmstudioVoice: data.lmstudioVoice || 'en_us_aria',
           kokoroVoice: data.kokoroVoice || 'af_bella',
+          vibevoiceVoice: data.vibevoiceVoice || 'en-Emma_woman',
+          vibevoice7bVoice: data.vibevoice7bVoice || 'en-Emma_woman',
           playbackSpeed: data.playbackSpeed || 1,
         });
       }
