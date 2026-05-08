@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Loader2, Volume2 } from 'lucide-react';
 import { getTTSAudio } from '@/app/actions';
 import { useSettings } from '@/hooks/use-settings';
+import { getCachedAudio, setCachedAudio } from '@/utils/audio-cache';
 
 interface TTSButtonProps {
   text: string;
@@ -56,7 +57,27 @@ export default function TTSButton({ text, ipa }: TTSButtonProps) {
             : settings.voice;
     
     console.log('[TTSButton] Using provider:', provider, 'voice:', voice);
-    
+
+    // Check cache first (only for short texts)
+    const cachedAudio = getCachedAudio(text, provider, voice);
+    if (cachedAudio) {
+      console.log('[TTSButton] Using cached audio');
+      const audio = new Audio(cachedAudio);
+      audioRef.current = audio;
+      audio.playbackRate = settings.playbackSpeed || 1;
+      audio.onended = () => {
+        setIsLoading(false);
+        audioRef.current = null;
+      };
+      audio.onerror = () => {
+        setIsLoading(false);
+        audioRef.current = null;
+      };
+      await audio.play();
+      setIsLoading(false);
+      return;
+    }
+
     const requestId = ++currentRequestRef.current;
     
     try {
@@ -67,15 +88,8 @@ export default function TTSButton({ text, ipa }: TTSButtonProps) {
       }
       
       if (result?.media) {
-        try {
-          if (result.media.length < 4 * 1024 * 1024) {
-            const cacheKey = `genki_audio_${provider}_${voice}_${btoa(unescape(encodeURIComponent(text))).slice(0, 32)}`;
-            localStorage.setItem(cacheKey, result.media);
-          }
-        } catch {
-          // Ignore cache errors
-        }
-        
+        setCachedAudio(text, provider, voice, result.media);
+
         const audio = new Audio(result.media);
         audioRef.current = audio;
         audio.playbackRate = settings.playbackSpeed || 1;

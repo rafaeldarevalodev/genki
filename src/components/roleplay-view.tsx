@@ -6,6 +6,7 @@ import { startRoleplayAction, continueRoleplayAction, evaluateRoleplayAction, ge
 import { useSettings } from '@/hooks/use-settings';
 import { useDecks } from '@/hooks/use-decks';
 import { useToast } from '@/hooks/use-toast';
+import { getCachedAudio, setCachedAudio } from '@/utils/audio-cache';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import FormattedText from '@/components/formatted-text';
@@ -119,17 +120,18 @@ export default function RoleplayView({ deck }: RoleplayViewProps) {
               : provider === 'vibevoice7b'
                 ? settings.vibevoice7bVoice
                 : settings.voice;
-        const cacheKey = `genki_audio_roleplay_${provider}_${voice}_${btoa(unescape(encodeURIComponent(text))).slice(0, 32)}`;
-        let audioDataUrl = localStorage.getItem(cacheKey);
+
+        // Check cache first (only for short texts)
+        let audioDataUrl = getCachedAudio(text, provider, voice);
 
         if (!audioDataUrl) {
             const fetchedAudioData = await getTTSAudio(text, voice, provider);
             if (fetchedAudioData && fetchedAudioData.media) {
                 audioDataUrl = fetchedAudioData.media;
-                try { localStorage.setItem(cacheKey, audioDataUrl); } catch (e) { console.warn("Failed to cache audio") }
+                setCachedAudio(text, provider, voice, audioDataUrl);
             }
         }
-        
+
         if (audioDataUrl) {
             setAudioUrl(audioDataUrl);
             setPlayingAudio(id);
