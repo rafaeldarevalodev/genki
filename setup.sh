@@ -133,15 +133,6 @@ download_models() {
         log_info "Para descargar más modelos Piper, ver:"
         echo "  https://github.com/rhasspy/piper/tree/master/src/python_run"
     fi
-    
-    log_info "Modelos listos"
-}
-        fi
-    fi
-    
-    # Los modelos de Piper se pueden descargar manualmente
-    # https://github.com/rhasspy/piper
-    log_info "Modelos listos"
 }
 
 build_app() {

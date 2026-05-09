@@ -24,6 +24,8 @@ Genki Sensei es una aplicación web para aprender idiomas mediante flashcards in
 ### Características Principales
 
 - **Generación de Cards**: IA crea tarjetas SRS desde cualquier texto
+- **Word Mode / Chunks Mode**: Extrae vocabulario individual o frases completas
+- **Categorización Automática**: Cards organizadas por categoría (action, structure, concept, modifier, idiom, filler)
 - **Quiz Interactivo**: Práctica con preguntas generadas por IA
 - **Roleplay**: Conversación simulada con la IA (tutor Dr. Sarah Chen)
 - **Voice Practice**: Evaluación de pronunciación fonema por fonema
@@ -789,8 +791,9 @@ interface Card {
   front: string;        // English chunk
   back: string;         // Spanish translation / original
   ipa: string;          // IPA pronunciation
-  spanish_ipa: string; // Spanish-friendly phonetic
+  spanish_phonetic: string; // Spanish-friendly phonetic
   explanation: string;  // Grammar explanation (Spanish)
+  category: 'structure' | 'action' | 'concept' | 'modifier' | 'idiom' | 'filler';
   srs: SrsData;         // Spaced repetition data
   voice?: string;       // TTS voice assignment
 }

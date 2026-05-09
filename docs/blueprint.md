@@ -3,6 +3,8 @@
 ## Core Features:
 
 - Chunk Generation: Generate language chunks with translations and IPA pronunciations from user-provided text or images.
+- **Word Mode / Chunks Mode**: Choose between extracting individual vocabulary words or multi-word phrases.
+- **Category System**: Automatic categorization into structure, action, concept, modifier, idiom, or filler.
 - SRS Review System: Implement a Spaced Repetition System (SRS) algorithm (Strict A1 Logic) to schedule card reviews for optimal learning and retention using flashcards.
 - AI-Powered Quiz Generation: Generate multiple-choice quizzes based on the card content to test the user's understanding. AI chooses wrong answers to offer.
 - AI Role-Playing Simulation: AI character tool role-plays conversations with the user using vocabulary from selected card sets and user configured contexts, offering real-time feedback on language use.
