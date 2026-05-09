@@ -10,8 +10,9 @@ export interface Card {
   front: string;
   back: string;
   ipa: string;
-  spanish_ipa: string;
+  spanish_phonetic: string;
   explanation: string;
+  category: 'structure' | 'action' | 'concept' | 'modifier' | 'idiom' | 'filler';
   srs: SrsData;
   voice?: string;
 }

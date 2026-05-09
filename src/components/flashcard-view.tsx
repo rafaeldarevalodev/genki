@@ -118,7 +118,7 @@ export default function FlashcardView({ deck, isSrsMode, onSessionEnd }: Flashca
             <h2 className="text-4xl md:text-5xl font-black text-slate-800 mb-8 tracking-tightest leading-tight font-headline">{currentCard.front}</h2>
             <div className="flex flex-col items-center gap-2 mb-8">
               <TTSButton text={currentCard.front} ipa={currentCard.ipa} />
-              <span className="text-indigo-600 font-black italic text-xl tracking-tight bg-indigo-50 px-6 py-2 rounded-xl border border-indigo-100 mt-2">spa: {currentCard.spanish_ipa}</span>
+              <span className="text-indigo-600 font-black italic text-xl tracking-tight bg-indigo-50 px-6 py-2 rounded-xl border border-indigo-100 mt-2">spa: {currentCard.spanish_phonetic}</span>
             </div>
             <div className="mt-auto text-slate-300 font-black uppercase text-xs tracking-widest flex items-center gap-2">
               <RotateCcw size={18} /> Tap to Flip

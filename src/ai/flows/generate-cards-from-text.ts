@@ -15,8 +15,9 @@ const GenerateCardsFromTextOutputSchema = z.object({
     front: z.string(),
     back: z.string(),
     ipa: z.string(),
-    spanish_ipa: z.string(),
+    spanish_phonetic: z.string(),
     explanation: z.string(),
+    category: z.enum(['structure', 'action', 'concept', 'modifier', 'idiom', 'filler']),
     voice: z.string().optional(),
   })),
 });
@@ -39,100 +40,105 @@ function getVoiceForCard(): { voice: string } {
   }
 }
 
-const SYSTEM_PROMPT = `You are an expert Linguistic Analyst and Lexical Learning Specialist. 
-Your goal is to deconstruct the provided English text into a COMPLETE list of lexical chunks for Spanish-speaking students.
+const VALID_CATEGORIES = ['structure', 'action', 'concept', 'modifier', 'idiom', 'filler'] as const;
 
-### INSTRUCTIONS:
-1. NO OMISSION: You must process the entire text. Every single word from the original input must be included in at least one chunk. Do not summarize.
-2. CHUNK DEFINITION: Extract phrases, collocations, or individual words that carry meaning.
-3. PRONUNCIATION RULE (CRITICAL): The field "spanish_phonetic" MUST NOT contain the Spanish translation. It must represent how the English word sounds using Spanish-friendly phonetics.
-   - Example: For "People", write "pípol". 
-   - Example: For "Tuesday", write "tiús-dei" (DO NOT write "martes").
-4. LANGUAGE: The "explanation" and "back" fields must be in Spanish.
-
-### OUTPUT FORMAT:
-Return ONLY a JSON array of objects. Do not include conversational text.
-Structure:
-[
-  {
-    "front": "English chunk",
-    "back": "Traducción al español / Original English",
-    "ipa": "Standard IPA transcription",
-    "spanish_phonetic": "Approximate English sound using Spanish alphabet",
-    "explanation": "Explicación breve del uso o gramática en español"
+function validateCategory(cat: string): typeof VALID_CATEGORIES[number] {
+  if (VALID_CATEGORIES.includes(cat as typeof VALID_CATEGORIES[number])) {
+    return cat as typeof VALID_CATEGORIES[number];
   }
-]
+  return 'concept';
+}
 
-### EXAMPLE:
-Input: "Questions about the course?"
+const CHUNKS_SYSTEM_PROMPT = `Role: Expert Linguistic Analyst.
+Goal: Deconstruct text into the LONGEST possible meaningful lexical chunks. 
+
+### THE "MAXIMUM PHRASING" RULE:
+Your priority is to group words into multi-word phrases (2-4 words) that function as a single unit. 
+- BAD (Too simple): ["most", "of", "us"] 
+- GOOD (Target): ["most of us"]
+- BAD (Too simple): ["in", "very", "simple", "ways"]
+- GOOD (Target): ["in very simple ways"]
+
+### CRITICAL RULES:
+1. WORD INTEGRITY: Never break a word like "interface" into "inter-face".
+2. TOTAL COVERAGE: Every word must be included, but prioritize incorporating them into larger chunks first. Standalone words are ONLY allowed for connectors (e.g., "While", "and", "but") that cannot be logically grouped.
+3. SEQUENTIAL: Extract in the order they appear.
+
+### CATEGORIES:
+- "structure": Connectors/Prepositions (e.g., "While", "In this", "before").
+- "action": Verb phrases (e.g., "use them", "can create", "get started").
+- "concept": Compound nouns (e.g., "AI tools", "business tasks", "content creation").
+- "modifier": Descriptive phrases (e.g., "ever-growing", "much better", "for specific needs").
+- "idiom": Fixed expressions (e.g., "one at a time", "diving into").
+- "filler": Conversational markers.
+
+### FORMAT: 
+JSON array only. "back" and "explanation" in Spanish.
+
+EXAMPLE:
+Input: "Most of us use them in very simple ways."
 Output:
 [
   {
-    "front": "Questions about",
-    "back": "Preguntas sobre / Questions about",
-    "ipa": "/ˈkwɛstʃənz əˈbaʊt/",
-    "spanish_phonetic": "cuéstions abáut",
-    "explanation": "Estructura común para introducir el tema de una duda."
+    "front": "Most of us",
+    "back": "La mayoría de nosotros",
+    "ipa": "/moʊst əv ʌs/",
+    "spanish_phonetic": "móust ov as",
+    "explanation": "Frase común para referirse a una mayoría.",
+    "category": "concept"
   },
   {
-    "front": "the course",
-    "back": "el curso / the course",
-    "ipa": "/ðə kɔːrs/",
-    "spanish_phonetic": "de cors",
-    "explanation": "Sustantivo precedido por artículo definido."
+    "front": "use them in very simple ways",
+    "back": "las usamos de formas muy sencillas",
+    "ipa": "/juːz ðəm ɪn ˈvɛri ˈsɪmpəl weɪz/",
+    "spanish_phonetic": "iús dem in véri símpol uéis",
+    "explanation": "Predicado completo que describe una acción y su modo.",
+    "category": "action"
   }
 ]`;
 
-const WORDS_SYSTEM_PROMPT = `Eres un experto en extracción de vocabulario para estudiantes hispanohablantes.
+const WORDS_SYSTEM_PROMPT = `Role: Expert Linguistic Data Processor.
+Goal: Tokenize the input text into individual, whole words for a UI Reading View.
 
-### INSTRUCCIONES:
-1. Extrae SOLO palabras individuales - NO frases, NO expresiones de múltiples palabras.
-2. Cada entrada debe ser una sola palabra en inglés.
-3. El campo "spanish_phonetic" debe representar cómo suena la palabra en inglés usando fonética española (NO la traducción).
-4. Los campos "back" y "explanation" deben estar en español.
+### THE ABSOLUTE RULE OF INTEGRITY:
+- EVERY WORD must be its own JSON object.
+- NEVER split a word into characters or syllables (e.g., "have" is ONE word, NOT "h a ve").
+- NEVER break hyphenated words unless they are separated by spaces (e.g., "ever-growing" stays "ever-growing").
+- The number of objects in your array must match the number of words in the text.
 
-### FORMATO DE SALIDA:
-Retorna SOLO un array JSON de objetos. Sin texto conversacional.
-Estructura:
-[
-  {
-    "front": "word",
-    "back": "traducción / word",
-    "ipa": "/pronunciación IPA/",
-    "spanish_phonetic": "como suena en español",
-    "explanation": "breve explicación en español"
-  }
-]
+### PROCESSING STEPS:
+1. Split the text strictly by whitespace to identify each word.
+2. For each word:
+   - "front": The word exactly as it appears (remove attached punctuation like commas or periods).
+   - "category": Assign based on function (structure, action, concept, modifier, idiom, filler).
+   - "back", "ipa", "spanish_phonetic", "explanation": Standard linguistic analysis in Spanish.
 
-### EJEMPLO:
-Input: "The weather is nice today"
+### CATEGORY DEFINITIONS:
+- "structure": Articles, prepositions, conjunctions (the, in, and, while).
+- "action": Verbs (have, use, create, shows).
+- "concept": Nouns (tools, power, interface, analysis).
+- "modifier": Adjectives and adverbs (simple, better, often).
+- "idiom": Specialized vocabulary or phrasal components.
+- "filler": Conversational markers.
+
+### FORMAT: 
+Return ONLY a JSON array.
+
+EXAMPLE:
+Input: "AI tools have power."
 Output:
 [
-  {
-    "front": "weather",
-    "back": "clima / weather",
-    "ipa": "/ˈweðər/",
-    "spanish_phonetic": "wéder",
-    "explanation": "Estado de la atmósfera en un momento dado."
-  },
-  {
-    "front": "nice",
-    "back": "bueno / nice",
-    "ipa": "/naɪs/",
-    "spanish_phonetic": "náis",
-    "explanation": "Algo agradable, agradable a los sentidos."
-  }
+  { "front": "AI", "category": "concept", "back": "IA", "ipa": "/ˌeɪˈaɪ/", "spanish_phonetic": "ei-ái", "explanation": "Inteligencia Artificial." },
+  { "front": "tools", "category": "concept", "back": "herramientas", "ipa": "/tuːlz/", "spanish_phonetic": "tuls", "explanation": "Instrumentos." },
+  { "front": "have", "category": "action", "back": "tienen", "ipa": "/hæv/", "spanish_phonetic": "jav", "explanation": "Verbo poseer." },
+  { "front": "power", "category": "concept", "back": "poder", "ipa": "/ˈpaʊər/", "spanish_phonetic": "páuer", "explanation": "Capacidad." }
 ]`;
-
 
 export async function generateCardsFromText(input: GenerateCardsFromTextInput): Promise<GenerateCardsFromTextOutput> {
   const mode = input.mode || 'chunks';
-  const systemPrompt = mode === 'words' ? WORDS_SYSTEM_PROMPT : SYSTEM_PROMPT;
-  
-  const prompt = mode === 'words'
-    ? `Extrae vocabulario del siguiente texto:\n\n${input.text}\n\nRetorna JSON array: [{"front": "word", "back": "traducción / word", "ipa": "/...", "spanish_ipa": "...", "explanation": "..."}]`
-    : `Extract vocabulary from:\n\n${input.text}\n\nReturn JSON array: [{"front": "word", "back": "traducción / word", "ipa": "/pronunciation...", "spanish_ipa": "/pron...", "explanation": "meaning"}]`;
+  const systemPrompt = mode === 'words' ? WORDS_SYSTEM_PROMPT : CHUNKS_SYSTEM_PROMPT;
 
+  const prompt = input.text;
   try {
     const result = await callAIWithContext(systemPrompt, prompt, {
       temperature: 0.7,
@@ -160,8 +166,9 @@ export async function generateCardsFromText(input: GenerateCardsFromTextInput): 
         front: String(card.front || '').trim(),
         back: String(card.back || '').trim(),
         ipa: String(card.ipa || '').trim(),
-        spanish_ipa: String(card.spanish_ipa || '').trim(),
+        spanish_phonetic: String(card.spanish_phonetic || '').trim(),
         explanation: String(card.explanation || '').trim(),
+        category: validateCategory(card.category),
         voice,
       };
     }).filter((card: any) => card.front && card.back);
