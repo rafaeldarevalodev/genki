@@ -2,6 +2,7 @@
 'use server';
 
 import { generateCardsFromText } from '@/ai/flows/generate-cards-from-text';
+import { cleanText } from '@/utils/text-cleaner';
 import { generateQuizQuestions } from '@/ai/flows/generate-quiz-questions';
 import { simulateLanguageRoleplay } from '@/ai/flows/simulate-language-roleplay';
 import { evaluateRoleplayPerformance } from '@/ai/flows/evaluate-roleplay-performance';
@@ -64,7 +65,16 @@ export async function generateCardsAction(
       sourceImages: images,
       cefrLevel: cefrLevel,
     };
-    
+
+    // DEBUG: verify cards before save
+    console.log('╔═══════════════════════════════════════════════════════════╗');
+    console.log('║  NEW DECK CARDS (first 10) - DEBUG                         ║');
+    console.log('╠═══════════════════════════════════════════════════════════╣');
+    newDeck.cards.slice(0, 10).forEach((card, idx) => {
+      console.log(`║  ${idx + 1}. front: "${card.front}" | back: "${String(card.back).substring(0, 30)}"`);
+    });
+    console.log('╚═══════════════════════════════════════════════════════════╝');
+
     return newDeck;
 
   } catch (err) {

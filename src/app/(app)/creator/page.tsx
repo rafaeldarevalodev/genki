@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ImageIcon,
@@ -84,7 +84,7 @@ export default function CreatorPage() {
     }
   };
   
-  const handleGenerate = async () => {
+  const handleGenerate = useCallback(async () => {
     if (pastedImages.length === 0 && (!textInput.trim() || !deckName.trim())) {
       toast({
         title: 'Falta información',
@@ -105,7 +105,7 @@ export default function CreatorPage() {
       toast({ title: '¡Éxito!', description: `Se generaron ${newDeck.cards.length} tarjetas.` });
       router.push(`/creator/analysis/${newDeck.id}`);
     }
-  };
+  }, [mode, deckName, textInput, pastedImages, toast, router, addDeck]);
 
   const buttonText = mode === 'words' ? 'Generar Deck de Palabras' : 'Generar Deck de Chunks';
 
