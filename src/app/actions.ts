@@ -12,28 +12,12 @@ import { classifyTextCefr } from '@/ai/flows/classify-text-cefr';
 import { voicePractice, generateReferenceAudio } from '@/ai/flows/voice-practice';
 import type { Card, Deck } from '@/lib/types';
 
-/**
- * Nota: En archivos con directiva 'use server', solo se permite la exportación 
- * de funciones asíncronas. Constantes globales no permitidas han sido eliminadas.
- */
-
 export async function generateCardsAction(
   deckName: string,
   text: string,
   images: string[],
   mode: 'words' | 'chunks' = 'chunks'
 ): Promise<Deck | { error: string }> {
-  // === DEBUG LOGS ===
-  console.log('╔═══════════════════════════════════════════════════════════╗');
-  console.log('║  generateCardsAction - DEBUG                              ║');
-  console.log('╠═══════════════════════════════════════════════════════════╣');
-  console.log('║  mode:', mode);
-  console.log('║  deckName:', deckName);
-  console.log('║  text length:', text.length);
-  console.log('║  text preview:', text.substring(0, 100) + '...');
-  console.log('╚═══════════════════════════════════════════════════════════╝');
-  // === END DEBUG ===
-  
   try {
     let cefrLevel: string | undefined = undefined;
     if (text.trim()) {
@@ -65,15 +49,6 @@ export async function generateCardsAction(
       sourceImages: images,
       cefrLevel: cefrLevel,
     };
-
-    // DEBUG: verify cards before save
-    console.log('╔═══════════════════════════════════════════════════════════╗');
-    console.log('║  NEW DECK CARDS (first 10) - DEBUG                         ║');
-    console.log('╠═══════════════════════════════════════════════════════════╣');
-    newDeck.cards.slice(0, 10).forEach((card, idx) => {
-      console.log(`║  ${idx + 1}. front: "${card.front}" | back: "${String(card.back).substring(0, 30)}"`);
-    });
-    console.log('╚═══════════════════════════════════════════════════════════╝');
 
     return newDeck;
 
@@ -160,12 +135,10 @@ export async function evaluateRoleplayAction(
 
 export async function getTTSAudio(text: string, voice?: string, provider?: string): Promise<{media: string} | null> {
   try {
-    // Normalize provider
     const validProvider = (provider === 'voxtral' || provider === 'piper' || provider === 'kokoro' || provider === 'vibevoice' || provider === 'vibevoice7b')
       ? provider as 'piper' | 'voxtral' | 'kokoro' | 'vibevoice' | 'vibevoice7b'
       : 'kokoro';
 
-    // For vibevoice7b, check if it's a user voice and get reference audio data
     let referenceAudioData: string | undefined;
     if (validProvider === 'vibevoice7b' && voice?.startsWith('user_')) {
       if (typeof window !== 'undefined') {

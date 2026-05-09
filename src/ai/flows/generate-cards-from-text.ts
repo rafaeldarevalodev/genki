@@ -139,60 +139,20 @@ Output:
 export async function generateCardsFromText(input: GenerateCardsFromTextInput): Promise<GenerateCardsFromTextOutput> {
   const mode = input.mode || 'chunks';
   const systemPrompt = mode === 'words' ? WORDS_SYSTEM_PROMPT : CHUNKS_SYSTEM_PROMPT;
-
-  // Clean text BEFORE any processing
   const cleanedText = cleanText(input.text);
-
-  // === DEBUG: Print original text ===
-  console.log('╔═══════════════════════════════════════════════════════════╗');
-  console.log('║  INPUT TEXT (first 200 chars)                              ║');
-  console.log('╠═══════════════════════════════════════════════════════════╣');
-  console.log('║  Original:', input.text.substring(0, 200));
-  console.log('║  Cleaned:', cleanedText.substring(0, 200));
-  console.log('╚═══════════════════════════════════════════════════════════╝');
-
-  // === DEBUG LOGS ===
-  console.log('╔═══════════════════════════════════════════════════════════╗');
-  console.log('║  generateCardsFromText - DEBUG                            ║');
-  console.log('╠═══════════════════════════════════════════════════════════╣');
-  console.log('║  mode:', mode);
-  console.log('║  systemPrompt length:', systemPrompt.length);
-  console.log('║  systemPrompt (first 250 chars):');
-  console.log('║  ', systemPrompt.substring(0, 250));
-  console.log('║  text length (original):', input.text.length);
-  console.log('║  text length (cleaned):', cleanedText.length);
-  console.log('║  text preview:', cleanedText.substring(0, 100) + '...');
-  console.log('╚═══════════════════════════════════════════════════════════╝');
-  // === END DEBUG ===
-
   const prompt = cleanedText;
+
   try {
     const result = await callAIWithContext(systemPrompt, prompt, {
       temperature: 0.7,
       maxTokens: 16000
     });
 
-const content = result || '';
-
-    // === DEBUG: Print LLM raw response (full) ===
-    console.log('╔═══════════════════════════════════════════════════════════╗');
-    console.log('║  LLM RAW RESPONSE (first 1000 chars)                       ║');
-    console.log('╠═══════════════════════════════════════════════════════════╣');
-    console.log(content.substring(0, 1000));
-    console.log('╚═══════════════════════════════════════════════════════════╝');
-
+    const content = result || '';
     let cards;
+
     try {
       const jsonMatch = content.match(/\[[\s\S]*\]/) || content.match(/\{[\s\S]*\}/);
-      console.log('╔═══════════════════════════════════════════════════════════╗');
-      console.log('║  JSON MATCH DEBUG                                         ║');
-      console.log('╠═══════════════════════════════════════════════════════════╣');
-      console.log('║  Match found:', !!jsonMatch);
-      console.log('║  Match length:', jsonMatch ? jsonMatch[0].length : 0);
-      if (jsonMatch) {
-        console.log('║  Match preview (200 chars):', jsonMatch[0].substring(0, 200));
-      }
-      console.log('╚═══════════════════════════════════════════════════════════╝');
       
       if (jsonMatch) {
         cards = JSON.parse(jsonMatch[0]);
@@ -201,24 +161,8 @@ const content = result || '';
         cards = JSON.parse(content);
       }
     } catch (parseError) {
-      console.log('╔═══════════════════════════════════════════════════════════╗');
-      console.log('║  JSON PARSE ERROR                                         ║');
-      console.log('╠═══════════════════════════════════════════════════════════╣');
-      console.log('║  Error:', parseError);
-      console.log('║  Content that failed to parse:');
-      console.log('║  ', content.substring(0, 300));
-      console.log('╚═══════════════════════════════════════════════════════════╝');
       throw new Error('Failed to parse AI response as JSON');
     }
-
-    // === DEBUG: Print parsed cards (before validation) ===
-    console.log('╔═══════════════════════════════════════════════════════════╗');
-    console.log('║  PARSED CARDS (before validation) - first 10              ║');
-    console.log('╠═══════════════════════════════════════════════════════════╣');
-    (cards || []).slice(0, 10).forEach((card: any, idx: number) => {
-      console.log(`║  ${idx + 1}. front: "${card.front}", back: "${String(card.back || '').substring(0, 30)}"`);
-    });
-    console.log('╚═══════════════════════════════════════════════════════════╝');
 
     const validatedCards = cards.map((card: any) => {
       const { voice } = getVoiceForCard();
@@ -232,17 +176,6 @@ const content = result || '';
         voice,
       };
     }).filter((card: any) => card.front && card.back);
-
-    // === DEBUG: Print all words that will be saved ===
-    console.log('╔═══════════════════════════════════════════════════════════╗');
-    console.log('║  CARDS TO BE SAVED (front field only)                      ║');
-    console.log('╠═══════════════════════════════════════════════════════════╣');
-    console.log('║  Total cards:', validatedCards.length);
-    console.log('║  Words list:');
-    validatedCards.forEach((card: any, idx: number) => {
-      console.log(`║  ${idx + 1}. "${card.front}" (category: ${card.category})`);
-    });
-    console.log('╚═══════════════════════════════════════════════════════════╝');
 
     if (validatedCards.length === 0) {
       throw new Error('No valid cards generated');

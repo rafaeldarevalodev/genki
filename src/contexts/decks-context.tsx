@@ -30,16 +30,6 @@ export const DecksProvider = ({ children }: { children: ReactNode }) => {
       const savedDecks = localStorage.getItem('genki_decks');
       if (savedDecks) {
         const parsedDecks = JSON.parse(savedDecks);
-        console.log('╔═══════════════════════════════════════════════════════════╗');
-        console.log('║  DecksContext - LOADING FROM localStorage                   ║');
-        console.log('╠═══════════════════════════════════════════════════════════╣');
-        console.log('║  Decks count:', parsedDecks.length);
-        if (parsedDecks.length > 0) {
-          console.log('║  First deck name:', parsedDecks[0].name);
-          console.log('║  First deck cards count:', parsedDecks[0].cards?.length || 0);
-          console.log('║  First deck first 5 card fronts:', parsedDecks[0].cards?.slice(0, 5).map((c: any) => `"${c.front}"`).join(', '));
-        }
-        console.log('╚═══════════════════════════════════════════════════════════╝');
         setDecks(parsedDecks);
       }
       const savedProfile = localStorage.getItem('genki_user_profile');
@@ -64,17 +54,6 @@ export const DecksProvider = ({ children }: { children: ReactNode }) => {
   }, [decks, userProfile, isLoaded]);
 
   const addDeck = useCallback((deck: Deck) => {
-    // DEBUG: Log what we're adding
-    console.log('╔═══════════════════════════════════════════════════════════╗');
-    console.log('║  DecksContext.addDeck - DEBUG                               ║');
-    console.log('╠═══════════════════════════════════════════════════════════╣');
-    console.log('║  deck.id:', deck.id);
-    console.log('║  deck.name:', deck.name);
-    console.log('║  deck.cards count:', deck.cards.length);
-    console.log('║  First 5 card fronts:', deck.cards.slice(0, 5).map(c => `"${c.front}"`).join(', '));
-    console.log('║  sourceText (first 50 chars):', deck.sourceText.substring(0, 50));
-    console.log('╚═══════════════════════════════════════════════════════════╝');
-    
     setDecks((prev) => [deck, ...prev]);
   }, []);
   
@@ -83,7 +62,7 @@ export const DecksProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const deleteDeck = useCallback((deckId: string) => {
-    setDecks((prev) => prev.filter((d) => d.id !== deckId));
+    setDecks((prev) => prev.filter((d) => d.id === deckId));
   }, []);
 
   const updateCardSrs = useCallback((deckId: string, cardIndex: number, quality: number): Card => {
@@ -121,7 +100,6 @@ export const DecksProvider = ({ children }: { children: ReactNode }) => {
       return newDecks;
     });
     
-    // TypeScript doesn't know that setDecks runs synchronously, but it does
     return resultCard!;
   }, []);
   
@@ -135,7 +113,6 @@ export const DecksProvider = ({ children }: { children: ReactNode }) => {
         newLevel++;
         newXp -= xpToNextLevel;
         xpToNextLevel = newLevel * XP_PER_LEVEL_BASE;
-        // Future: Add a toast here for level up
       }
       
       return { level: newLevel, xp: newXp };

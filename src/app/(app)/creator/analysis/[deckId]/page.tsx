@@ -16,24 +16,7 @@ export default function AnalysisPage() {
   const deckId = params.deckId as string;
 
   const activeDeck = useMemo(
-    () => {
-      const found = decks.find((d) => d.id === deckId);
-      console.log('╔═══════════════════════════════════════════════════════════╗');
-      console.log('║  AnalysisPage - DECK LOOKUP DEBUG                           ║');
-      console.log('╠═══════════════════════════════════════════════════════════╣');
-      console.log('║  deckId:', deckId);
-      console.log('║  found:', !!found);
-      if (found) {
-        console.log('║  deck.name:', found.name);
-        console.log('║  deck.cards count:', found.cards.length);
-        console.log('║  First 5 card fronts:', found.cards.slice(0, 5).map(c => `"${c.front}"`).join(', '));
-        console.log('║  sourceText (first 50 chars):', found.sourceText.substring(0, 50));
-      } else {
-        console.log('║  Available deckIds:', decks.map(d => d.id).join(', '));
-      }
-      console.log('╚═══════════════════════════════════════════════════════════╝');
-      return found;
-    },
+    () => decks.find((d) => d.id === deckId),
     [decks, deckId]
   );
   
