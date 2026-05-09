@@ -148,9 +148,8 @@ build_app() {
 start_servers() {
     log_step "5" "6" "Iniciando servidores..."
     
-    # Usar start-servers.sh
-    chmod +x start-servers.sh
-    ./start-servers.sh start || {
+    chmod +x genki.sh
+    ./genki.sh start || {
         log_warn "No se pudieron iniciar todos los servidores"
     }
     
@@ -159,22 +158,17 @@ start_servers() {
 
 verify_setup() {
     echo ""
-    echo "=== Verificación ==="
-    
-    # Verificar puertos
-    echo "Puertos:"
-    lsof -i :8000 2>/dev/null && echo "  ✓ Voxtral TTS (8000)" || echo "  ✗ Voxtral TTS (8000)"
-    lsof -i :8080 2>/dev/null && echo "  ✓ Piper TTS (8080)" || echo "  ✗ Piper TTS (8080)"
-    lsof -i :1234 2>/dev/null && echo "  ✓ LM Studio (1234)" || echo "  ✗ LM Studio (1234)"
-    lsof -i :9002 2>/dev/null && echo "  ✓ Next.js (9002)" || echo "  ✗ Next.js (9002)"
-    
-    echo ""
-    echo ".URLs:"
-    echo "  App:      http://localhost:9002"
-    echo "  Voxtral:  http://localhost:8000/health"
-    echo "  Piper:   http://localhost:8080/health"
-    echo ""
     echo "=== Setup completo ==="
+    echo ""
+    echo "Para ver el estado de los servicios:"
+    echo -e "  ${CYAN}./genki.sh status${NC}"
+    echo ""
+    echo "Para iniciar Genki:"
+    echo -e "  ${CYAN}./genki.sh start${NC}"
+    echo ""
+    echo "URL de la app:"
+    echo -e "  ${CYAN}http://localhost:9002${NC}"
+    echo ""
 }
 
 usage() {

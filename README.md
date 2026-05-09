@@ -659,9 +659,9 @@ genki/
 ├── vibevoice_server.py    # Servidor VibeVoice TTS
 ├── README.md              # Este manual
 ├── QUICKSTART.md          # Guía rápida
-├── environment.yml        # Entornos Conda
-├── start-servers.sh       # Script de inicio
-├── setup.sh               # Setup completo
+├── genki.sh              # Manager unificado (start/stop/status)
+├── setup.sh              # Instalación completa
+├── environment.yml       # Entornos Conda
 │
 ├── src/
 │   ├── ai/
@@ -733,53 +733,38 @@ genki/
 
 ---
 
-## quick reference / Referencia Rápida
+## Referencia Rápida
 
-```bash
-# ===== INICIO RÁPIDO =====
+### Inicio rápido
 
-# 1. Activar conda
-source ~/miniforge3/etc/profile.d/conda.sh
+Copia y pega en tu terminal:
 
-# 2. Crear entornos
-conda env create -f environment.yml
-
-# 3. Iniciar servidores TTS
-./start-servers.sh start
-
-# 4. Configurar .env.local
-#    LLM_PROVIDER=cloud (Groq/Mistral)
-#    TTS_PROVIDER=vibevoice7b
-
-# 5. Iniciar Genki
-npm run dev
-# App: http://localhost:9002
-
-# ===== COMANDOS ÚTILES =====
-
-# Ver puertos en uso
-lsof -i :8000 -i :8080 -i :8880 -i :10301 -i :1234 -i :9002
-
-# Estado de servidores
-./start-servers.sh status
-
-# Reiniciar servidores
-./start-servers.sh restart
-
-# Ver logs
-tail -f /tmp/voxtral.log
-tail -f /tmp/piper.log
-tail -f /tmp/vibevoice.log
-tail -f /tmp/voice-eval.log
-
-# Health checks
-curl http://localhost:8000/health   # Voxtral
-curl http://localhost:8080/health   # Piper
-curl http://localhost:8090/health   # VibeVoice
-curl http://localhost:8880/health   # Kokoro
-curl http://localhost:10301/health  # Voice Eval
-curl http://localhost:1234/v1/models # LM Studio
 ```
+./genki.sh start
+```
+
+Luego abre tu navegador y escribe:
+
+```
+http://localhost:9002
+```
+
+---
+
+### Comandos
+
+| Qué quieres hacer | Copia y pega |
+|-------------------|--------------|
+| Iniciar todo | `./genki.sh start` |
+| Iniciar sin app web | `./genki.sh start --dev` |
+| Ver qué está corriendo | `./genki.sh status` |
+| Detener todo | `./genki.sh stop` |
+| Reiniciar | `./genki.sh restart` |
+
+### Para desarrollo
+
+1. Copia y pega: `./genki.sh start --dev`
+2. En otra terminal: `npm run dev`
 
 ---
 

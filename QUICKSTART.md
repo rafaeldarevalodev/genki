@@ -1,4 +1,4 @@
-# Quick Start Guide <!-- omit in toc -->
+# Quick Start Guide
 
 ## Requisitos
 
@@ -6,127 +6,109 @@
 - Node.js 20+
 - Python 3.11+
 - Conda (Miniforge3)
-- Cloud LLM API (Groq/Mistral) - opcional para local
 
-## Instalación Rápida
+## Instalación (Primera vez)
 
-```bash
-# 1. Clonar repositorio
-git clone https://github.com/tu-usuario/genki.git
+**Paso 1:** Clonar o descargar el proyecto
+
+**Paso 2:** Abrir terminal y entrar al directorio del proyecto:
+```text
 cd genki
+```
 
-# 2. Crear entornos Conda
+**Paso 3:** Crear entornos de Python:
+```text
 conda env create -f environment.yml
+```
 
-# 3. Instalar dependencias Node
+**Paso 4:** Instalar dependencias de Node:
+```text
 npm install
 ```
 
-## Inicio Rápido
-
-```bash
-# 1. Activar conda
-source ~/miniforge3/etc/profile.d/conda.sh
-
-# 2. Iniciar servidores TTS
-./start-servers.sh start
-
-# 3. Iniciar Genki
-npm run dev
-# App: http://localhost:9002
+**Paso 5:** Ejecutar la instalación completa:
+```text
+./setup.sh full
 ```
 
-**Modo cloud (sin LM Studio):**
-```bash
-# Editar .env.local y configurar:
-# LLM_PROVIDER=cloud
-# CLOUD_API_KEY=tu-api-key
-# TTS_PROVIDER=vibevoice7b
+---
+
+## Uso Diario
+
+**Paso 1:** Abrir terminal
+
+**Paso 2:** Entrar al directorio del proyecto:
+```text
+cd genki
 ```
 
-**VibeVoice 7B (Voice Cloning):**
-```bash
-# Activar entorno
-conda activate vibevoice7b
-
-# Iniciar servidor (puerto 8091)
-python vibevoice7b_server.py
-
-# Agregar voces custom desde Settings > TTS
+**Paso 3:** Iniciar Genki:
+```text
+./genki.sh start
 ```
+
+**Paso 4:** Abrir tu navegador y escribir:
+```text
+http://localhost:9002
+```
+
+---
 
 ## Comandos
 
-```bash
-# Iniciar todos los servidores
-./start-servers.sh start
+Copia y pega estos comandos en tu terminal según lo que necesites:
 
-# Ver estado
-./start-servers.sh status
+| Qué quieres hacer | Copia y pega este comando |
+|-------------------|--------------------------|
+| **Iniciar todo** | `./genki.sh start` |
+| **Iniciar solo TTS (sin app)** | `./genki.sh start --dev` |
+| **Ver qué está corriendo** | `./genki.sh status` |
+| **Detener todos los servicios** | `./genki.sh stop` |
+| **Reiniciar todo** | `./genki.sh restart` |
 
-# Reiniciar
-./start-servers.sh restart
+---
 
-# Detener
-./start-servers.sh stop
+## Puertos que usa Genki
+
+| Servicio | Puerto |
+|----------|--------|
+| App web | 9002 |
+| Voxtral TTS | 8000 |
+| Piper TTS | 8080 |
+| VibeVoice TTS | 8090 |
+| VibeVoice 7B TTS | 8091 |
+| Voice Eval | 10301 |
+
+---
+
+## Si algo no funciona
+
+### Los servicios no inician
+Copia y pega:
+```text
+./genki.sh restart
 ```
 
-## Puertos
+### Ver los logs
+Copia y pega en terminal (cada uno en una terminal diferente):
 
-| Servicio | Puerto | Health URL |
-|----------|--------|-----------|
-| Next.js | 9002 | - |
-| Voxtral TTS | 8000 | `/health` |
-| Piper TTS | 8080 | `/health` |
-| VibeVoice TTS | 8090 | `/health` |
-| VibeVoice 7B TTS | 8091 | `/health` |
-| Kokoro TTS | 8880 | `/health` |
-| Voice Eval | 10301 | `/health` |
-| Cloud LLM | 443 | - |
-
-## Features TTS
-
-| Proveedor | Puerto | Modelo | Latencia | Voces | Voice Cloning |
-|----------|--------|--------|----------|-------|---------------|
-| VibeVoice 7B | 8091 | VibeVoice-7B | ~1s | 8+ | ✅ Yes |
-| Voxtral | 8000 | Voxtral-4B | ~2s | 5 | ❌ No |
-| VibeVoice | 8090 | VibeVoice-0.5B | ~300ms | 10 | ❌ No |
-| Kokoro | 8880 | Kokoro-7B | ~1s | 10+ | ❌ No |
-| Piper | 8080 | Piper | ~0.5s | 3 | ❌ No |
-
-## Problemas Comunes
-
-### Error: `EADDRINUSE`
-```bash
-./start-servers.sh restart
+```text
+tail -f /tmp/voxtral.log
 ```
 
-### Modelos no descargan
-```bash
-python scripts/download-models.py
+```text
+tail -f /tmp/nextjs.log
 ```
 
-### LM Studio no responde
-1. Abrir LM Studio
-2. Cargar modelo (ej: Voxtral Small)
-3. Click "Start Server"
+---
 
-## Desarrollo
+## Para desarrollo
 
-```bash
-# Modo desarrollo
-npm run dev
+Si estás修改ando el código:
 
-# Type check
-npm run typecheck
+1. Copia y pega: `./genki.sh start --dev`
+2. En otra terminal, copia y pega: `npm run dev`
 
-# Lint
-npm run lint
+---
 
-# Production build
-npm run build && npm start
-```
-
-## Más Info
-
-Ver [README.md](./README.md) para manual completo.
+Para más información, ver [README.md](./README.md)
