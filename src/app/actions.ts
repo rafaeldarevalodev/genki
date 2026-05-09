@@ -22,6 +22,17 @@ export async function generateCardsAction(
   images: string[],
   mode: 'words' | 'chunks' = 'chunks'
 ): Promise<Deck | { error: string }> {
+  // === DEBUG LOGS ===
+  console.log('╔═══════════════════════════════════════════════════════════╗');
+  console.log('║  generateCardsAction - DEBUG                              ║');
+  console.log('╠═══════════════════════════════════════════════════════════╣');
+  console.log('║  mode:', mode);
+  console.log('║  deckName:', deckName);
+  console.log('║  text length:', text.length);
+  console.log('║  text preview:', text.substring(0, 100) + '...');
+  console.log('╚═══════════════════════════════════════════════════════════╝');
+  // === END DEBUG ===
+  
   try {
     let cefrLevel: string | undefined = undefined;
     if (text.trim()) {

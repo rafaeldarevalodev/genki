@@ -97,46 +97,56 @@ Output:
   }
 ]`;
 
-const WORDS_SYSTEM_PROMPT = `Role: Expert Linguistic Data Processor.
-Goal: Tokenize the input text into individual, whole words for a UI Reading View.
+const WORDS_SYSTEM_PROMPT = `Role: Vocabulary Extraction Expert for Spanish Speakers.
+Goal: Extract each word as a COMPLETE, UNBROKEN unit.
 
-### THE ABSOLUTE RULE OF INTEGRITY:
-- EVERY WORD must be its own JSON object.
-- NEVER split a word into characters or syllables (e.g., "have" is ONE word, NOT "h a ve").
-- NEVER break hyphenated words unless they are separated by spaces (e.g., "ever-growing" stays "ever-growing").
-- The number of objects in your array must match the number of words in the text.
+### ABSOLUTE RULES:
+1. PRESERVE COMPLETE WORDS: Every word must appear as-is, not split into syllables or characters.
+   - "interface" → ONE entry, not "inter-face" or "in-ter-a-ce"
+   - "AI" → ONE entry, not "A-I"
+   - "ever-growing" → ONE entry, keep hyphen
+2. ONE WORD PER ENTRY: Each JSON object contains exactly one complete word.
+3. SEQUENCE ORDER: Extract words in the order they appear.
 
-### PROCESSING STEPS:
-1. Split the text strictly by whitespace to identify each word.
-2. For each word:
-   - "front": The word exactly as it appears (remove attached punctuation like commas or periods).
-   - "category": Assign based on function (structure, action, concept, modifier, idiom, filler).
-   - "back", "ipa", "spanish_phonetic", "explanation": Standard linguistic analysis in Spanish.
+### CATEGORIES (assign based on word function):
+- "structure": Articles, prepositions (the, and, in, of)
+- "action": Verbs (use, have, create, make)
+- "concept": Nouns (tools, interface, system, data)
+- "modifier": Adjectives/adverbs (simple, very, better)
+- "idiom": Contractions/slang (gonna, wanna, kinda)
+- "filler": Conversation fillers (like, well, you know)
 
-### CATEGORY DEFINITIONS:
-- "structure": Articles, prepositions, conjunctions (the, in, and, while).
-- "action": Verbs (have, use, create, shows).
-- "concept": Nouns (tools, power, interface, analysis).
-- "modifier": Adjectives and adverbs (simple, better, often).
-- "idiom": Specialized vocabulary or phrasal components.
-- "filler": Conversational markers.
-
-### FORMAT: 
-Return ONLY a JSON array.
+### OUTPUT FORMAT:
+JSON array only. Spanish for "back" and "explanation".
 
 EXAMPLE:
-Input: "AI tools have power."
+Input: "AI tools have power and interface"
 Output:
 [
-  { "front": "AI", "category": "concept", "back": "IA", "ipa": "/ˌeɪˈaɪ/", "spanish_phonetic": "ei-ái", "explanation": "Inteligencia Artificial." },
-  { "front": "tools", "category": "concept", "back": "herramientas", "ipa": "/tuːlz/", "spanish_phonetic": "tuls", "explanation": "Instrumentos." },
-  { "front": "have", "category": "action", "back": "tienen", "ipa": "/hæv/", "spanish_phonetic": "jav", "explanation": "Verbo poseer." },
-  { "front": "power", "category": "concept", "back": "poder", "ipa": "/ˈpaʊər/", "spanish_phonetic": "páuer", "explanation": "Capacidad." }
+  { "front": "AI", "category": "concept", "back": "Inteligencia Artificial / AI", "ipa": "/ˌeɪˈaɪ/", "spanish_phonetic": "ei-ái", "explanation": "Tecnología que simula inteligencia humana." },
+  { "front": "tools", "category": "concept", "back": "herramientas / tools", "ipa": "/tuːlz/", "spanish_phonetic": "tuls", "explanation": "Instrumentos o aplicaciones." },
+  { "front": "have", "category": "action", "back": "tienen / have", "ipa": "/hæv/", "spanish_phonetic": "jav", "explanation": "Verbo para indicar posesión." },
+  { "front": "power", "category": "concept", "back": "poder / power", "ipa": "/ˈpaʊər/", "spanish_phonetic": "páuer", "explanation": "Capacidad o energía." },
+  { "front": "and", "category": "structure", "back": "y / and", "ipa": "/ænd/", "spanish_phonetic": "ánd", "explanation": "Conjunción que conecta elementos." },
+  { "front": "interface", "category": "concept", "back": "interfaz / interface", "ipa": "/ˈɪntərfeɪs/", "spanish_phonetic": "intérfeis", "explanation": "Superficie de interacción entre sistemas." }
 ]`;
 
 export async function generateCardsFromText(input: GenerateCardsFromTextInput): Promise<GenerateCardsFromTextOutput> {
   const mode = input.mode || 'chunks';
   const systemPrompt = mode === 'words' ? WORDS_SYSTEM_PROMPT : CHUNKS_SYSTEM_PROMPT;
+
+  // === DEBUG LOGS ===
+  console.log('╔═══════════════════════════════════════════════════════════╗');
+  console.log('║  generateCardsFromText - DEBUG                            ║');
+  console.log('╠═══════════════════════════════════════════════════════════╣');
+  console.log('║  mode:', mode);
+  console.log('║  systemPrompt length:', systemPrompt.length);
+  console.log('║  systemPrompt (first 250 chars):');
+  console.log('║  ', systemPrompt.substring(0, 250));
+  console.log('║  text length:', input.text.length);
+  console.log('║  text preview:', input.text.substring(0, 100) + '...');
+  console.log('╚═══════════════════════════════════════════════════════════╝');
+  // === END DEBUG ===
 
   const prompt = input.text;
   try {
