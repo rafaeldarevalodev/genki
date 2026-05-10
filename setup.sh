@@ -4,7 +4,7 @@
 #
 #   full        - Instalar todo (entornos, deps, modelos)
 #   quick      - Solo instalar deps y entornos (saltar descarga de modelos)
-#   skip-models - Solo iniciar servidores (sin descargar nada)
+#   skip-models - Solo iniciar servidores
 
 set -e
 
@@ -16,6 +16,7 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
+CYAN='\033[0;36m'
 NC='\033[0m'
 
 log_info() { echo -e "${GREEN}[SETUP]${NC} $1"; }
@@ -57,9 +58,9 @@ install_node_deps() {
 }
 
 install_conda_envs() {
-    log_step "2" "6" "Creando entornos Conda..."
+    log_step "2" "5" "Creando entornos Conda..."
     
-    # Entorno genki
+    # Entorno genki (Piper + Kokoro)
     if conda env list | grep -q "^genki "; then
         log_info "Entorno 'genki' ya existe"
     else
@@ -67,16 +68,6 @@ install_conda_envs() {
         conda create -n genki python=3.11 -y -q
         conda activate genki
         pip install genkit dotenv numpy -q
-    fi
-    
-    # Entorno voxtral_audio
-    if conda env list | grep -q "^voxtral_audio "; then
-        log_info "Entorno 'voxtral_audio' ya existe"
-    else
-        log_info "Creando entorno 'voxtral_audio'..."
-        conda create -n voxtral_audio python=3.12 -y -q
-        conda activate voxtral_audio
-        pip install mlx-audio "mistral-common[audio]" numpy -q
     fi
     
     # Entorno voice_eval
@@ -89,54 +80,37 @@ install_conda_envs() {
         pip install fastapi uvicorn python-multipart soundfile sounddevice httpx pydantic voxmlx numpy -q
     fi
     
+    # Entorno vibevoice7b
+    if conda env list | grep -q "^vibevoice7b "; then
+        log_info "Entorno 'vibevoice7b' ya existe"
+    else
+        log_info "Creando entorno 'vibevoice7b'..."
+        conda create -n vibevoice7b python=3.11 -y -q
+        conda activate vibevoice7b
+        pip install mlx huggingface_hub[hf_xet] soundfile numpy -q
+    fi
+    
     log_info "Entornos Conda listos"
 }
 
 download_models() {
-    log_step "3" "6" "Descargando modelos de TTS..."
+    log_step "3" "5" "Descargando modelos de TTS..."
     
-    # Crear directorios de modelos
-    mkdir -p models
     mkdir -p tts/models
     
-    # Descargar Voxtral TTS si no existe
-    if [ -d "models/Voxtral-4B-TTS" ]; then
-        log_info "Modelo Voxtral TTS ya existe"
-    else
-        log_info "Descargando Voxtral TTS (esto puede tomar tiempo)..."
-        
-        if check_command python; then
-            python scripts/download-models.py
-        else
-            log_warn "Saltando descarga automática. Descargar manualmente desde:"
-            echo "  https://huggingface.co/mlx-community/Voxtral-4B-TTS-2603-mlx-4bit"
-            echo ""
-            echo "O ejecutar después:"
-            echo "  python scripts/download-models.py"
-        fi
-    fi
-    
-    # Descargar modelos Piper
+    # Modelos Piper
     if ls tts/models/*.onnx 2>/dev/null | head -1 | grep -q .; then
         log_info "Modelos Piper ya existen"
     else
-        log_info "Descargando modelos Piper..."
-        cd tts/models
-        
-        # Descargar modelos en_US-lessac-medium
-        if [ ! -f "en_US-lessac-medium.onnx" ]; then
-            echo "Descargando en_US-lessac-medium..."
-            # Agregar aquí descarga si se quiere automática
-        fi
-        
-        cd "$SCRIPT_DIR"
-        log_info "Para descargar más modelos Piper, ver:"
-        echo "  https://github.com/rhasspy/piper/tree/master/src/python_run"
+        log_info "Modelos Piper no encontrados en tts/models/"
+        echo "  Descargar desde: https://github.com/rhasspy/piper"
     fi
+    
+    log_info "Modelos listos"
 }
 
 build_app() {
-    log_step "4" "6" "Build de producción..."
+    log_step "4" "5" "Build de producción..."
     
     npm run build || {
         log_warn "Build falló, usando modo desarrollo"
@@ -146,7 +120,7 @@ build_app() {
 }
 
 start_servers() {
-    log_step "5" "6" "Iniciando servidores..."
+    log_step "5" "5" "Iniciando servidores..."
     
     chmod +x genki.sh
     ./genki.sh start || {
@@ -161,13 +135,13 @@ verify_setup() {
     echo "=== Setup completo ==="
     echo ""
     echo "Para ver el estado de los servicios:"
-    echo -e "  ${CYAN}./genki.sh status${NC}"
+    echo "  ./genki.sh status"
     echo ""
     echo "Para iniciar Genki:"
-    echo -e "  ${CYAN}./genki.sh start${NC}"
+    echo "  ./genki.sh start"
     echo ""
     echo "URL de la app:"
-    echo -e "  ${CYAN}http://localhost:9002${NC}"
+    echo "  http://localhost:9002"
     echo ""
 }
 

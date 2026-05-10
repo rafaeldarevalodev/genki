@@ -6,13 +6,11 @@ const ENV_PATH = join(process.cwd(), '.env.local');
 
 interface SettingsData {
   provider?: 'local' | 'cloud';
-  localModel?: 'gemma' | 'voxtral';
+  localModel?: 'gemma';
   cloudModel?: string;
-  ttsProvider?: 'piper' | 'voxtral' | 'kokoro' | 'vibevoice' | 'vibevoice7b';
+  ttsProvider?: 'piper' | 'kokoro' | 'vibevoice7b';
   voice?: string;
-  lmstudioVoice?: string;
   kokoroVoice?: string;
-  vibevoiceVoice?: string;
   vibevoice7bVoice?: string;
   playbackSpeed?: number;
 }
@@ -45,14 +43,12 @@ export async function GET() {
   try {
     const env = readEnvFile();
     return NextResponse.json({
-      provider: env.LLM_PROVIDER || 'local',
-      localModel: env.LOCAL_MODEL_NAME || 'gemma',
-      cloudModel: env.CLOUD_MODEL || '',
+      provider: env.LLM_PROVIDER || 'cloud',
+      localModel: 'gemma',
+      cloudModel: env.CLOUD_MODEL || 'moonshotai/kimi-k2.6',
       ttsProvider: env.TTS_PROVIDER || 'kokoro',
       voice: env.TTS_VOICE || 'en_GB-alan-medium',
-      lmstudioVoice: env.TTS_VOXTRAL_VOICE || 'en_us_aria',
       kokoroVoice: env.TTS_KOKORO_VOICE || 'af_bella',
-      vibevoiceVoice: env.TTS_VIBEVOICE_VOICE || 'en-Emma_woman',
       vibevoice7bVoice: env.TTS_VIBEVOICE7B_VOICE || 'en-Emma_woman',
       playbackSpeed: parseFloat(env.TTS_PLAYBACK_SPEED || '1'),
     });
@@ -82,14 +78,8 @@ export async function POST(request: NextRequest) {
     if (data.voice) {
       env.TTS_VOICE = data.voice;
     }
-    if (data.lmstudioVoice) {
-      env.TTS_VOXTRAL_VOICE = data.lmstudioVoice;
-    }
     if (data.kokoroVoice) {
       env.TTS_KOKORO_VOICE = data.kokoroVoice;
-    }
-    if (data.vibevoiceVoice) {
-      env.TTS_VIBEVOICE_VOICE = data.vibevoiceVoice;
     }
     if (data.vibevoice7bVoice) {
       env.TTS_VIBEVOICE7B_VOICE = data.vibevoice7bVoice;

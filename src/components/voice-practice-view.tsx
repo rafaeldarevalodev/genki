@@ -150,14 +150,6 @@ export default function VoicePracticeView({ deck, onSessionEnd }: VoicePracticeV
     
     // Si settings no loaded, usar valores por defecto en lugar de mostrar error
     const provider = settings?.ttsProvider || 'piper';
-    const voice = provider === 'voxtral' 
-      ? settings?.lmstudioVoice || 'en_us_aria'
-      : provider === 'kokoro'
-        ? settings?.kokoroVoice || 'af_bella'
-        : settings?.voice || 'en_GB-alan-medium';
-    const baseUrl = provider === 'voxtral' ? 'http://localhost:8000' 
-                : provider === 'kokoro' ? 'http://localhost:8880' 
-                : 'http://localhost:8080';
     const playbackSpeed = settings?.playbackSpeed || 1;
     
     setIsLoadingReference(true);
@@ -176,31 +168,30 @@ export default function VoicePracticeView({ deck, onSessionEnd }: VoicePracticeV
     }
     
     // Get TTS config from settings (fallback values)
-    const useVoxtral = provider === 'voxtral';
     const useKokoro = provider === 'kokoro';
+    const useVibeVoice7B = provider === 'vibevoice7b';
     
     let apiUrl: string;
     let requestBody: Record<string, unknown>;
     
-    if (useVoxtral) {
-      apiUrl = `${baseUrl}/v1/audio/speech`;
+    if (useVibeVoice7B) {
+      apiUrl = 'http://localhost:8091/v1/audio/speech';
       requestBody = {
         input: currentCard.front,
-        voice: voice,
-        response_format: 'wav'
+        voice: settings?.vibevoice7bVoice || 'en-Emma_woman',
       };
     } else if (useKokoro) {
-      apiUrl = `${baseUrl}/v1/audio/speech`;
+      apiUrl = 'http://localhost:8880/v1/audio/speech';
       requestBody = {
         input: currentCard.front,
-        voice: voice,
+        voice: settings?.kokoroVoice || 'af_bella',
         speed: 1.0
       };
     } else {
-      apiUrl = `${baseUrl}/tts`;
+      apiUrl = 'http://localhost:8080/tts';
       requestBody = {
         text: currentCard.front,
-        voice: voice
+        voice: settings?.voice || 'en_GB-alan-medium'
       };
     }
     

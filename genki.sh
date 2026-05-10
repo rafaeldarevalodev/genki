@@ -1,17 +1,13 @@
 #!/bin/bash
 # genki.sh - Unified manager for Genki Sensei
 # Usage: ./genki.sh [start|stop|status|restart] [--dev]
-#
-# Inspired by Ollama's simple CLI pattern
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 # Puertos
-VOXTRAL_PORT=8000
 PIPER_PORT=8080
 KOKORO_PORT=8880
-VIBEVOICE_PORT=8090
 VIBEVOICE7B_PORT=8091
 VOICE_EVAL_PORT=10301
 NEXT_PORT=9002
@@ -55,12 +51,10 @@ cmd_status() {
     echo ""
     
     local running=0
-    local total=7
+    local total=5
     
-    service_status $VOXTRAL_PORT "Voxtral TTS" || ((running++))
     service_status $PIPER_PORT "Piper TTS" || ((running++))
     service_status $KOKORO_PORT "Kokoro TTS" || ((running++))
-    service_status $VIBEVOICE_PORT "VibeVoice TTS" || ((running++))
     service_status $VIBEVOICE7B_PORT "VibeVoice 7B TTS" || ((running++))
     service_status $VOICE_EVAL_PORT "Voice Eval" || ((running++))
     service_status $NEXT_PORT "Next.js" || ((running++))
@@ -72,11 +66,11 @@ cmd_status() {
     if check_port $NEXT_PORT; then
         echo -e "  ${CYAN}http://localhost:$NEXT_PORT${NC} - App"
     fi
-    if check_port $VOXTRAL_PORT; then
-        echo -e "  ${CYAN}http://localhost:$VOXTRAL_PORT/health${NC} - Voxtral"
+    if check_port $KOKORO_PORT; then
+        echo -e "  ${CYAN}http://localhost:$KOKORO_PORT/health${NC} - Kokoro"
     fi
-    if check_port $PIPER_PORT; then
-        echo -e "  ${CYAN}http://localhost:$PIPER_PORT/health${NC} - Piper"
+    if check_port $VIBEVOICE7B_PORT; then
+        echo -e "  ${CYAN}http://localhost:$VIBEVOICE7B_PORT/health${NC} - VibeVoice 7B"
     fi
     echo ""
 }
@@ -105,19 +99,14 @@ start_service() {
     fi
 }
 
-start_voxtral() {
-    conda activate voxtral_audio 2>/dev/null || { error "Entorno voxtral_audio no existe"; return 1; }
-    nohup python audio_server.py > /tmp/voxtral.log 2>&1 &
-}
-
 start_piper() {
     conda activate genki 2>/dev/null || { error "Entorno genki no existe"; return 1; }
     nohup python tts/server.py > /tmp/piper.log 2>&1 &
 }
 
-start_vibevoice() {
-    conda activate voxtral_audio 2>/dev/null || conda activate genki 2>/dev/null || { error "No hay entorno conda"; return 1; }
-    nohup python vibevoice_server.py > /tmp/vibevoice.log 2>&1 &
+start_kokoro() {
+    conda activate genki 2>/dev/null || { error "Entorno genki no existe"; return 1; }
+    nohup python kokoro_server.py > /tmp/kokoro.log 2>&1 &
 }
 
 start_vibevoice7b() {
@@ -126,8 +115,8 @@ start_vibevoice7b() {
 }
 
 start_voice_eval() {
-    conda activate voice_eval 2>/dev/null || { error "Entorno voice_eval no existe"; return 1; }
-    nohup python voice-eval/main_api.py --port $VOICE_EVAL_PORT --eval voxmlx > /tmp/voice-eval.log 2>&1 &
+    conda activate voice-eval-env 2>/dev/null || { error "Entorno voice-eval-env no existe"; return 1; }
+    nohup python voice-eval/main_api.py --port $VOICE_EVAL_PORT --eval voxmlx > /tmp/voice_eval.log 2>&1 &
 }
 
 start_next() {
@@ -142,15 +131,14 @@ cmd_start() {
     
     local failed=0
     
-    start_service "Voxtral TTS" $VOXTRAL_PORT start_voxtral || ((failed++))
     start_service "Piper TTS" $PIPER_PORT start_piper || ((failed++))
-    start_service "VibeVoice TTS" $VIBEVOICE_PORT start_vibevoice || ((failed++))
+    start_service "Kokoro TTS" $KOKORO_PORT start_kokoro || ((failed++))
     start_service "VibeVoice 7B TTS" $VIBEVOICE7B_PORT start_vibevoice7b || ((failed++))
     start_service "Voice Eval" $VOICE_EVAL_PORT start_voice_eval || ((failed++))
     
     if [ "$dev_mode" = "dev" ]; then
         echo ""
-        info "Modo desarrollo detectado. Next.js NO se inicia automáticamente."
+        info "Modo desarrollo. Next.js NO se inicia automáticamente."
         warn "Para iniciar Next.js manualmente:"
         echo -e "  ${CYAN}npm run dev${NC}  # En otra terminal"
     else
@@ -178,7 +166,7 @@ cmd_stop() {
     log "Deteniendo Genki Sensei..."
     echo ""
     
-    for port in $NEXT_PORT $VOXTRAL_PORT $PIPER_PORT $KOKORO_PORT $VIBEVOICE_PORT $VIBEVOICE7B_PORT $VOICE_EVAL_PORT; do
+    for port in $NEXT_PORT $PIPER_PORT $KOKORO_PORT $VIBEVOICE7B_PORT $VOICE_EVAL_PORT; do
         PIDS=$(lsof -ti :$port 2>/dev/null) || continue
         if [ -n "$PIDS" ]; then
             echo "$PIDS" | xargs kill -9 2>/dev/null || true

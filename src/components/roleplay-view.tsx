@@ -111,15 +111,11 @@ export default function RoleplayView({ deck }: RoleplayViewProps) {
         
         // Get TTS config from settings
         const provider = settings.ttsProvider;
-        const voice = provider === 'voxtral' 
-          ? settings.lmstudioVoice 
-          : provider === 'kokoro'
-            ? settings.kokoroVoice
-            : provider === 'vibevoice'
-              ? settings.vibevoiceVoice
-              : provider === 'vibevoice7b'
-                ? settings.vibevoice7bVoice
-                : settings.voice;
+        const voice = provider === 'kokoro'
+          ? settings.kokoroVoice
+          : provider === 'vibevoice7b'
+            ? settings.vibevoice7bVoice
+            : settings.voice;
 
         // Check cache first (only for short texts)
         let audioDataUrl = getCachedAudio(text, provider, voice);

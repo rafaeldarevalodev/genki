@@ -4,13 +4,11 @@ import { useState, useEffect, createContext, useContext, ReactNode } from 'react
 
 interface Settings {
   provider: 'local' | 'cloud';
-  localModel: 'gemma' | 'voxtral';
+  localModel: 'gemma';
   cloudModel: string;
-  ttsProvider: 'piper' | 'voxtral' | 'kokoro' | 'vibevoice' | 'vibevoice7b';
+  ttsProvider: 'piper' | 'kokoro' | 'vibevoice7b';
   voice: string;
-  lmstudioVoice: string;
   kokoroVoice: string;
-  vibevoiceVoice: string;
   vibevoice7bVoice: string;
   playbackSpeed: number;
 }
@@ -22,14 +20,12 @@ interface SettingsContextType {
 }
 
 const defaultSettings: Settings = {
-  provider: 'local',
+  provider: 'cloud',
   localModel: 'gemma',
-  cloudModel: 'llama-3.3-70b-versatile',
+  cloudModel: 'moonshotai/kimi-k2.6',
   ttsProvider: 'kokoro',
   voice: 'en_GB-alan-medium',
-  lmstudioVoice: 'en_us_aria',
   kokoroVoice: 'af_bella',
-  vibevoiceVoice: 'en-Emma_woman',
   vibevoice7bVoice: 'en-Emma_woman',
   playbackSpeed: 1,
 };
@@ -56,14 +52,12 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       if (res.ok) {
         const data = await res.json();
         setSettings({
-          provider: data.provider || 'local',
-          localModel: data.localModel || 'gemma',
-          cloudModel: data.cloudModel || '',
+          provider: data.provider || 'cloud',
+          localModel: 'gemma',
+          cloudModel: data.cloudModel || 'moonshotai/kimi-k2.6',
           ttsProvider: data.ttsProvider || 'kokoro',
           voice: data.voice || 'en_GB-alan-medium',
-          lmstudioVoice: data.lmstudioVoice || 'en_us_aria',
           kokoroVoice: data.kokoroVoice || 'af_bella',
-          vibevoiceVoice: data.vibevoiceVoice || 'en-Emma_woman',
           vibevoice7bVoice: data.vibevoice7bVoice || 'en-Emma_woman',
           playbackSpeed: data.playbackSpeed || 1,
         });

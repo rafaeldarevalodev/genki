@@ -29,7 +29,7 @@ Genki Sensei es una aplicación web para aprender idiomas mediante flashcards in
 - **Quiz Interactivo**: Práctica con preguntas generadas por IA
 - **Roleplay**: Conversación simulada con la IA (tutor Dr. Sarah Chen)
 - **Voice Practice**: Evaluación de pronunciación fonema por fonema
-- **TTS**: Pronunciación nativa con Voxtral/Piper/Kokoro
+- **TTS**: Pronunciación nativa con Piper/Kokoro/VibeVoice 7B
 - **CEFR Classification**: Clasificación automática de nivel (A1-C2)
 - **Phrase Explorer**: Feedback educativo sobre uso de vocabulario
 - **100% Local**: Sin dependencias de APIs externas (opcional cloud)
@@ -54,9 +54,8 @@ Genki Sensei es una aplicación web para aprender idiomas mediante flashcards in
 │  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐      │
 │  │sessionStorage│    │   TTS        │    │ Voice Eval   │      │
 │  │ (Audio Cache)│    │  Servers     │    │  :10301     │      │
-│  └──────────────┘    │ 8000/8080/   │    └──────────────┘      │
-│                      │ 8880/8090/    │                          │
-│                      │   8091        │                          │
+│  └──────────────┘    │ 8080/8880/   │    └──────────────┘      │
+│                      │   8091       │                          │
 │                      └──────────────┘                          │
 │                                                                  │
 └─────────────────────────────────────────────────────────────────┘
@@ -66,17 +65,11 @@ Genki Sensei es una aplicación web para aprender idiomas mediante flashcards in
 
 | Servicio | Puerto | Descripción |
 |----------|--------|-------------|
-| Next.js Dev | 9002 | Servidor de desarrollo |
+| Next.js | 9002 | Aplicación web |
 | Cloud LLM API | 443 | Groq/Mistral API |
-| Voxtral TTS | 8000 | TTS principal (Apple Silicon) |
-| Piper TTS | 8080 | TTS fallback |
+| Piper TTS | 8080 | TTS rápido |
 | Kokoro TTS | 8880 | TTS alternativo |
-| VibeVoice TTS | 8090 | TTS realtime (Microsoft 0.5B) |
-| VibeVoice 7B TTS | 8091 | TTS large model (Microsoft 7B, voice cloning) |
-| Voice Eval | 10301 | Evaluación de pronunciación |
-| Kokoro TTS | 8880 | TTS alternativo |
-| VibeVoice TTS | 8090 | TTS realtime (Microsoft 0.5B) |
-| VibeVoice 7B TTS | 8091 | TTS large model (Microsoft 7B, voice cloning) |
+| VibeVoice 7B TTS | 8091 | TTS alta calidad con voice cloning |
 | Voice Eval | 10301 | Evaluación de pronunciación |
 
 ---
@@ -132,7 +125,7 @@ conda env create -f environment.yml
 ### Entornos individuales
 
 #### genki (Base)
-Para Piper TTS y funciones básicas de IA.
+Para Piper TTS, Kokoro TTS y funciones básicas de IA.
 
 ```bash
 conda create -n genki python=3.11 -y
@@ -140,17 +133,8 @@ conda activate genki
 pip install genkit dotenv
 ```
 
-#### voxtral_audio
-Para Voxtral TTS (requiere Apple Silicon con mlx-audio).
-
-```bash
-conda create -n voxtral_audio python=3.12 -y
-conda activate voxtral_audio
-pip install mlx-audio "mistral-common[audio]" numpy
-```
-
 #### voice_eval
-Para evaluación de pronunciación (VoxMLX o Montreal Forced Aligner).
+Para evaluación de pronunciación (VoxMLX).
 
 ```bash
 conda create -n voice_eval python=3.11 -y
@@ -162,7 +146,7 @@ pip install fastapi uvicorn python-multipart soundfile sounddevice httpx pydanti
 Para VibeVoice 7B TTS con voice cloning (requiere ~22GB RAM).
 
 ```bash
-conda create -n vibevoice7b python=3.13 -y
+conda create -n vibevoice7b python=3.11 -y
 conda activate vibevoice7b
 pip install mlx huggingface_hub[hf_xet] soundfile numpy
 ```
@@ -171,39 +155,9 @@ pip install mlx huggingface_hub[hf_xet] soundfile numpy
 
 ## 5. Servidores TTS
 
-### 5.1. Voxtral TTS (Principal - Apple Silicon)
+### 5.1. Piper TTS
 
-Voxtral es un TTS de alta calidad de Mistral, optimizado para Apple Silicon.
-
-```bash
-conda activate voxtral_audio
-python audio_server.py
-# Servidor disponible en http://localhost:8000
-```
-
-**API:**
-```
-POST http://localhost:8000/v1/audio/speech
-{
-  "input": "Hello world",
-  "voice": "en_us_aria",
-  "response_format": "wav"
-}
-```
-
-**Voces Disponibles:**
-
-| Voz Internal | Embedding | Descripción |
-|-------------|-----------|-------------|
-| `en_us_aria` | `casual_female` | Estadounidense, amigable |
-| `en_us_zoe` | `cheerful_female` | Estadounidense, alegre |
-| `en_us_james` | `casual_male` | Estadounidense, natural |
-| `en_gb_sophie` | `neutral_female` | Británico, elegante |
-| `en_gb_oliver` | `neutral_male` | Británico, formal |
-
-### 5.2. Piper TTS (Fallback)
-
-Piper es un TTS rápido y ligero. Se usa cuando Voxtral no está disponible.
+Piper es un TTS rápido y ligero.
 
 ```bash
 conda activate genki
@@ -226,7 +180,7 @@ POST http://localhost:8080/tts
 | `en_US-lessac-medium` | Estadounidense, varón |
 | `en_US-ryan-high` | Estadounidense, varón (agudo) |
 
-### 5.3. Kokoro TTS (Alternativo)
+### 5.2. Kokoro TTS
 
 TTS basado en Kokoro con múltiples voces.
 
@@ -241,52 +195,11 @@ python kokoro_server.py
 - `am_adam`, `am_eric`, `am_fen`, `am_michael`
 - Y muchas más...
 
-### 5.4. VibeVoice TTS (Realtime 0.5B)
+### 5.3. VibeVoice 7B TTS
 
-VibeVoice-Realtime es un modelo de síntesis de voz de Microsoft, optimizado para latencia ultra-baja (~300ms).
-
-**Modelo:** `mlx-community/VibeVoice-Realtime-0.5B-4bit` (1.2 GB, MLX)
-
-```bash
-conda activate voxtral_audio
-python vibevoice_server.py
-# Servidor disponible en http://localhost:8090
-```
-
-**API:**
-```
-POST http://localhost:8090/v1/audio/speech
-{
-  "input": "Hello world",
-  "voice": "en-Emma_woman"
-}
-```
-
-**Voces Disponibles:**
-
-| Voz | Descripción |
-|-----|-------------|
-| `en-Emma_woman` | Estadounidense, mujer |
-| `en-Davis_man` | Estadounidense, varón |
-| `en-Carter_man` | Estadounidense, varón |
-| `en-Grace_woman` | Estadounidense, mujer |
-| `en-Mike_man` | Estadounidense, varón |
-| `en-Frank_man` | Estadounidense, varón |
-
-**Características:**
-- Latencia ~300ms (first audio chunk)
-- Single-speaker
-- Max ~10 minutos de audio
-- Soporte MLX (Apple Silicon)
-- English only
-
-### 5.5. VibeVoice 7B TTS (Large Model with Voice Cloning)
-
-VibeVoice Large es un modelo de 7B parámetros con voice cloning, multi-speaker y mejor calidad de audio.
+VibeVoice Large es un modelo de 7B parámetros con voice cloning y mejor calidad de audio.
 
 **Modelo:** `appautomaton/vibevoice-mlx` (7B, int8 quantized, ~10 GB)
-
-**Entorno:** `vibevoice7b`
 
 ```bash
 conda activate vibevoice7b
@@ -303,7 +216,7 @@ POST http://localhost:8091/v1/audio/speech
 }
 ```
 
-**Voces Disponibles (preset):**
+**Voces Disponibles:**
 
 | Voz | Descripción | Tipo |
 |-----|-------------|------|
@@ -312,14 +225,10 @@ POST http://localhost:8091/v1/audio/speech
 | `en-Carter_man` | Hombre americano formal | preset |
 | `en-Grace_woman` | Mujer americana joven | preset |
 | `en-Mike_man` | Hombre americano casual | preset |
-| `en-Frank_man` | Hombre americano | preset |
-| `en-Sara_woman` | Voz custom (Sara) | custom |
-| `en-Max_man` | Voz custom (Max) | custom |
 
 **Voces personalizadas:**
 - Subir audio de referencia desde Settings (max 5MB)
 - Se almacenan en localStorage (temporal)
-- Migración futura a backend con base de datos
 
 **Multi-speaker:**
 ```
@@ -330,61 +239,48 @@ POST http://localhost:8091/v1/audio/speech
 }
 ```
 
-**Características:**
-- Voice cloning (por reference audio)
-- Multi-speaker (hasta 4 speakers)
-- Mejor calidad que 0.5B
-- RAM: ~22GB peak
-- Soporte MLX (Apple Silicon)
-- English only
-
 **Archivos de referencia:**
 Los clips de referencia están en `/reference_voices/`:
 - `en_Emma_woman.wav`, `en_Davis_man.wav`, etc.
-- `en_Sara_woman.mp3`, `en_Max_man.mp3` (custom voices)
 
-### 5.6. Iniciar Todos los Servidores
+### 5.4. Iniciar Todos los Servidores
 
-```bash
-./start-servers.sh start
+```
+./genki.sh start
 ```
 
 Verificar estado:
-```bash
-./start-servers.sh status
+```
+./genki.sh status
 ```
 
 ---
 
-## 6. LM Studio - Modelos Locales
+## 6. LLM - Modelos de Lenguaje
 
-### 6.1. Instalación de LM Studio
+Genki usa **LLM en la nube** (Groq/Mistral) por defecto para mejor rendimiento.
+
+### Configuración en `.env.local`
+
+```env
+LLM_PROVIDER=cloud
+CLOUD_MODEL=moonshotai/kimi-k2.6
+CLOUD_API_KEY=tu-api-key
+CLOUD_BASE_URL=https://api.nvidia.com/v1/experimental/mistral-ai/codestral-latest
+```
+
+### LM Studio (Opcional - Local)
+
+Si prefieres usar modelos locales:
 
 1. Descargar desde: https://lmstudio.ai/
-2. Instalar la aplicación
-3. Abrir LM Studio
-
-### 6.2. Modelos Recomendados
-
-| Modelo | Tamaño | Uso | Descarga |
-|--------|-------|-----|---------|
-| Voxtral Small 24B | ~24GB | Chat principal | `mistralai/voxtral-small-24b-2507` |
-| Gemma 4B | ~4GB | Fallback rápido | `google/gemma-4-4b-it` |
-| Gemma 27B | ~27GB | Mejor calidad | `google/gemma-4-27b-it` |
-
-#### Descargar en LM Studio
-
-1. Ir a la pestaña **Models**
-2. Buscar `mistralai/voxtral-small-24b-2507`
-3. Seleccionar versión **Q6_K_L** (recomendado) o Q4_K_M
-4. Click **Download**
-
-### 6.3. Configuración de API Local
-
-1. Ir a **Settings** > **API**
-2. Habilitar **Local Server**
-3. Puerto: `1234`
-4. Cargar modelo y hacer click en **Start Server**
+2. Cargar un modelo (ej: `mistralai/voxtral-small-24b-2507`)
+3. Click en **Start Server** (puerto 1234)
+4. Configurar `.env.local`:
+```env
+LLM_PROVIDER=local
+LOCAL_MODEL_NAME=gemma
+```
 
 ---
 
@@ -394,7 +290,7 @@ Verificar estado:
 
 ```bash
 # Asegurar que los servidores TTS están corriendo
-./start-servers.sh start
+./genki.sh start --dev
 
 # Iniciar Next.js
 npm run dev
@@ -426,10 +322,8 @@ npm start
 
 | Servicio | Puerto | Endpoint | Formato |
 |----------|--------|----------|---------|
-| Voxtral | 8000 | `/v1/audio/speech` | `{"input": "..."}` |
 | Piper | 8080 | `/tts` | `{"text": "...", "voice": "..."}` |
 | Kokoro | 8880 | `/v1/audio/speech` | `{"input": "...", "voice": "..."}` |
-| VibeVoice | 8090 | `/v1/audio/speech` | `{"input": "...", "voice": "..."}` |
 | VibeVoice 7B | 8091 | `/v1/audio/speech` | `{"input": "...", "voice": "...", "reference_audio_data": "..."}` |
 
 ### Voice Evaluation API
@@ -541,11 +435,9 @@ Evalúa uso de vocabulario en frases del usuario:
 **Flow:** `src/ai/flows/text-to-speech.ts`
 
 Soporta múltiples proveedores TTS:
-- **Voxtral** (principal, Apple Silicon, mlx-audio)
-- **Piper** (fallback, ligero)
-- **Kokoro** (alternativo, múltiples voces)
-- **VibeVoice 0.5B** (realtime, Microsoft, ~300ms latency)
-- **VibeVoice 7B** (large model, voice cloning, mejor calidad)
+- **Piper** (rápido, ligero)
+- **Kokoro** (buena calidad, múltiples voces)
+- **VibeVoice 7B** (la mejor calidad, voice cloning)
 
 **Cacheo de audio (temporal):**
 - Usa `sessionStorage` para cachear audios generados
@@ -564,20 +456,16 @@ Devuelve audio en formato base64 (data URL).
 
 ```bash
 # LLM Configuration
-LLM_PROVIDER=local          # 'local' o 'cloud'
-LOCAL_MODEL_NAME=voxtral    # 'gemma' o 'voxtral'
-CLOUD_MODEL=codestral-latest
+LLM_PROVIDER=cloud          # 'local' o 'cloud'
+CLOUD_MODEL=moonshotai/kimi-k2.6
 CLOUD_API_KEY=your-key
-CLOUD_BASE_URL=https://codestral.mistral.ai/v1
+CLOUD_BASE_URL=https://api.nvidia.com/v1/experimental/mistral-ai/codestral-latest
 
 # TTS Configuration
-TTS_PROVIDER=vibevoice7b    # 'piper', 'voxtral', 'kokoro', 'vibevoice', 'vibevoice7b'
+TTS_PROVIDER=vibevoice7b    # 'piper', 'kokoro', 'vibevoice7b'
 TTS_ENDPOINT=http://localhost:8080
 TTS_VOICE=en_GB-alan-medium
-TTS_VOXTRAL_VOICE=en_us_aria
 TTS_KOKORO_VOICE=af_bella
-TTS_VIBEVOICE_BASE_URL=http://localhost:8090
-TTS_VIBEVOICE_VOICE=en-Emma_woman
 TTS_VIBEVOICE7B_BASE_URL=http://localhost:8091
 TTS_VIBEVOICE7B_VOICE=en-Sara_woman
 TTS_PLAYBACK_SPEED=1
@@ -590,7 +478,7 @@ TTS_PLAYBACK_SPEED=1
 ```bash
 # Configurar en .env.local
 LLM_PROVIDER=local
-LOCAL_MODEL_NAME=voxtral    # o 'gemma'
+LOCAL_MODEL_NAME=gemma
 ```
 
 #### Cloud (Groq - Recomendado para desarrollo)
@@ -613,17 +501,11 @@ CLOUD_API_KEY=tu-api-key
 **Solución:**
 ```bash
 # Encontrar proceso
-lsof -i :8000
+lsof -i :9002
 
 # Matar proceso
 kill -9 <PID>
 ```
-
-### Error: `There is no Stream(gpu, 0) in current thread`
-
-**Causa**: MLX intenta usar GPU en el hilo incorrecto.
-
-**Solución**: Usar `audio_server.py` con generación por subproceso.
 
 ### Error: `QuotaExceededError` en localStorage
 
@@ -654,15 +536,14 @@ Object.keys(localStorage).forEach(k => localStorage.removeItem(k))
 ```
 genki/
 ├── .env.local              # Variables de entorno
-├── audio_server.py        # Servidor Voxtral TTS
-├── kokoro_server.py       # Servidor Kokoro TTS
-├── vibevoice_server.py    # Servidor VibeVoice TTS
-├── README.md              # Este manual
-├── QUICKSTART.md          # Guía rápida
 ├── genki.sh              # Manager unificado (start/stop/status)
 ├── setup.sh              # Instalación completa
 ├── environment.yml       # Entornos Conda
-│
+├── kokoro_server.py       # Servidor Kokoro TTS
+├── vibevoice7b_server.py  # Servidor VibeVoice 7B TTS
+├── README.md              # Este manual
+├── QUICKSTART.md          # Guía rápida
+├── │
 ├── src/
 │   ├── ai/
 │   │   ├── flows/              # Genkit AI flows
@@ -710,11 +591,6 @@ genki/
 │
 ├── mlx-speech/            # appautomaton/mlx-speech (VibeVoice 7B runtime)
 │
-├── vibevoice_server.py    # VibeVoice 0.5B TTS server (puerto 8090)
-├── vibevoice7b_server.py  # VibeVoice 7B TTS server (puerto 8091)
-├── audio_server.py        # Voxtral TTS server
-├── kokoro_server.py       # Kokoro TTS server
-│
 ├── voice-eval/            # Voice Evaluation API
 │   ├── main_api.py        # FastAPI server
 │   ├── voxmlx_server.py
@@ -728,7 +604,7 @@ genki/
 │               └── voxmlx_eval.py
 │
 └── models/                # Modelos descargados
-    └── Voxtral-4B-TTS/
+    └── kokoro/           # Kokoro TTS models
 ```
 
 ---

@@ -29,12 +29,11 @@ function reloadEnv(): Record<string, string> {
 const ENV = loadEnv();
 
 export type LLMProvider = 'local' | 'cloud';
-export type TTSProvider = 'piper' | 'voxtral' | 'kokoro' | 'vibevoice' | 'vibevoice7b';
-export type LocalModelName = 'gemma' | 'voxtral';
+export type TTSProvider = 'piper' | 'kokoro' | 'vibevoice7b';
+export type LocalModelName = 'gemma';
 
 const LOCAL_MODEL_MAP: Record<LocalModelName, string> = {
   gemma: 'google/gemma-4-4b-it',
-  voxtral: 'mistralai_voxtral-small-24b-2507',
 };
 
 export interface LLMConfig {
@@ -86,7 +85,6 @@ function getLLMConfig(): LLMConfig {
 }
 
 export function getTTSConfig(): TTSConfig {
-  // Reload from file to get latest settings
   const env = reloadEnv();
   const provider = (env.TTS_PROVIDER || 'piper') as TTSProvider;
   
@@ -102,19 +100,19 @@ export function getTTSConfig(): TTSConfig {
     return getKokoroConfig();
   }
 
-  if (provider === 'vibevoice') {
-    return getVibeVoiceConfig();
-  }
-
   if (provider === 'vibevoice7b') {
     return getVibeVoice7BConfig();
   }
 
+  return getKokoroConfig();
+}
+
+export function getVibeVoice7BConfig(): TTSConfig {
+  const env = reloadEnv();
   return {
-    provider: 'voxtral',
-    endpoint: 'http://localhost:8000',
-    voice: env.TTS_VOICE || 'en_GB-alan-medium',
-    lmstudioVoice: env.TTS_VOXTRAL_VOICE || 'en_us_aria',
+    provider: 'vibevoice7b',
+    endpoint: env.TTS_VIBEVOICE7B_BASE_URL || 'http://localhost:8091',
+    voice: env.TTS_VIBEVOICE7B_VOICE || 'en-Emma_woman',
   };
 }
 
@@ -124,24 +122,6 @@ export function getKokoroConfig(): TTSConfig {
     provider: 'kokoro',
     endpoint: env.TTS_KOKORO_BASE_URL || 'http://localhost:8880',
     voice: env.TTS_KOKORO_VOICE || 'af_bella',
-  };
-}
-
-export function getVibeVoiceConfig(): TTSConfig {
-  const env = reloadEnv();
-  return {
-    provider: 'vibevoice',
-    endpoint: env.TTS_VIBEVOICE_BASE_URL || 'http://localhost:8090',
-    voice: env.TTS_VIBEVOICE_VOICE || 'en-Emma_woman',
-  };
-}
-
-export function getVibeVoice7BConfig(): TTSConfig {
-  const env = reloadEnv();
-  return {
-    provider: 'vibevoice7b',
-    endpoint: env.TTS_VIBEVOICE7B_BASE_URL || 'http://localhost:8091',
-    voice: env.TTS_VIBEVOICE7B_VOICE || 'en-Emma_woman',
   };
 }
 

@@ -5,7 +5,7 @@ import { getTTSConfig } from '@/ai/llm';
 
 const TextToSpeechInputSchema = z.object({
   text: z.string(),
-  provider: z.enum(['piper', 'voxtral', 'kokoro', 'vibevoice', 'vibevoice7b']).optional(),
+  provider: z.enum(['piper', 'kokoro', 'vibevoice7b']).optional(),
   voice: z.string().optional(),
   referenceAudioData: z.string().optional(),
 });
@@ -22,7 +22,6 @@ export async function textToSpeech(input: TextToSpeechInput): Promise<TextToSpee
   const provider = ttsConfig.provider;
   
   console.log('[textToSpeech] Provider from config:', provider);
-  console.log('[textToSpeech] TTS Config:', ttsConfig);
 
   if (provider === 'piper') {
     const voice = input?.voice || ttsConfig.voice || 'en_GB-alan-medium';
@@ -34,25 +33,17 @@ export async function textToSpeech(input: TextToSpeechInput): Promise<TextToSpee
     return textToSpeechKokoro(text, voice);
   }
 
-  if (provider === 'vibevoice') {
-    const voice = input?.voice || ttsConfig.voice || 'en-Emma_woman';
-    return textToSpeechVibeVoice(text, voice);
-  }
-
   if (provider === 'vibevoice7b') {
     const voice = input?.voice || ttsConfig.voice || 'en-Emma_woman';
     const referenceAudioData = input?.referenceAudioData;
     return textToSpeechVibeVoice7B(text, voice, referenceAudioData);
   }
   
-  // For Voxtral, use lmstudioVoice directly
-  const voice = input?.voice || ttsConfig.lmstudioVoice || 'en_us_aria';
-  return textToSpeechVoxtral(text, voice);
+  return textToSpeechKokoro(text, ttsConfig.voice || 'af_bella');
 }
 
 async function textToSpeechPiper(text: string, voice: string): Promise<TextToSpeechOutput> {
   const ttsConfig = getTTSConfig();
-  console.log('[textToSpeechPiper] Voice:', voice, 'Endpoint:', ttsConfig.endpoint);
   
   try {
     const response = await fetch(`${ttsConfig.endpoint}/tts`, {
@@ -75,7 +66,6 @@ async function textToSpeechPiper(text: string, voice: string): Promise<TextToSpe
     const base64 = btoa(binary);
     const mediaUrl = `data:audio/wav;base64,${base64}`;
     
-    console.log('[textToSpeechPiper] Generated:', arrayBuffer.byteLength, 'bytes');
     return { media: mediaUrl };
   } catch (error) {
     console.error('[textToSpeechPiper] Error:', error);
@@ -83,62 +73,8 @@ async function textToSpeechPiper(text: string, voice: string): Promise<TextToSpe
   }
 }
 
-async function textToSpeechVoxtral(text: string, voice: string): Promise<TextToSpeechOutput> {
-  const ttsConfig = getTTSConfig();
-  console.log('[textToSpeechVoxtral] Voice:', voice, 'Endpoint:', ttsConfig.endpoint);
-  
-  // Map frontend voice IDs to Voxtral voice embeddings
-  const voiceMap: Record<string, string> = {
-    'en_us_aria': 'casual_female',
-    'en_us_zoe': 'cheerful_female',
-    'en_us_james': 'casual_male',
-    'en_gb_sophie': 'cheerful_female',
-    'en_gb_oliver': 'neutral_male',
-  };
-  
-  const voxtralVoice = voiceMap[voice] || 'casual_male';
-  
-  const model = 'voxtral-4b-tts-2603-mlx-4bit';
-  
-  try {
-    const response = await fetch(`${ttsConfig.endpoint}/v1/audio/speech`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: model,
-        input: text,
-        voice: voxtralVoice,
-        response_format: 'wav'
-      })
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('[textToSpeechVoxtral] Error response:', errorText);
-      throw new Error(`Voxtral TTS failed: ${response.status} - ${errorText}`);
-    }
-
-    const arrayBuffer = await response.arrayBuffer();
-    const uint8Array = new Uint8Array(arrayBuffer);
-    
-    let binary = '';
-    for (let i = 0; i < uint8Array.length; i++) {
-      binary += String.fromCharCode(uint8Array[i]);
-    }
-    const base64 = btoa(binary);
-    const mediaUrl = `data:audio/wav;base64,${base64}`;
-    
-    console.log('[textToSpeechVoxtral] Generated:', arrayBuffer.byteLength, 'bytes');
-    return { media: mediaUrl };
-  } catch (error) {
-    console.error('[textToSpeechVoxtral] Error:', error);
-    throw error;
-  }
-}
-
 async function textToSpeechKokoro(text: string, voice: string): Promise<TextToSpeechOutput> {
   const ttsConfig = getTTSConfig();
-  console.log('[textToSpeechKokoro] Voice:', voice, 'Endpoint:', ttsConfig.endpoint);
   
   try {
     const response = await fetch(`${ttsConfig.endpoint}/v1/audio/speech`, {
@@ -153,7 +89,6 @@ async function textToSpeechKokoro(text: string, voice: string): Promise<TextToSp
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('[textToSpeechKokoro] Error response:', errorText);
       throw new Error(`Kokoro TTS failed: ${response.status} - ${errorText}`);
     }
 
@@ -167,7 +102,6 @@ async function textToSpeechKokoro(text: string, voice: string): Promise<TextToSp
     const base64 = btoa(binary);
     const mediaUrl = `data:audio/wav;base64,${base64}`;
     
-    console.log('[textToSpeechKokoro] Generated:', arrayBuffer.byteLength, 'bytes');
     return { media: mediaUrl };
   } catch (error) {
     console.error('[textToSpeechKokoro] Error:', error);
@@ -175,48 +109,8 @@ async function textToSpeechKokoro(text: string, voice: string): Promise<TextToSp
   }
 }
 
-async function textToSpeechVibeVoice(text: string, voice: string): Promise<TextToSpeechOutput> {
-  const ttsConfig = getTTSConfig();
-  console.log('[textToSpeechVibeVoice] Voice:', voice, 'Endpoint:', ttsConfig.endpoint);
-
-  try {
-    const response = await fetch(`${ttsConfig.endpoint}/v1/audio/speech`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        input: text,
-        voice: voice,
-        response_format: 'wav'
-      })
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('[textToSpeechVibeVoice] Error response:', errorText);
-      throw new Error(`VibeVoice TTS failed: ${response.status} - ${errorText}`);
-    }
-
-    const arrayBuffer = await response.arrayBuffer();
-    const uint8Array = new Uint8Array(arrayBuffer);
-
-    let binary = '';
-    for (let i = 0; i < uint8Array.length; i++) {
-      binary += String.fromCharCode(uint8Array[i]);
-    }
-    const base64 = btoa(binary);
-    const mediaUrl = `data:audio/wav;base64,${base64}`;
-
-    console.log('[textToSpeechVibeVoice] Generated:', arrayBuffer.byteLength, 'bytes');
-    return { media: mediaUrl };
-  } catch (error) {
-    console.error('[textToSpeechVibeVoice] Error:', error);
-    throw error;
-  }
-}
-
 async function textToSpeechVibeVoice7B(text: string, voice: string, referenceAudioData?: string): Promise<TextToSpeechOutput> {
   const ttsConfig = getTTSConfig();
-  console.log('[textToSpeechVibeVoice7B] Voice:', voice, 'Endpoint:', ttsConfig.endpoint);
 
   const requestBody: Record<string, unknown> = {
     input: text,
@@ -237,7 +131,6 @@ async function textToSpeechVibeVoice7B(text: string, voice: string, referenceAud
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('[textToSpeechVibeVoice7B] Error response:', errorText);
       throw new Error(`VibeVoice-7B TTS failed: ${response.status} - ${errorText}`);
     }
 
@@ -251,7 +144,6 @@ async function textToSpeechVibeVoice7B(text: string, voice: string, referenceAud
     const base64 = btoa(binary);
     const mediaUrl = `data:audio/wav;base64,${base64}`;
 
-    console.log('[textToSpeechVibeVoice7B] Generated:', arrayBuffer.byteLength, 'bytes');
     return { media: mediaUrl };
   } catch (error) {
     console.error('[textToSpeechVibeVoice7B] Error:', error);

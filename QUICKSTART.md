@@ -68,16 +68,15 @@ Copia y pega estos comandos en tu terminal según lo que necesites:
 
 ---
 
-## Puertos que usa Genki
+## Servicios de Voz (TTS)
 
-| Servicio | Puerto |
-|----------|--------|
-| App web | 9002 |
-| Voxtral TTS | 8000 |
-| Piper TTS | 8080 |
-| VibeVoice TTS | 8090 |
-| VibeVoice 7B TTS | 8091 |
-| Voice Eval | 10301 |
+Genki usa 3 motores de voz:
+
+| Servicio | Puerto | Calidad | Voice Cloning |
+|----------|--------|---------|---------------|
+| **Piper** | 8080 | Rápido | No |
+| **Kokoro** | 8880 | Buena | No |
+| **VibeVoice 7B** | 8091 | La mejor | Sí |
 
 ---
 
@@ -93,7 +92,7 @@ Copia y pega:
 Copia y pega en terminal (cada uno en una terminal diferente):
 
 ```text
-tail -f /tmp/voxtral.log
+tail -f /tmp/pipeline.log
 ```
 
 ```text
@@ -104,7 +103,7 @@ tail -f /tmp/nextjs.log
 
 ## Para desarrollo
 
-Si estás修改ando el código:
+Si estás modificando el código:
 
 1. Copia y pega: `./genki.sh start --dev`
 2. En otra terminal, copia y pega: `npm run dev`
