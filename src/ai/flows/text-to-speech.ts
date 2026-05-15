@@ -3,6 +3,18 @@
 import { z } from 'genkit';
 import { getTTSConfig } from '@/ai/llm';
 
+// Helper para asegurar puntuación final en texto para TTS
+// Sin puntuación, los modelos TTS pueden truncar la última palabra
+function ensureEndingPunctuation(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed) return text;
+  // Si no termina en puntuación, agregar punto
+  if (!/[.!?]$/.test(trimmed)) {
+    return trimmed + '.';
+  }
+  return trimmed;
+}
+
 const TextToSpeechInputSchema = z.object({
   text: z.string(),
   provider: z.enum(['piper', 'kokoro', 'vibevoice7b']).optional(),
@@ -18,7 +30,8 @@ export type TextToSpeechOutput = z.infer<typeof TextToSpeechOutputSchema>;
 
 export async function textToSpeech(input: TextToSpeechInput): Promise<TextToSpeechOutput> {
   const ttsConfig = getTTSConfig();
-  const text = typeof input === 'string' ? input : input.text;
+  const rawText = typeof input === 'string' ? input : input.text;
+  const text = ensureEndingPunctuation(rawText); // Ensure proper ending for complete audio
   const provider = ttsConfig.provider;
   
   console.log('[textToSpeech] Provider from config:', provider);

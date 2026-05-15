@@ -54,11 +54,14 @@ function getRandomVoice(): { voice: string } {
 export async function generateReferenceAudio(text: string): Promise<string> {
   const { voice } = getRandomVoice();
   
+  // Ensure proper ending for complete audio (avoid cut-off words)
+  const normalizedText = text.trim().match(/[.!?]$/) ? text : text + '.';
+  
   const response = await fetch(`${VOXTRAL_TTS_BASE}/audio/speech`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      input: text,
+      input: normalizedText,
       voice: voice,
       response_format: 'wav'
     })
