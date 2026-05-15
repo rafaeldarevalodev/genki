@@ -30,7 +30,8 @@ Genki Sensei es una **aplicación web para aprender idiomas** que usa Inteligenc
 | 🃏 **Flashcards Inteligentes** | Crea tarjetas de vocabulario desde cualquier texto |
 | 🎯 **Repetición Espaciada (SRS)** | El sistema te muestra las palabras justo cuando las vas a olvidar |
 | 🗣️ **Práctica de Voz** | Graba tu pronunciación y la IA te evalúa |
-| 💬 **Roleplay** | Practica conversaciones con un tutor de IA |
+| 💬 **Roleplay** | Practica conversaciones con Maya (tutor de inglés) |
+| 🎙️ **Live Voice** | Conversación inmersiva con voz en tiempo real |
 | 🔊 **Text-to-Speech (TTS)** | Escucha la pronunciación correcta |
 
 ### 💡 ¿Por qué es especial?
@@ -164,6 +165,7 @@ Esto inicia todos los servicios necesarios:
 - Piper TTS (8080)
 - Kokoro TTS (8880)
 - VibeVoice 7B TTS (8091)
+- Maya Live Voice (8092)
 - Voice Eval (10301)
 - Next.js (9002)
 
@@ -190,6 +192,7 @@ Esto inicia todos los servicios necesarios:
 | Piper TTS | 8080 |
 | Kokoro TTS | 8880 |
 | VibeVoice 7B TTS | 8091 |
+| Maya Live Voice | 8092 |
 | Voice Eval | 10301 |
 
 ---
@@ -208,7 +211,7 @@ Verás el menú principal con opciones:
 | ✏️ **Creator** | Crear nuevas tarjetas desde texto |
 | 🎯 **Study** | Estudiar con repetición espaciada |
 | 🎤 **Voice Practice** | Practicar pronunciación |
-| 💬 **Roleplay** | Conversar con un tutor de IA |
+| 💬 **Roleplay** | Conversar con Maya (tutor de inglés) |
 | ⚙️ **Settings** | Configurar voces, modelos, etc. |
 
 ### 📖 Flujo de Uso Básico

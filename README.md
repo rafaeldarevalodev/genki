@@ -27,12 +27,13 @@ Genki Sensei es una aplicación web para aprender idiomas mediante flashcards in
 - **Word Mode / Chunks Mode**: Extrae vocabulario individual o frases completas
 - **Categorización Automática**: Cards organizadas por categoría (action, structure, concept, modifier, idiom, filler)
 - **Quiz Interactivo**: Práctica con preguntas generadas por IA
-- **Roleplay**: Conversación simulada con la IA (tutor Dr. Sarah Chen)
+- **Roleplay**: Conversación simulada con Maya (tutor de inglés)
+- **Live Voice Mode**: Conversación inmersiva con voz real tiempo real
 - **Voice Practice**: Evaluación de pronunciación fonema por fonema
 - **TTS**: Pronunciación nativa con Piper/Kokoro/VibeVoice 7B
 - **CEFR Classification**: Clasificación automática de nivel (A1-C2)
 - **Phrase Explorer**: Feedback educativo sobre uso de vocabulario
-- **100% Local**: Sin dependencias de APIs externas (opcional cloud)
+- **Cloud LLM**: NVIDIA API para respuestas de IA (configurable a local)
 
 ---
 
@@ -55,7 +56,10 @@ Genki Sensei es una aplicación web para aprender idiomas mediante flashcards in
 │  │sessionStorage│    │   TTS        │    │ Voice Eval   │      │
 │  │ (Audio Cache)│    │  Servers     │    │  :10301     │      │
 │  └──────────────┘    │ 8080/8880/   │    └──────────────┘      │
-│                      │   8091       │                          │
+│                      │ 8091/8092    │                          │
+│                      │              │                          │
+│                      │ 8092: Maya    │                          │
+│                      │ Live Voice   │                          │
 │                      └──────────────┘                          │
 │                                                                  │
 └─────────────────────────────────────────────────────────────────┘
@@ -66,10 +70,11 @@ Genki Sensei es una aplicación web para aprender idiomas mediante flashcards in
 | Servicio | Puerto | Descripción |
 |----------|--------|-------------|
 | Next.js | 9002 | Aplicación web |
-| Cloud LLM API | 443 | Groq/Mistral API |
+| Cloud LLM API | 443 | NVIDIA API (moonshotai/kimi-k2.6) |
 | Piper TTS | 8080 | TTS rápido |
 | Kokoro TTS | 8880 | TTS alternativo |
 | VibeVoice 7B TTS | 8091 | TTS alta calidad con voice cloning |
+| Maya Live Voice | 8092 | Live Voice Mode con streaming |
 | Voice Eval | 10301 | Evaluación de pronunciación |
 
 ---
@@ -326,6 +331,25 @@ npm start
 | Kokoro | 8880 | `/v1/audio/speech` | `{"input": "...", "voice": "..."}` |
 | VibeVoice 7B | 8091 | `/v1/audio/speech` | `{"input": "...", "voice": "...", "reference_audio_data": "..."}` |
 
+### Maya Live Voice API
+
+| Endpoint | Método | Descripción |
+|----------|--------|-------------|
+| `/health` | GET | Estado del servicio |
+| `/v1/voice/conversation` | POST | Pipeline completo: VAD → ASR → LLM → TTS streaming |
+| `/v1/voice/session/reset` | POST | Reset historial de sesión |
+| `/v1/voice/abort` | POST | Abortar sesión actual |
+
+**Pipeline de Live Voice:**
+```
+1. POST /v1/voice/conversation con { user_audio: base64 }
+2. VAD detecta si hay habla
+3. ASR transcribe audio (mlx-whisper)
+4. LLM genera respuesta de Maya (2-3 frases)
+5. TTS streaming audio chunks
+6. Cliente puede abortar en cualquier momento (AbortController)
+```
+
 ### Voice Evaluation API
 
 | Endpoint | Método | Descripción |
@@ -370,12 +394,33 @@ Genera preguntas de opción múltiple con:
 
 **Flow:** `src/ai/flows/simulate-language-roleplay.ts`
 
-- **Tutor:** Dr. Sarah Chen (tutor conversacional senior)
-- Usa vocabulario objetivo naturalmente
-- Correcciones indirectas con `[tutor note]`
+- **Tutor:** Maya (tutor conversacional de inglés)
+- Respuestas cortas (2-3 frases) para mantener ritmo de conversación
+- Correcciones indirectas con `[note]`
 - Mantiene historial de conversación
+- Toggle entre modo Chat y modo Voice en la UI
 
-### 9.4. Evaluación de Roleplay
+### 9.4. Live Voice Mode (Inmersivo)
+
+**Componentes:**
+- `src/hooks/useLiveVoice.ts` - Hook principal con abort + barge-in
+- `src/workers/audio-stream.worker.ts` - WebWorker para playback
+- `src/components/roleplay/live-voice-ui.tsx` - UI simplificada con avatar
+
+**Pipeline completo (Estrategia B):**
+```
+User habla → VAD → ASR (mlx-whisper) → LLM (Maya) → TTS Streaming
+                ↑                                              |
+                └──────── Barge-in (AbortController) ────────┘
+```
+
+**Features:**
+- Abort completo: AbortController cancela fetch + LLM
+- Session reset: Maya olvida lo que iba a decir en interrupción
+- Push-to-talk: Mantén para hablar, suelta para enviar
+- Transcripción visible: Usuario ve qué entendió Maya
+
+### 9.5. Evaluación de Roleplay
 
 **Flow:** `src/ai/flows/evaluate-roleplay-performance.ts`
 
@@ -570,23 +615,35 @@ genki/
 │   │   ├── flashcard-view.tsx
 │   │   ├── quiz-view.tsx
 │   │   ├── roleplay-view.tsx
+│   │   │   ├── roleplay/
+│   │   │   │   └── live-voice-ui.tsx   # Live Voice Mode UI
 │   │   ├── voice-practice-view.tsx
 │   │   ├── tts-button.tsx
 │   │   └── ui/            # shadcn/ui components
 │   │
-│   ├── contexts/          # React contexts
 │   ├── hooks/             # Custom hooks
-│   └── lib/
-│       ├── types.ts       # TypeScript interfaces
-│       ├── srs.ts        # SM-2 algorithm
-│       └── utils.ts
+│   │   └── useLiveVoice.ts   # Live Voice hook con abort/barge-in
+│   │
+│   ├── workers/           # WebWorkers
+│   │   └── audio-stream.worker.ts  # Audio playback sin bloquear UI
+│   │
+│   ├── contexts/          # React contexts
+│   ├── lib/
+│   │   ├── types.ts       # TypeScript interfaces
+│   │   ├── srs.ts        # SM-2 algorithm
+│   │   └── utils.ts
 │
 ├── tts/                   # Servidor Piper
 │   └── server.py
 │
+├── kokoro_server.py       # Servidor Kokoro TTS (8880)
+├── vibevoice7b_server.py   # Servidor VibeVoice 7B TTS (8091)
+├── maya_live_server.py     # Servidor Maya Live Voice (8092) - FastAPI
+│
 ├── reference_voices/      # Voice cloning reference audio files
 │   ├── en_Emma_woman.wav
 │   ├── en_Sara_woman.mp3
+│   ├── maya_ref.wav      # (opcional) Voice reference para Maya
 │   └── ...
 │
 ├── mlx-speech/            # appautomaton/mlx-speech (VibeVoice 7B runtime)

@@ -51,7 +51,11 @@ DEFAULT_VOICES = [
     "en-Sara_woman",
     "en-Max_man",
     "en-July_Sexy_woman",
-    "en-Jane_woman"
+    "en-Jane_woman",
+    "en-Giuseppe_man",
+    "en-Andi_Male",
+    "en-Lady_female",
+    "en-Hanel_male",
 ]
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -68,6 +72,10 @@ VOICE_TO_REFERENCE = {
     "en-Max_man": "en_Max_man.wav",
     "en-July_Sexy_woman": "en_July_Sexy_woman.wav",
     "en-Jane_woman": "en_Jane_woman.wav",
+    "en-Giuseppe_man": "en_Giuseppe_man.wav",
+    "en-Andi_Male": "en_Andi_Male.wav",
+    "en-Lady_female": "en_Lady_female.wav",
+    "en-Hanel_male": "en_Hanel_male.wav",
 }
 
 model = None

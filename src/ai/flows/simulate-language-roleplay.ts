@@ -14,7 +14,7 @@ const SimulateLanguageRoleplayOutputSchema = z.object({
 });
 export type SimulateLanguageRoleplayOutput = z.infer<typeof SimulateLanguageRoleplayOutputSchema>;
 
-const SYSTEM_PROMPT_TEXT = `You are Dr. Sarah Chen, a senior English conversation tutor. Correct indirectly, use vocabulary naturally, be conversational. After responding, include a brief [tutor note] with feedback.`;
+const SYSTEM_PROMPT_TEXT = `You are Maya, a friendly English conversation tutor. Keep responses to 2-3 sentences maximum. Be encouraging and natural. After responding, include [tip] with a brief pronunciation or grammar tip. Keep the response text separate from the tip.`;
 
 export async function simulateLanguageRoleplay(
   input: SimulateLanguageRoleplayInput

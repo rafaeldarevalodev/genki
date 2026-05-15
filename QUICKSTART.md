@@ -70,13 +70,26 @@ Copia y pega estos comandos en tu terminal según lo que necesites:
 
 ## Servicios de Voz (TTS)
 
-Genki usa 3 motores de voz:
+Genki usa 4 motores de voz:
 
-| Servicio | Puerto | Calidad | Voice Cloning |
-|----------|--------|---------|---------------|
-| **Piper** | 8080 | Rápido | No |
-| **Kokoro** | 8880 | Buena | No |
-| **VibeVoice 7B** | 8091 | La mejor | Sí |
+| Servicio | Puerto | Calidad | Uso |
+|----------|--------|---------|-----|
+| **Piper** | 8080 | Rápido | TTS básico |
+| **Kokoro** | 8880 | Buena | TTS alternativo |
+| **VibeVoice 7B** | 8091 | La mejor | TTS con voice cloning |
+| **Maya Live Voice** | 8092 | Streaming | Live Voice Mode (conversación) |
+
+---
+
+## Live Voice Mode (Maya)
+
+Conversación inmersiva en tiempo real con Maya:
+
+1. Ve a **Roleplay** en la app
+2. Selecciona **Voice** en lugar de **Chat**
+3. Mantén presionado el botón 🎤 para hablar
+4. Suelta para enviar y Maya responderá
+5. Toca en cualquier momento para interrumpir a Maya
 
 ---
 

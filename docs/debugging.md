@@ -107,6 +107,9 @@ console.log('║  JSON MATCH:', jsonMatch?.[0].substring(0, 200));
 | **Analysis UI** | `src/components/analyzed-text.tsx` | Text display with highlighted cards |
 | **Analysis Page** | `src/app/(app)/creator/analysis/[deckId]/page.tsx` | Page routing and deck lookup |
 | **Text Cleaning** | `src/utils/text-cleaner.ts` | Pre-process input text |
+| **Live Voice** | `src/hooks/useLiveVoice.ts` | Voice conversation with Maya |
+| **Live Voice UI** | `src/components/roleplay/live-voice-ui.tsx` | Voice mode UI |
+| **Audio Worker** | `src/workers/audio-stream.worker.ts` | Audio playback |
 
 ## Key Data Structures
 
@@ -135,6 +138,35 @@ interface Deck {
   sourceImages?: string[];
   cefrLevel?: string;
 }
+```
+
+### LiveVoiceState Object
+```typescript
+interface LiveVoiceState {
+  mode: 'chat' | 'voice';
+  vadState: 'idle' | 'listening' | 'speaking' | 'processing';
+  userTranscript: string;
+  mayaTranscript: string;
+  isMayaSpeaking: boolean;
+  sessionId: string;
+  error: string | null;
+}
+```
+
+### Debug Live Voice Pipeline
+```typescript
+// In useLiveVoice.ts
+console.log('║  vadState:', state.vadState);
+console.log('║  userTranscript:', state.userTranscript);
+console.log('║  isMayaSpeaking:', state.isMayaSpeaking);
+
+// Check Maya Live server logs
+// tail -f /tmp/maya_live.log
+
+// Test endpoint directly
+// curl -X POST http://localhost:8092/v1/voice/conversation \
+//   -H "Content-Type: application/json" \
+//   -d '{"user_audio": "...", "mode": "fast"}'
 ```
 
 ## Browser Console Logs

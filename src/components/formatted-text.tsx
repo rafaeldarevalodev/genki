@@ -16,16 +16,50 @@ const renderBadges = (str: string) => {
   });
 };
 
-export default function FormattedText({ text }: { text: string }) {
+interface FormattedTextProps {
+  text: string;
+}
+
+export default function FormattedText({ text }: FormattedTextProps) {
   if (typeof text !== 'string') return String(text);
+  
+  // Split text from [tip] content
+  const tipMatch = text.match(/\[tip\]([\s\S]*?)$/i);
+  let mainText = text;
+  let tipText: string | null = null;
+  
+  if (tipMatch) {
+    mainText = text.slice(0, tipMatch.index).trim();
+    tipText = tipMatch[1].trim();
+  }
+  
+  const lines = mainText.split('\n').filter(line => line.trim());
+  
   return (
     <div className="space-y-3">
-      {text.split('\n').map((line, i) => (
-        <div key={i} className="flex gap-4">
+      {lines.length > 0 ? (
+        lines.map((line, i) => (
+          <div key={i} className="flex gap-4">
+            <div className="w-2.5 h-2.5 bg-indigo-400 rounded-full mt-1.5 shrink-0"></div>
+            <div>{renderBadges(line)}</div>
+          </div>
+        ))
+      ) : (
+        <div className="flex gap-4">
           <div className="w-2.5 h-2.5 bg-indigo-400 rounded-full mt-1.5 shrink-0"></div>
-          <div>{renderBadges(line)}</div>
+          <div>{renderBadges(mainText)}</div>
         </div>
-      ))}
+      )}
+      
+      {/* Render tip at the end with distinctive styling */}
+      {tipText && (
+        <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3">
+          <span className="text-lg">💡</span>
+          <div className="text-sm text-amber-800 italic leading-relaxed">
+            {tipText}
+          </div>
+        </div>
+      )}
     </div>
   );
-};
+}

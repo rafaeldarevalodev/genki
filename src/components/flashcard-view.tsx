@@ -107,6 +107,23 @@ export default function FlashcardView({ deck, isSrsMode, onSessionEnd }: Flashca
 
   return (
     <div className="max-w-2xl mx-auto space-y-8 animate-in zoom-in-95">
+      {isSrsMode && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {srsButtons.map(btn => (
+            <button
+              key={btn.label}
+              onClick={(e) => { e.stopPropagation(); handleSrsGrade(btn.q); }}
+              className={`bg-${btn.color}-100 text-${btn.color}-700 py-4 rounded-2xl font-black hover:bg-${btn.color}-200 transition-all flex flex-col items-center`}
+            >
+              {btn.label}
+              <span className="text-xs font-medium opacity-60 mt-1">
+                {formatInterval(getNextIntervalPreview(currentCard, btn.q))}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+
       <div
         className="relative w-full aspect-[16/11] cursor-pointer perspective-2000 group"
         onClick={() => setIsFlipped(!isFlipped)}
@@ -133,25 +150,8 @@ export default function FlashcardView({ deck, isSrsMode, onSessionEnd }: Flashca
         </div>
       </div>
 
-      {isFlipped && <PhraseExplorer chunk={currentCard.front} />}
-      
       {isSrsMode ? (
-        isFlipped ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {srsButtons.map(btn => (
-               <button
-               key={btn.label}
-               onClick={(e) => { e.stopPropagation(); handleSrsGrade(btn.q); }}
-               className={`bg-${btn.color}-100 text-${btn.color}-700 py-4 rounded-2xl font-black hover:bg-${btn.color}-200 transition-all flex flex-col items-center`}
-             >
-               {btn.label}
-               <span className="text-xs font-medium opacity-60 mt-1">
-                 {formatInterval(getNextIntervalPreview(currentCard, btn.q))}
-               </span>
-             </button>
-            ))}
-          </div>
-        ) : (
+        isFlipped ? null : (
           <Button onClick={() => setIsFlipped(true)} className="w-full bg-slate-900 text-white py-7 rounded-3xl font-black shadow-xl hover:scale-[1.02] transition-transform text-lg h-auto">Show Answer</Button>
         )
       ) : (
@@ -160,6 +160,9 @@ export default function FlashcardView({ deck, isSrsMode, onSessionEnd }: Flashca
           <Button onClick={() => handleNav('next')} className="flex-1 bg-indigo-600 text-white py-6 rounded-3xl font-black shadow-2xl active:scale-95 transition-all text-base h-auto">Next</Button>
         </div>
       )}
+
+      <PhraseExplorer chunk={currentCard.front} />
+
       {isSrsMode && <div className="text-center text-slate-300 text-sm font-bold tracking-widest uppercase">Cards Left: {sessionQueue.length - currentIndex}</div>}
     </div>
   );

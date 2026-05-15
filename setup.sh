@@ -39,7 +39,7 @@ check_command() {
 }
 
 install_node_deps() {
-    log_step "1" "5" "Instalando dependencias Node.js..."
+    log_step "1" "6" "Instalando dependencias Node.js..."
     
     if ! check_command node; then
         log_error "Node.js no encontrado. Instalar primero:"
@@ -58,16 +58,18 @@ install_node_deps() {
 }
 
 install_conda_envs() {
-    log_step "2" "5" "Creando entornos Conda..."
+    log_step "2" "6" "Creando entornos Conda..."
     
-    # Entorno genki (Piper + Kokoro)
+    # Entorno genki (Piper + Kokoro + Maya Live Voice)
     if conda env list | grep -q "^genki "; then
         log_info "Entorno 'genki' ya existe"
+        conda activate genki
+        pip install fastapi uvicorn f5-tts-mlx mlx-whisper requests 2>/dev/null || true
     else
         log_info "Creando entorno 'genki'..."
         conda create -n genki python=3.11 -y -q
         conda activate genki
-        pip install genkit dotenv numpy -q
+        pip install genkit dotenv numpy fastapi uvicorn f5-tts-mlx mlx-whisper requests -q
     fi
     
     # Entorno voice_eval
@@ -94,7 +96,7 @@ install_conda_envs() {
 }
 
 download_models() {
-    log_step "3" "5" "Descargando modelos de TTS..."
+    log_step "3" "6" "Descargando modelos de TTS..."
     
     mkdir -p tts/models
     
@@ -106,11 +108,40 @@ download_models() {
         echo "  Descargar desde: https://github.com/rhasspy/piper"
     fi
     
-    log_info "Modelos listos"
+    log_info "Modelos TTS listos"
+    
+    # Descargar modelos MLX (F5-TTS + Whisper)
+    download_ml_models
+}
+
+download_ml_models() {
+    log_step "4" "6" "Descargando modelos MLX (F5-TTS + Whisper)..."
+    
+    conda activate genki
+    
+    # F5-TTS
+    log_info "Descargando F5-TTS (~2GB)..."
+    python -c "
+from f5_tts_mlx.generate import generate
+print('F5-TTS: Downloading model weights...')
+generate('Hello world', output='/tmp/f5tts_test.wav')
+print('F5-TTS: Model downloaded and verified')
+" 2>&1 || log_warn "F5-TTS download failed (will retry on first use)"
+    
+    # Whisper
+    log_info "Descargando Whisper (~1.5GB)..."
+    python -c "
+import mlx_whisper
+print('Whisper: Downloading model weights...')
+mlx_whisper.transcribe('/tmp/f5tts_test.wav', model='mlx-community/whisper-large-v3-turbo-mlx')
+print('Whisper: Model downloaded and verified')
+" 2>&1 || log_warn "Whisper download failed (will retry on first use)"
+    
+    log_info "Modelos MLX listos"
 }
 
 build_app() {
-    log_step "4" "5" "Build de producción..."
+    log_step "5" "6" "Build de producción..."
     
     npm run build || {
         log_warn "Build falló, usando modo desarrollo"
@@ -120,7 +151,7 @@ build_app() {
 }
 
 start_servers() {
-    log_step "5" "5" "Iniciando servidores..."
+    log_step "6" "6" "Iniciando servidores..."
     
     chmod +x genki.sh
     ./genki.sh start || {
@@ -134,6 +165,14 @@ verify_setup() {
     echo ""
     echo "=== Setup completo ==="
     echo ""
+    echo "Servicios activos:"
+    echo "  - Next.js:        http://localhost:9002"
+    echo "  - Piper TTS:      localhost:8080"
+    echo "  - Kokoro TTS:     localhost:8880"
+    echo "  - VibeVoice 7B:   localhost:8091"
+    echo "  - Maya Live Voice: localhost:8092 (Live Voice Mode)"
+    echo "  - Voice Eval:     localhost:10301"
+    echo ""
     echo "Para ver el estado de los servicios:"
     echo "  ./genki.sh status"
     echo ""
@@ -143,17 +182,22 @@ verify_setup() {
     echo "URL de la app:"
     echo "  http://localhost:9002"
     echo ""
+    echo "Modelos MLX descargados:"
+    echo "  - F5-TTS (Live Voice)"
+    echo "  - Whisper (ASR)"
+    echo ""
 }
 
 usage() {
     echo "Usage: $0 [option]"
     echo ""
     echo "Opciones:"
-    echo "  full         - Instalar todo (default)"
-    echo "  quick        - Instalar deps sin descargar modelos"
-    echo "  skip-models - Solo iniciar servidores"
-    echo "  node-only    - Solo instalar deps Node"
-    echo "  conda-only   - Solo crear entornos Conda"
+    echo "  full           - Instalar todo (default)"
+    echo "  quick          - Instalar deps sin descargar modelos MLX"
+    echo "  ml-models      - Solo descargar modelos MLX (F5-TTS + Whisper)"
+    echo "  skip-models    - Solo iniciar servidores"
+    echo "  node-only      - Solo instalar deps Node"
+    echo "  conda-only     - Solo crear entornos Conda"
     echo ""
     exit 1
 }
@@ -172,12 +216,18 @@ case "$MODE" in
         verify_setup
         ;;
     quick)
-        log_info "Mode: QUICK (sin descargar modelos)"
+        log_info "Mode: QUICK (sin descargar modelos MLX)"
         install_node_deps
         install_conda_envs
+        download_models
         build_app
         start_servers
         verify_setup
+        ;;
+    ml-models)
+        log_info "Mode: ML MODELS (descargar F5-TTS + Whisper)"
+        install_conda_envs
+        download_ml_models
         ;;
     skip-models)
         log_info "Mode: SKIP MODELS (solo servidores)"
