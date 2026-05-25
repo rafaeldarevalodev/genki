@@ -135,8 +135,8 @@ export async function evaluateRoleplayAction(
 
 export async function getTTSAudio(text: string, voice?: string, provider?: string): Promise<{media: string} | null> {
   try {
-    const validProvider = (provider === 'piper' || provider === 'kokoro' || provider === 'vibevoice7b')
-      ? provider as 'piper' | 'kokoro' | 'vibevoice7b'
+    const validProvider = (provider === 'piper' || provider === 'kokoro' || provider === 'vibevoice7b' || provider === 'f5tts')
+      ? provider as 'piper' | 'kokoro' | 'vibevoice7b' | 'f5tts'
       : 'kokoro';
 
     let referenceAudioData: string | undefined;
@@ -157,7 +157,13 @@ export async function getTTSAudio(text: string, voice?: string, provider?: strin
       }
     }
 
+    console.log('[getTTSAudio] text:', text);
+    console.log('[getTTSAudio] voice:', voice);
+    console.log('[getTTSAudio] provider:', validProvider);
+    
     const input = { text, provider: validProvider, voice, referenceAudioData };
+    console.log('[getTTSAudio] input to textToSpeech:', JSON.stringify(input));
+    
     const result = await textToSpeech(input);
     return result;
   } catch (err) {

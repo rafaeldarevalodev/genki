@@ -34,12 +34,20 @@ export default function QuizView({ deck, onSessionEnd }: QuizViewProps) {
   const audioStarted = useRef(false);
   
   useEffect(() => {
-    synths.current.correct = new Tone.Synth().toDestination();
-    synths.current.incorrect = new Tone.Synth().toDestination();
+    try {
+      synths.current.correct = new Tone.Synth().toDestination();
+      synths.current.incorrect = new Tone.Synth().toDestination();
+    } catch (e) {
+      console.warn('[QuizView] Tone.js initialization failed:', e);
+    }
     
     return () => {
-      synths.current.correct?.dispose();
-      synths.current.incorrect?.dispose();
+      try {
+        synths.current.correct?.dispose();
+        synths.current.incorrect?.dispose();
+      } catch (e) {
+        console.warn('[QuizView] Tone.js dispose failed:', e);
+      }
     };
   }, []);
 

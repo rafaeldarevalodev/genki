@@ -56,6 +56,7 @@ DEFAULT_VOICES = [
     "en-Andi_Male",
     "en-Lady_female",
     "en-Hanel_male",
+    "en-Mark_Eng",
 ]
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -76,6 +77,7 @@ VOICE_TO_REFERENCE = {
     "en-Andi_Male": "en_Andi_Male.wav",
     "en-Lady_female": "en_Lady_female.wav",
     "en-Hanel_male": "en_Hanel_male.wav",
+    "en-Mark_Eng": "en_Mark_Eng.wav",
 }
 
 model = None

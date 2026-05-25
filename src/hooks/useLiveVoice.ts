@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { useSettings } from '@/hooks/use-settings';
 
 function generateId(): string {
   return crypto.randomUUID();
@@ -73,13 +74,28 @@ export function useLiveVoice(options: UseLiveVoiceOptions = {}): UseLiveVoiceRet
     messages: []
   });
 
-  // Load Maya voice from localStorage
-  const [mayaVoiceId, setMayaVoiceId] = useState<string>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem(MAYA_VOICE_STORAGE_KEY) || DEFAULT_MAYA_VOICE;
+  // Get TTS settings from user preferences
+  const { settings, isLoaded: settingsLoaded } = useSettings();
+
+  // Get TTS provider and voice from settings
+  const getTTSVoice = useCallback(() => {
+    if (!settings || !settingsLoaded) return { provider: 'f5tts', voice: 'en-Emma_woman' };
+    
+    const provider = settings.ttsProvider || 'f5tts';
+    let voice = 'en-Emma_woman';
+    
+    if (provider === 'kokoro') {
+      voice = settings.kokoroVoice || 'af_bella';
+    } else if (provider === 'vibevoice7b') {
+      voice = settings.vibevoice7bVoice || 'en-Emma_woman';
+    } else if (provider === 'f5tts') {
+      voice = settings.f5ttsVoice || 'en-Emma_woman';
+    } else if (provider === 'piper') {
+      voice = settings.voice || 'en_GB-alan-medium';
     }
-    return DEFAULT_MAYA_VOICE;
-  });
+    
+    return { provider, voice };
+  }, [settings, settingsLoaded]);
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -277,7 +293,8 @@ export function useLiveVoice(options: UseLiveVoiceOptions = {}): UseLiveVoiceRet
             session_id: state.sessionId,
             mode: mode,
             vocabulary: vocabulary,
-            voice_id: mayaVoiceId
+            tts_provider: getTTSVoice().provider,
+            tts_voice: getTTSVoice().voice
           }),
           signal: abortControllerRef.current.signal
         });

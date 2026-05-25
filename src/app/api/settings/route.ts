@@ -8,10 +8,11 @@ interface SettingsData {
   provider?: 'local' | 'cloud';
   localModel?: 'gemma';
   cloudModel?: string;
-  ttsProvider?: 'piper' | 'kokoro' | 'vibevoice7b';
+  ttsProvider?: 'piper' | 'kokoro' | 'vibevoice7b' | 'f5tts';
   voice?: string;
   kokoroVoice?: string;
   vibevoice7bVoice?: string;
+  f5ttsVoice?: string;
   playbackSpeed?: number;
 }
 
@@ -50,6 +51,7 @@ export async function GET() {
       voice: env.TTS_VOICE || 'en_GB-alan-medium',
       kokoroVoice: env.TTS_KOKORO_VOICE || 'af_bella',
       vibevoice7bVoice: env.TTS_VIBEVOICE7B_VOICE || 'en-Emma_woman',
+      f5ttsVoice: env.TTS_F5TTS_VOICE || 'en-Emma_woman',
       playbackSpeed: parseFloat(env.TTS_PLAYBACK_SPEED || '1'),
     });
   } catch (error) {
@@ -83,6 +85,9 @@ export async function POST(request: NextRequest) {
     }
     if (data.vibevoice7bVoice) {
       env.TTS_VIBEVOICE7B_VOICE = data.vibevoice7bVoice;
+    }
+    if (data.f5ttsVoice) {
+      env.TTS_F5TTS_VOICE = data.f5ttsVoice;
     }
     if (data.playbackSpeed) {
       env.TTS_PLAYBACK_SPEED = data.playbackSpeed.toString();

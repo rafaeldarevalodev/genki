@@ -17,7 +17,8 @@ export async function POST(req: NextRequest) {
         session_id: body.session_id,
         mode: body.mode || 'fast',
         vocabulary: body.vocabulary || [],
-        voice_id: body.voice_id || 'en-Emma_woman'
+        tts_provider: body.tts_provider || 'f5tts',
+        tts_voice: body.tts_voice || 'en-Emma_woman'
       })
     });
 

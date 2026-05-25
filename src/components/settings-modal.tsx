@@ -42,12 +42,12 @@ export function SettingsModal() {
   
   const [provider, setProvider] = useState<'local' | 'cloud'>('cloud');
   const [cloudModel, setCloudModel] = useState('moonshotai/kimi-k2.6');
-  const [ttsProvider, setTtsProvider] = useState<'piper' | 'kokoro' | 'vibevoice7b'>('kokoro');
+  const [ttsProvider, setTtsProvider] = useState<'piper' | 'kokoro' | 'vibevoice7b' | 'f5tts'>('f5tts');
   
   const [selectedVoice, setSelectedVoice] = useState('en_GB-alan-medium');
   const [selectedKokoroVoice, setSelectedKokoroVoice] = useState('af_bella');
   const [selectedVibeVoice7B, setSelectedVibeVoice7B] = useState('en-Emma_woman');
-  const [selectedMayaVoice, setSelectedMayaVoice] = useState('en-Emma_woman');
+  const [selectedF5TTSVoice, setSelectedF5TTSVoice] = useState('en-Emma_woman');
   const [selectedPlaybackSpeed, setSelectedPlaybackSpeed] = useState(1);
   const [userVoices7B, setUserVoices7B] = useState<Array<{id: string, name: string, data: string}>>([]);
 
@@ -64,10 +64,11 @@ export function SettingsModal() {
         const data = await res.json();
         if (data.provider) setProvider(data.provider);
         if (data.cloudModel) setCloudModel(data.cloudModel);
-        if (data.ttsProvider) setTtsProvider(data.ttsProvider);
+        if (data.ttsProvider) setTtsProvider(data.ttsProvider as 'piper' | 'kokoro' | 'vibevoice7b' | 'f5tts');
         if (data.voice) setSelectedVoice(data.voice);
         if (data.kokoroVoice) setSelectedKokoroVoice(data.kokoroVoice);
         if (data.vibevoice7bVoice) setSelectedVibeVoice7B(data.vibevoice7bVoice);
+        if (data.f5ttsVoice) setSelectedF5TTSVoice(data.f5ttsVoice);
         if (data.playbackSpeed) setSelectedPlaybackSpeed(data.playbackSpeed);
       } catch (e) {
         console.error('Failed to load settings:', e);
@@ -84,16 +85,6 @@ export function SettingsModal() {
       }
     } catch (e) {
       console.error('Failed to load user voices:', e);
-    }
-    
-    // Load Maya voice from localStorage
-    try {
-      const mayaVoice = localStorage.getItem('maya_voice_id');
-      if (mayaVoice) {
-        setSelectedMayaVoice(mayaVoice);
-      }
-    } catch (e) {
-      console.error('Failed to load Maya voice:', e);
     }
   }, [isOpen]);
 
@@ -116,11 +107,10 @@ export function SettingsModal() {
           voice: selectedVoice,
           kokoroVoice: selectedKokoroVoice,
           vibevoice7bVoice: selectedVibeVoice7B,
+          f5ttsVoice: selectedF5TTSVoice,
           playbackSpeed: selectedPlaybackSpeed,
         }),
       });
-      // Save Maya voice to localStorage
-      localStorage.setItem('maya_voice_id', selectedMayaVoice);
       await refresh();  // Refresh settings in context
       close();
     } catch (e) {
@@ -150,6 +140,11 @@ export function SettingsModal() {
         body = { ...body, reference_audio_data: userVoice.data };
       }
     }
+
+    if (tts === 'f5tts') {
+      url = 'http://localhost:8093/tts';
+      body = { text: 'Hello, this is a voice test.', voice: voiceId };
+    }
     
     try {
       const response = await fetch(url, {
@@ -172,9 +167,10 @@ export function SettingsModal() {
   
 
   const ttsProviders = [
-    { id: 'piper', name: 'Piper', description: 'Local, fast, UK/US voices' },
-    { id: 'kokoro', name: 'Kokoro', description: 'High quality neural voices' },
+    { id: 'f5tts', name: 'F5-TTS', description: 'Fast, high quality voice cloning' },
     { id: 'vibevoice7b', name: 'VibeVoice 7B', description: 'Microsoft large model, best quality, 22GB RAM' },
+    { id: 'kokoro', name: 'Kokoro', description: 'High quality neural voices' },
+    { id: 'piper', name: 'Piper', description: 'Local, fast, UK/US voices' },
   ];
 
   const piperVoices = [
@@ -213,27 +209,10 @@ export function SettingsModal() {
     { id: 'en-Andi_Male', name: 'Andi (Male)', accent: 'Custom', source: 'preset' },
     { id: 'en-Lady_female', name: 'Lady (Female)', accent: 'Custom', source: 'preset' },
     { id: 'en-Hanel_male', name: 'Hanel (Male)', accent: 'Custom', source: 'preset' },
+    { id: 'en-Mark_Eng', name: 'Mark (Male)', accent: 'Custom', source: 'preset' },
   ];
 
-  // Maya F5-TTS voices (uses same reference audio as VibeVoice)
-  const mayaVoices = [
-    { id: 'en-Emma_woman', name: 'Emma (Female)', accent: 'US' },
-    { id: 'en-Grace_woman', name: 'Grace (Female)', accent: 'US' },
-    { id: 'en-Sara_woman', name: 'Sara (Female)', accent: 'US' },
-    { id: 'en-Jane_woman', name: 'Jane (Female)', accent: 'US' },
-    { id: 'en-Davis_man', name: 'Davis (Male)', accent: 'US' },
-    { id: 'en-Carter_man', name: 'Carter (Male)', accent: 'US' },
-    { id: 'en-Mike_man', name: 'Mike (Male)', accent: 'US' },
-    { id: 'en-Max_man', name: 'Max (Male)', accent: 'US' },
-    { id: 'en-Frank_man', name: 'Frank (Male)', accent: 'US' },
-    { id: 'en-July_Sexy_woman', name: 'July (Female)', accent: 'US' },
-    { id: 'en-Giuseppe_man', name: 'Giuseppe (Male)', accent: 'Custom' },
-    { id: 'en-Andi_Male', name: 'Andi (Male)', accent: 'Custom' },
-    { id: 'en-Lady_female', name: 'Lady (Female)', accent: 'Custom' },
-    { id: 'en-Hanel_male', name: 'Hanel (Male)', accent: 'Custom' },
-  ];
-
-  
+  const f5ttsVoices = vibevoice7bVoices; // F5-TTS uses same voices as VibeVoice
 
   const PLAYBACK_SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
@@ -405,6 +384,43 @@ export function SettingsModal() {
             </div>
           )}
 
+          {/* TTS Voice (F5-TTS) */}
+          {ttsProvider === 'f5tts' && (
+            <div className="space-y-4">
+              <span className="text-xs text-slate-500 mb-2 block">
+                Fast, high quality voice cloning — uses reference audio
+              </span>
+              <span className="text-sm font-medium text-slate-600 mb-2 block">Voice</span>
+              <div className="space-y-2">
+                {f5ttsVoices.map((voice) => (
+                  <div
+                    key={voice.id}
+                    className={`flex items-center justify-between p-3 rounded-xl ${
+                      selectedF5TTSVoice === voice.id
+                        ? 'bg-indigo-50 border-2 border-indigo-600'
+                        : 'bg-slate-50 border-2 border-transparent'
+                    }`}
+                  >
+                    <button
+                      onClick={() => setSelectedF5TTSVoice(voice.id)}
+                      className="flex-1 text-left"
+                    >
+                      <span className="font-bold text-sm">{voice.name}</span>
+                      <span className="text-xs text-slate-500 ml-2">{voice.accent}</span>
+                    </button>
+                    <button
+                      onClick={() => testTtsVoice(voice.id, 'f5tts')}
+                      disabled={testingVoice !== null}
+                      className="text-xs bg-slate-200 px-2 py-1 rounded-lg disabled:opacity-50"
+                    >
+                      Test
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* TTS Voice (VibeVoice 7B) */}
           {ttsProvider === 'vibevoice7b' && (
             <div className="space-y-4">
@@ -556,33 +572,6 @@ export function SettingsModal() {
                   }`}
                 >
                   {speed}x
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Maya Voice (F5-TTS) */}
-          <div className="mt-6 pt-4 border-t border-slate-200">
-            <div className="flex items-center gap-2 mb-3">
-              <Bot size={18} className="text-indigo-600" />
-              <h3 className="font-bold text-slate-700">Maya Voice (Live Mode)</h3>
-            </div>
-            <span className="text-xs text-slate-500 mb-2 block">
-              Select the voice Maya will use in live conversation mode (F5-TTS)
-            </span>
-            <div className="grid grid-cols-2 gap-2">
-              {mayaVoices.map((voice) => (
-                <button
-                  key={voice.id}
-                  onClick={() => setSelectedMayaVoice(voice.id)}
-                  className={`p-3 rounded-xl text-left transition-all ${
-                    selectedMayaVoice === voice.id
-                      ? 'bg-indigo-50 border-2 border-indigo-600'
-                      : 'bg-slate-50 border-2 border-transparent hover:border-slate-300'
-                  }`}
-                >
-                  <span className="font-bold text-sm">{voice.name}</span>
-                  <span className="text-xs text-slate-500 ml-2">{voice.accent}</span>
                 </button>
               ))}
             </div>

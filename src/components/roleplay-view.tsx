@@ -121,7 +121,9 @@ export default function RoleplayView({ deck }: RoleplayViewProps) {
         }
         
         // Extract text without [tip] for TTS
+        console.log('[roleplay-view] BEFORE extractTextForTTS - text:', text);
         const textForTTS = extractTextForTTS(text);
+        console.log('[roleplay-view] AFTER extractTextForTTS - textForTTS:', textForTTS);
         
         setAudioLoading(id);
         
@@ -131,9 +133,13 @@ export default function RoleplayView({ deck }: RoleplayViewProps) {
           ? settings.kokoroVoice
           : provider === 'vibevoice7b'
             ? settings.vibevoice7bVoice
-            : settings.voice;
+            : provider === 'f5tts'
+              ? settings.f5ttsVoice
+              : settings.voice;
 
         // Check cache first (only for short texts)
+        console.log('[roleplay-view] Calling getTTSAudio with:', { textForTTS, voice, provider });
+        
         let audioDataUrl = getCachedAudio(textForTTS, provider, voice);
 
         if (!audioDataUrl) {

@@ -170,6 +170,7 @@ export default function VoicePracticeView({ deck, onSessionEnd }: VoicePracticeV
     // Get TTS config from settings (fallback values)
     const useKokoro = provider === 'kokoro';
     const useVibeVoice7B = provider === 'vibevoice7b';
+    const useF5TTS = provider === 'f5tts';
     
     let apiUrl: string;
     let requestBody: Record<string, unknown>;
@@ -186,6 +187,12 @@ export default function VoicePracticeView({ deck, onSessionEnd }: VoicePracticeV
         input: currentCard.front,
         voice: settings?.kokoroVoice || 'af_bella',
         speed: 1.0
+      };
+    } else if (useF5TTS) {
+      apiUrl = 'http://localhost:8093/tts';
+      requestBody = {
+        text: currentCard.front,
+        voice: settings?.f5ttsVoice || 'en-Giuseppe_man'
       };
     } else {
       apiUrl = 'http://localhost:8080/tts';

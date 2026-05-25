@@ -17,7 +17,7 @@ function ensureEndingPunctuation(text: string): string {
 
 const TextToSpeechInputSchema = z.object({
   text: z.string(),
-  provider: z.enum(['piper', 'kokoro', 'vibevoice7b']).optional(),
+  provider: z.enum(['piper', 'kokoro', 'vibevoice7b', 'f5tts']).optional(),
   voice: z.string().optional(),
   referenceAudioData: z.string().optional(),
 });
@@ -32,9 +32,9 @@ export async function textToSpeech(input: TextToSpeechInput): Promise<TextToSpee
   const ttsConfig = getTTSConfig();
   const rawText = typeof input === 'string' ? input : input.text;
   const text = ensureEndingPunctuation(rawText); // Ensure proper ending for complete audio
-  const provider = ttsConfig.provider;
+  const provider = input?.provider || ttsConfig.provider;
   
-  console.log('[textToSpeech] Provider from config:', provider);
+  console.log('[textToSpeech] Provider:', provider);
 
   if (provider === 'piper') {
     const voice = input?.voice || ttsConfig.voice || 'en_GB-alan-medium';
@@ -50,6 +50,11 @@ export async function textToSpeech(input: TextToSpeechInput): Promise<TextToSpee
     const voice = input?.voice || ttsConfig.voice || 'en-Emma_woman';
     const referenceAudioData = input?.referenceAudioData;
     return textToSpeechVibeVoice7B(text, voice, referenceAudioData);
+  }
+
+  if (provider === 'f5tts') {
+    const voice = input?.voice || ttsConfig.voice || 'en-Giuseppe_man';
+    return textToSpeechF5TTS(text, voice);
   }
   
   return textToSpeechKokoro(text, ttsConfig.voice || 'af_bella');
@@ -160,6 +165,42 @@ async function textToSpeechVibeVoice7B(text: string, voice: string, referenceAud
     return { media: mediaUrl };
   } catch (error) {
     console.error('[textToSpeechVibeVoice7B] Error:', error);
+    throw error;
+  }
+}
+
+async function textToSpeechF5TTS(text: string, voice: string): Promise<TextToSpeechOutput> {
+  const ttsConfig = getTTSConfig();
+  
+  console.log('[F5-TTS] Input text:', text);
+  console.log('[F5-TTS] Input voice:', voice);
+  
+  try {
+    const response = await fetch(`${ttsConfig.endpoint}/tts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, voice })
+    });
+
+    console.log('[F5-TTS] Response status:', response.status);
+
+    if (!response.ok) {
+      throw new Error(`F5-TTS failed: ${response.status}`);
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
+    
+    let binary = '';
+    for (let i = 0; i < uint8Array.length; i++) {
+      binary += String.fromCharCode(uint8Array[i]);
+    }
+    const base64 = btoa(binary);
+    const mediaUrl = `data:audio/wav;base64,${base64}`;
+    
+    return { media: mediaUrl };
+  } catch (error) {
+    console.error('[textToSpeechF5TTS] Error:', error);
     throw error;
   }
 }

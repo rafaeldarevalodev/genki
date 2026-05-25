@@ -29,7 +29,7 @@ function reloadEnv(): Record<string, string> {
 const ENV = loadEnv();
 
 export type LLMProvider = 'local' | 'cloud';
-export type TTSProvider = 'piper' | 'kokoro' | 'vibevoice7b';
+export type TTSProvider = 'piper' | 'kokoro' | 'vibevoice7b' | 'f5tts';
 export type LocalModelName = 'gemma';
 
 const LOCAL_MODEL_MAP: Record<LocalModelName, string> = {
@@ -100,10 +100,14 @@ export function getTTSConfig(): TTSConfig {
     return getKokoroConfig();
   }
 
-  if (provider === 'vibevoice7b') {
+if (provider === 'vibevoice7b') {
     return getVibeVoice7BConfig();
   }
 
+  if (provider === 'f5tts') {
+    return getF5TTSConfig();
+  }
+  
   return getKokoroConfig();
 }
 
@@ -122,6 +126,15 @@ export function getKokoroConfig(): TTSConfig {
     provider: 'kokoro',
     endpoint: env.TTS_KOKORO_BASE_URL || 'http://localhost:8880',
     voice: env.TTS_KOKORO_VOICE || 'af_bella',
+  };
+}
+
+export function getF5TTSConfig(): TTSConfig {
+  const env = reloadEnv();
+  return {
+    provider: 'f5tts',
+    endpoint: env.TTS_F5TTS_BASE_URL || 'http://localhost:8093',
+    voice: env.TTS_F5TTS_VOICE || 'en-Giuseppe_man',
   };
 }
 

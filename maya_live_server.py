@@ -55,6 +55,7 @@ DEFAULT_VOICES = [
     "en-Andi_Male",
     "en-Lady_female",
     "en-Hanel_male",
+    "en-Mark_Eng",
 ]
 
 # Maya Voice Settings - F5-TTS uses same reference voices (24kHz versions)
@@ -74,6 +75,7 @@ VOICE_ID_TO_FILE = {
     "en-Andi_Male": "en_Andi_Male.wav",
     "en-Lady_female": "en_Lady_female.wav",
     "en-Hanel_male": "en_Hanel_male.wav",
+    "en-Mark_Eng": "en_Mark_Eng_24k.wav",
 }
 
 # Reference text for each voice (transcribed with Whisper)
@@ -93,6 +95,7 @@ VOICE_ID_TO_REF_TEXT = {
     "en-Andi_Male": "it's alright it's hard in tabular form but when it's charted it's much easier to see like if it's achievable or not based on some of the trends and there's also if you scroll down",
     "en-Lady_female": "is not great and I don't know if we set out originally to track some of those performance things but I think that performance and in to your point Kenny I think",
     "en-Hanel_male": "yeah same not even not in real time but you know source feedback i got one person to respond so far so it may end up cindy being you and i just picking the one that we want to do",
+    "en-Mark_Eng": "I'm humbled that Central Florida has given so much back to me and my family as well. Thank you for taking the time to get to know me and our firm, Nijem Law.",
 }
 
 MAYA_SYSTEM_PROMPT = """You are Maya, a friendly English conversation tutor.
@@ -642,14 +645,17 @@ async def stream_tts(
     text: str,
     mode: str,
     signal: Optional[asyncio.CancelledError] = None,
+    tts_provider: str = 'f5tts',
+    tts_voice: str = 'en-Emma_woman',
     reference_audio_path: Optional[str] = None,
     reference_text: Optional[str] = None,
     session_id: str = ""
 ) -> AsyncGenerator[dict, None]:
-    """Stream TTS audio chunks."""
+    """Stream TTS audio chunks using user-selected provider."""
     import numpy as np
     
     try:
+        # Immersive mode uses local VibeVoice model
         if mode == "immersive":
             model = model_cache.load_vibevoice()
             if model:
@@ -657,18 +663,54 @@ async def stream_tts(
                     yield chunk
                 return
         
-        # Default: Try F5-TTS first (using generate function), then Kokoro fallback
-        # Try F5-TTS using generate function directly
-        try:
-            async for chunk in _stream_f5tts(text, signal=signal, reference_audio_path=reference_audio_path, reference_text=reference_text, session_id=session_id):
+        # Route to appropriate TTS provider based on user settings
+        if tts_provider == 'f5tts':
+            print(f"[TTS] Using F5-TTS provider with voice: {tts_voice}", flush=True)
+            try:
+                async for chunk in _stream_f5tts(
+                    text, 
+                    signal=signal, 
+                    reference_audio_path=reference_audio_path, 
+                    reference_text=reference_text, 
+                    session_id=session_id
+                ):
+                    yield chunk
+                return
+            except Exception as f5_err:
+                print(f"[TTS] F5-TTS failed: {f5_err}, falling back to Kokoro", flush=True)
+                async for chunk in _stream_kokoro_fallback(text, signal, session_id):
+                    yield chunk
+                return
+                
+        elif tts_provider == 'vibevoice7b':
+            print(f"[TTS] Using VibeVoice7B provider with voice: {tts_voice}", flush=True)
+            async for chunk in _stream_vibevoice_http(text, signal, tts_voice, session_id):
                 yield chunk
             return
-        except Exception as f5_err:
-            print(f"[TTS] F5-TTS generate failed: {f5_err}, trying Kokoro fallback", flush=True)
-        
-        # Fallback: Generate via HTTP to Kokoro
-        async for chunk in _stream_kokoro_fallback(text, signal, session_id):
-            yield chunk
+                
+        elif tts_provider == 'kokoro':
+            print(f"[TTS] Using Kokoro provider with voice: {tts_voice}", flush=True)
+            async for chunk in _stream_kokoro_fallback(text, signal, session_id, voice=tts_voice):
+                yield chunk
+            return
+                
+        elif tts_provider == 'piper':
+            print(f"[TTS] Using Piper provider with voice: {tts_voice}", flush=True)
+            async for chunk in _stream_piper_http(text, signal, tts_voice, session_id):
+                yield chunk
+            return
+                
+        else:
+            # Default to F5-TTS
+            print(f"[TTS] Unknown provider {tts_provider}, defaulting to F5-TTS", flush=True)
+            async for chunk in _stream_f5tts(
+                text, 
+                signal=signal, 
+                reference_audio_path=reference_audio_path, 
+                reference_text=reference_text, 
+                session_id=session_id
+            ):
+                yield chunk
             
     except asyncio.CancelledError:
         raise
@@ -785,58 +827,48 @@ async def _stream_f5tts(
         
         start_time = time.time()
         
-        # Generate audio - save to temp file
-        import tempfile
-        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp_out:
-            tmp_path = tmp_out.name
+        # Split text by sentences to reduce hallucinations
+        import re
+        sentences = re.split(r'(?<=[.!?])\s+', text)
+        sentences = [s.strip() for s in sentences if s.strip()]
         
-        f5_generate(
-            generation_text=text,
-            ref_audio_path=reference_audio_path,
-            ref_audio_text=reference_text,
-            steps=16,
-            speed=1.0,
-            output_path=tmp_path
-        )
+        print(f"[F5-TTS] Split into {len(sentences)} sentences", flush=True)
+        
+        # Generate audio for each sentence and concatenate
+        all_audio = []
+        sample_rate = 24000
+        
+        for i, sentence in enumerate(sentences):
+            print(f"[F5-TTS] Processing sentence {i+1}/{len(sentences)}: '{sentence[:50]}...'", flush=True)
+            
+            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp_sentence:
+                sentence_path = tmp_sentence.name
+            
+            try:
+                f5_generate(
+                    generation_text=sentence,
+                    ref_audio_path=reference_audio_path,
+                    ref_audio_text=reference_text,
+                    steps=16,
+                    speed=1.0,
+                    output_path=sentence_path
+                )
+                
+                sentence_audio, sr = sf.read(sentence_path)
+                all_audio.append(sentence_audio)
+                print(f"[F5-TTS] Sentence {i+1}: {len(sentence_audio)/sr:.2f}s", flush=True)
+            finally:
+                try:
+                    os.remove(sentence_path)
+                except:
+                    pass
         
         generation_time = time.time() - start_time
         print(f"[F5-TTS] Generation took {generation_time:.2f}s", flush=True)
         
-        # Load the generated audio
-        audio_np, sr = sf.read(tmp_path)
-        print(f"[F5-TTS] Generated audio: {len(audio_np)} samples at {sr}Hz ({len(audio_np)/sr:.2f}s)", flush=True)
-        
-        # Clean up temp file
-        import os
-        os.unlink(tmp_path)
-        
-        # Check for abort after generation
-        if signal and signal.cancelled:
-            raise asyncio.CancelledError("TTS cancelled")
-        
-        # Normalize if needed
-        max_abs = max(abs(audio_np.min()), abs(audio_np.max()))
-        if max_abs > 1.0:
-            audio_np = audio_np / max_abs
-        
-        print(f"[F5-TTS] Final audio: {len(audio_np)/sr:.2f}s", flush=True)
-        
-        # Convert to numpy (already in correct format from sf.read)
-        audio_np = np.array(audio_np, dtype=np.float32)
-        print(f"[F5-TTS] Trimmed audio: {len(audio_np)} samples ({len(audio_np)/sr:.2f}s)", flush=True)
-        
-        # Normalize if needed
-        max_abs = max(abs(audio_np.min()), abs(audio_np.max()))
-        if max_abs > 1.0:
-            audio_np = audio_np / max_abs
-        
-        # Apply fade-in to prevent "shouting" at start (0.5 seconds for smoother start)
-        fade_samples = int(0.5 * sr)
-        if len(audio_np) > fade_samples:
-            fade_curve = np.linspace(0, 1, fade_samples)
-            audio_np[:fade_samples] = audio_np[:fade_samples] * fade_curve
-        
-        print(f"[F5-TTS] Final audio: {len(audio_np)/sr:.2f}s", flush=True)
+        # Concatenate all audio
+        audio_np = np.concatenate(all_audio)
+        print(f"[F5-TTS] Total generated {len(audio_np)/sr:.2f}s of audio", flush=True)
         
         # Encode audio as base64 PCM (uncompressed for simplicity)
         pcm_base64 = audio_to_base64_pcm(audio_np)
@@ -873,7 +905,8 @@ async def _stream_f5tts(
 async def _stream_kokoro_fallback(
     text: str,
     signal: Optional[asyncio.CancelledError] = None,
-    session_id: str = ""
+    session_id: str = "",
+    voice: str = "af_bella"
 ) -> AsyncGenerator[dict, None]:
     """Fallback to Kokoro TTS via HTTP."""
     import numpy as np
@@ -892,7 +925,7 @@ async def _stream_kokoro_fallback(
                 "http://localhost:8880/v1/audio/speech",
                 json={
                     "input": text,
-                    "voice": "af_bella",
+                    "voice": voice,
                     "speed": "1.0"
                 },
                 timeout=30
@@ -923,8 +956,7 @@ async def _stream_kokoro_fallback(
             
             chunk = audio_np[i:i + chunk_size]
             pcm_base64 = audio_to_base64_pcm(chunk)
-            compressed = compress_audio_data(pcm_base64)
-            yield {"type": "audio_chunk", "data": compressed, "sample_rate": sr, "compressed": True, "download_url": f"/v1/voice/audio/{session_id}"}
+            yield {"type": "audio_chunk", "data": pcm_base64, "sample_rate": sr, "compressed": False, "download_url": f"/v1/voice/audio/{session_id}"}
             
             # Small delay to simulate streaming
             await asyncio.sleep(0.05)
@@ -944,6 +976,132 @@ async def _stream_kokoro_fallback(
         print(f"[Kokoro Fallback Error] {e}", flush=True)
         yield {"type": "error", "message": str(e)}
 
+
+async def _stream_vibevoice_http(
+    text: str,
+    signal: Optional[asyncio.CancelledError] = None,
+    voice: str = "en-Emma_woman",
+    session_id: str = ""
+) -> AsyncGenerator[dict, None]:
+    """VibeVoice7B TTS via HTTP."""
+    import numpy as np
+    import requests
+    
+    try:
+        if signal and signal.cancelled:
+            raise asyncio.CancelledError("TTS cancelled")
+        
+        loop = asyncio.get_event_loop()
+        response = await loop.run_in_executor(
+            None,
+            lambda: requests.post(
+                "http://localhost:8091/v1/audio/speech",
+                json={
+                    "input": text,
+                    "voice": voice,
+                    "response_format": "wav"
+                },
+                timeout=60
+            )
+        )
+        
+        if response.status_code != 200:
+            raise RuntimeError(f"VibeVoice7B error: {response.status_code}")
+        
+        wav_data = response.content
+        buffer = io.BytesIO(wav_data)
+        with wave.open(buffer, 'rb') as wav:
+            frames = wav.readframes(wav.getnframes())
+            sr = wav.getframerate()
+        
+        audio_np = np.frombuffer(frames, dtype=np.int16).astype(np.float32) / 32767.0
+        
+        if signal and signal.cancelled:
+            raise asyncio.CancelledError("TTS cancelled")
+        
+        # Yield as single chunk for now (VibeVoice7B generates full audio)
+        pcm_base64 = audio_to_base64_pcm(audio_np)
+        
+        # Save for download
+        audio_path = Path(f"/tmp/maya_audio_{session_id}.wav")
+        with wave.open(str(audio_path), 'wb') as wav_file:
+            wav_file.setnchannels(1)
+            wav_file.setsampwidth(2)
+            wav_file.setframerate(sr)
+            audio_int16 = (audio_np * 32767).astype(np.int16)
+            wav_file.writeframes(audio_int16.tobytes())
+        
+        yield {"type": "audio_chunk", "data": pcm_base64, "sample_rate": sr, "compressed": False, "download_url": f"{DEFAULT_HOST}/v1/voice/audio/{session_id}"}
+        
+    except asyncio.CancelledError:
+        raise
+    except Exception as e:
+        print(f"[VibeVoice7B HTTP Error] {e}", flush=True)
+        yield {"type": "error", "message": str(e)}
+
+
+async def _stream_piper_http(
+    text: str,
+    signal: Optional[asyncio.CancelledError] = None,
+    voice: str = "en_GB-alan-medium",
+    session_id: str = ""
+) -> AsyncGenerator[dict, None]:
+    """Piper TTS via HTTP."""
+    import numpy as np
+    import requests
+    
+    try:
+        if signal and signal.cancelled:
+            raise asyncio.CancelledError("TTS cancelled")
+        
+        loop = asyncio.get_event_loop()
+        response = await loop.run_in_executor(
+            None,
+            lambda: requests.post(
+                "http://localhost:8080/tts",
+                json={
+                    "text": text,
+                    "voice": voice
+                },
+                timeout=30
+            )
+        )
+        
+        if response.status_code != 200:
+            raise RuntimeError(f"Piper error: {response.status_code}")
+        
+        wav_data = response.content
+        buffer = io.BytesIO(wav_data)
+        with wave.open(buffer, 'rb') as wav:
+            frames = wav.readframes(wav.getnframes())
+            sr = wav.getframerate()
+        
+        audio_np = np.frombuffer(frames, dtype=np.int16).astype(np.float32) / 32767.0
+        
+        if signal and signal.cancelled:
+            raise asyncio.CancelledError("TTS cancelled")
+        
+        # Yield as single chunk
+        pcm_base64 = audio_to_base64_pcm(audio_np)
+        
+        # Save for download
+        audio_path = Path(f"/tmp/maya_audio_{session_id}.wav")
+        with wave.open(str(audio_path), 'wb') as wav_file:
+            wav_file.setnchannels(1)
+            wav_file.setsampwidth(2)
+            wav_file.setframerate(sr)
+            audio_int16 = (audio_np * 32767).astype(np.int16)
+            wav_file.writeframes(audio_int16.tobytes())
+        
+        yield {"type": "audio_chunk", "data": pcm_base64, "sample_rate": sr, "compressed": False, "download_url": f"{DEFAULT_HOST}/v1/voice/audio/{session_id}"}
+        
+    except asyncio.CancelledError:
+        raise
+    except Exception as e:
+        print(f"[Piper HTTP Error] {e}", flush=True)
+        yield {"type": "error", "message": str(e)}
+
+
 # =============================================================================
 # FastAPI App
 # =============================================================================
@@ -955,7 +1113,8 @@ class VoiceConversationRequest(BaseModel):
     session_id: Optional[str] = None
     mode: str = "fast"  # "fast" or "immersive"
     vocabulary: Optional[list[str]] = None
-    voice_id: str = DEFAULT_MAYA_VOICE  # Voice for F5-TTS/TTS
+    tts_provider: str = "f5tts"  # TTS provider: f5tts, vibevoice7b, kokoro, piper
+    tts_voice: str = DEFAULT_MAYA_VOICE  # Voice for the TTS provider
 
 class SessionResetRequest(BaseModel):
     session_id: str
@@ -994,7 +1153,8 @@ async def voice_conversation(
     session_id = body.session_id or create_session().id
     mode = body.mode
     vocabulary = body.vocabulary or []
-    voice_id = body.voice_id or DEFAULT_MAYA_VOICE
+    tts_provider = body.tts_provider or 'f5tts'
+    tts_voice = body.tts_voice or DEFAULT_MAYA_VOICE
     
     async def generate():
         try:
@@ -1071,14 +1231,24 @@ async def voice_conversation(
             yield json_chunk("status", {"stage": "speaking"})
             
             try:
-                # Map voice_id to reference audio file and reference text
-                voice_file = VOICE_ID_TO_FILE.get(voice_id, "en_Emma_woman.wav")
+                # Map tts_voice to reference audio file and reference text
+                voice_file = VOICE_ID_TO_FILE.get(tts_voice, "en_Emma_woman.wav")
                 ref_voice_path = os.path.join(SCRIPT_DIR, "reference_voices", voice_file)
-                ref_text = VOICE_ID_TO_REF_TEXT.get(voice_id, "Some call me nature, others call me mother nature.")
+                ref_text = VOICE_ID_TO_REF_TEXT.get(tts_voice, "Some call me nature, others call me mother nature.")
                 
-                print(f"[TTS] Using voice: {voice_id}, ref_text: '{ref_text[:50]}...'", flush=True)
+                print(f"[TTS] Provider: {tts_provider}, Voice: {tts_voice}", flush=True)
+                print(f"[TTS] Reference: {ref_voice_path}", flush=True)
+                print(f"[TTS] Ref text: '{ref_text[:50]}...'", flush=True)
                 
-                async for chunk in stream_tts(speech_text, mode, reference_audio_path=ref_voice_path, reference_text=ref_text, session_id=session_id):
+                async for chunk in stream_tts(
+                    speech_text, 
+                    mode, 
+                    tts_provider=tts_provider,
+                    tts_voice=tts_voice,
+                    reference_audio_path=ref_voice_path, 
+                    reference_text=ref_text, 
+                    session_id=session_id
+                ):
                     # Check for disconnect between chunks
                     if await request.is_disconnected():
                         print("[TTS] Stream interrupted by client", flush=True)

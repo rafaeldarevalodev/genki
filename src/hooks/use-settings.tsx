@@ -6,10 +6,11 @@ interface Settings {
   provider: 'local' | 'cloud';
   localModel: 'gemma';
   cloudModel: string;
-  ttsProvider: 'piper' | 'kokoro' | 'vibevoice7b';
+  ttsProvider: 'piper' | 'kokoro' | 'vibevoice7b' | 'f5tts';
   voice: string;
   kokoroVoice: string;
   vibevoice7bVoice: string;
+  f5ttsVoice: string;
   playbackSpeed: number;
 }
 
@@ -23,10 +24,11 @@ const defaultSettings: Settings = {
   provider: 'cloud',
   localModel: 'gemma',
   cloudModel: 'moonshotai/kimi-k2.6',
-  ttsProvider: 'kokoro',
+  ttsProvider: 'f5tts',
   voice: 'en_GB-alan-medium',
   kokoroVoice: 'af_bella',
   vibevoice7bVoice: 'en-Emma_woman',
+  f5ttsVoice: 'en-Emma_woman',
   playbackSpeed: 1,
 };
 
@@ -55,10 +57,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           provider: data.provider || 'cloud',
           localModel: 'gemma',
           cloudModel: data.cloudModel || 'moonshotai/kimi-k2.6',
-          ttsProvider: data.ttsProvider || 'kokoro',
+          ttsProvider: data.ttsProvider || 'f5tts',
           voice: data.voice || 'en_GB-alan-medium',
           kokoroVoice: data.kokoroVoice || 'af_bella',
           vibevoice7bVoice: data.vibevoice7bVoice || 'en-Emma_woman',
+          f5ttsVoice: data.f5ttsVoice || 'en-Emma_woman',
           playbackSpeed: data.playbackSpeed || 1,
         });
       }
