@@ -61,6 +61,40 @@ services:
       retries: 5
       start_period: 120s
 
+  genki-kokoro:
+    build:
+      context: ./services/genki-kokoro
+      dockerfile: Dockerfile
+    networks:
+      - genki-net
+    ports:
+      - "5001:5001"
+    volumes:
+      - genki-model-cache:/root/.cache/kokoro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  genki-whisper:
+    build:
+      context: ./services/genki-whisper
+      dockerfile: Dockerfile
+    networks:
+      - genki-net
+    ports:
+      - "8001:8001"
+    volumes:
+      - genki-model-cache:/root/.cache/whisper
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
   genki-voice:
     build:
       context: ./services/genki-voice
@@ -75,8 +109,14 @@ services:
     depends_on:
       genki-llm:
         condition: service_healthy
+      genki-kokoro:
+        condition: service_healthy
+      genki-whisper:
+        condition: service_healthy
     environment:
       - REDIS_URL=redis://genki-redis:6379
+      - KOKORO_URL=http://genki-kokoro:5001
+      - WHISPER_URL=http://genki-whisper:8001
 
   genki-api:
     build:
@@ -99,8 +139,14 @@ services:
         condition: service_healthy
       genki-redis:
         condition: service_healthy
+      genki-kokoro:
+        condition: service_healthy
+      genki-whisper:
+        condition: service_healthy
     environment:
       - REDIS_URL=redis://genki-redis:6379
+      - KOKORO_URL=http://genki-kokoro:5001
+      - WHISPER_URL=http://genki-whisper:8001
 
 networks:
   genki-net:
