@@ -286,7 +286,7 @@ async def voice_conversation(
                         break
                     yield chunk
 
- except asyncio.CancelledError:
+        except asyncio.CancelledError:
             abort_event.set()
             raise
         finally:
