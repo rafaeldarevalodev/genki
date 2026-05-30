@@ -142,11 +142,13 @@ Chain strategy: pending
 
 **Objetivo**: Enmascarar latencia percibida con animaciones fluidas.
 
-- [ ] 10.1 Integrar GSAP en frontend (`npm install gsap`)
-- [ ] 10.2 Animar waveform visualizer durante `listening` (scale + opacity)
-- [ ] 10.3 Animar transcription text: fade-in con stagger por palabra
-- [ ] 10.4 Animar TTS playback: waveform circular con progress ring
-- [ ] 10.5 Animar barge-in: quick fade-out + snap to idle state
+- [x] 10.1 GSAP 3.12 instalado + configurado en frontend
+- [x] 10.2 Waveform visualizer con 4 modos (idle/listening/processing/speaking)
+- [x] 10.3 ProcessingAnticipation: skeleton de 3 etapas durante ASR+LLM
+- [x] 10.4 AudioRing: pulse rings durante active audio
+- [x] 10.5 MessageBubble: spring entrance animation por role
+- [x] 10.6 App header staggered entrance, gradient logo, nav polish
+- [x] 10.7 Transcript scroll animado, scroll hint animado
 - [ ] 10.6 Crear `LoadingStates` component con skeleton animations para cada estado
 - [ ] 10.7 Implementar `useLiveVoice.ts` refactor: timer-based → Silero VAD
 - [ ] 10.8 Crear `vad.worker.ts`: Web Worker que corre Silero VAD model inference
