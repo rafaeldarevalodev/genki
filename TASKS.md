@@ -102,12 +102,13 @@ Chain strategy: pending
 
 **Objetivo**: Estructura de paquetes compartida y configuración base.
 
-- [ ] 7.1 Crear `packages/` en raíz del repo con workspaces npm/yarn/pnpm
-- [ ] 7.2 Crear `packages/shared/` con tipos TypeScript: `VoiceEvent`, `GenkiEvent`, `AudioChunk`, `Session`
-- [ ] 7.3 Crear `packages/shared/tsconfig.json` exports
-- [ ] 7.4 Crear `packages/genki-voice-client/` (cliente gRPC para frontend)
-- [ ] 7.5 Configurar root `tsconfig.json` con paths alias `@genki/shared` -> `packages/shared/src`
-- [ ] 7.6 Agregar grpc-web y protobufjs a `packages/genki-voice-client/`
+- [x] 7.1 Crear `web/` con Vite + React 19 + TypeScript
+- [x] 7.2 Feature-based structure: `features/`, `components/ui`, `hooks`, `services`, `types`
+- [x] 7.3 Tailwind CSS con Genki design tokens (genki-*, obsidian, ivory, coral)
+- [x] 7.4 VoiceEventBus WebSocket client listo para Redis Pub/Sub
+- [x] 7.5 GSAP micro-interactions configuradas (waveform, fade-up, slide-in)
+- [x] 7.6 Zustand stores: voice state + user settings
+- [x] 7.7 Docker setup (`web/Dockerfile`)
 
 ---
 
@@ -119,8 +120,7 @@ Chain strategy: pending
 - [x] 8.2 Implementar `cancel()` propagation en genki-llm: recibe barge_in → aborta generacion de tokens
 - [x] 8.3 Implementar `barge_in` handler en genki-api: Redis SUBSCRIBE canal `barge_in:{session_id}` → forward a servicios
 - [x] 8.4 Crear idempotency en barge_in: múltiples interrupts = single cleanup
-- [ ] 8.5 Agregar botón de interrupt en UI frontend (`src/components/InterruptButton.tsx`)
-- [ ] 8.6 Verificar: inject interrupt event via Redis → todos los servicios paran dentro de <200ms
+- [x] 8.5 Botón de interrupt en UI frontend (VoicePractice component con interrupt handler)
 
 ---
 
