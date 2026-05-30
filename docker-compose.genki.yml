@@ -1,0 +1,95 @@
+# Genki 2.0 — Docker Compose
+version: '3.9'
+services:
+  genki-db:
+    build:
+      context: ./services/genki-db
+      dockerfile: Dockerfile
+    volumes:
+      - genki-db-data:/var/lib/genki
+    networks:
+      - genki-net
+    healthcheck:
+      test: ["CMD", "sqlite3", "/var/lib/genki/genki.db", "SELECT 1;"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  genki-vector:
+    image: qdrant/qdrant:v1.7.4
+    volumes:
+      - genki-qdrant:/qdrant/storage
+    networks:
+      - genki-net
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/readyz"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  genki-llm:
+    build:
+      context: ./services/genki-llm
+      dockerfile: Dockerfile
+    volumes:
+      - genki-model-cache:/root/.ollama
+    networks:
+      - genki-net
+    ports:
+      - "11434:11434"
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+  genki-voice:
+    build:
+      context: ./services/genki-voice
+      dockerfile: Dockerfile
+    volumes:
+      - genki-model-cache:/model_cache
+      - genki-ipc:/tmp/genki/ipc
+    networks:
+      - genki-net
+    ports:
+      - "8092:8092"
+    depends_on:
+      genki-llm:
+        condition: service_healthy
+
+  genki-api:
+    build:
+      context: ./services/genki-api
+      dockerfile: Dockerfile
+    volumes:
+      - genki-ipc:/tmp/genki/ipc
+    networks:
+      - genki-net
+    ports:
+      - "8090:8090"
+    depends_on:
+      genki-voice:
+        condition: service_healthy
+      genki-llm:
+        condition: service_healthy
+      genki-vector:
+        condition: service_healthy
+      genki-db:
+        condition: service_healthy
+
+networks:
+  genki-net:
+    driver: bridge
+
+volumes:
+  genki-db-data:
+  genki-qdrant:
+  genki-model-cache:
+  genki-ipc:
