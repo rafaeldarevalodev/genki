@@ -1,184 +1,195 @@
 # Genki 2.0 — Tareas de Implementación
 
-## Review Workload Forecast
-
-| Field | Value |
-|-------|-------|
-| Estimated changed lines | ~3000-4000 (greenfield rebuild) |
-| 400-line budget risk | High |
-| Chained PRs recommended | Yes |
-| Suggested split | PR 1: Base infrastructure + DB + Vector + LLM / PR 2: Voice service + API gateway / PR 3: Frontend scaffold + Barge-in + ASR/TTS pipeline / PR 4: GSAP polish |
-| Delivery strategy | ask-on-risk |
-| Chain strategy | pending (user choice required) |
-
-Decision needed before apply: Yes
-Chained PRs recommended: Yes
-Chain strategy: pending
-400-line budget risk: High
+> Plan SRS + Pipeline de Voz. Actualizado: 2026-05-30
 
 ---
 
-## Phase 1: Docker Base Infrastructure
+## Estado del Pipeline de Voz
 
-**Objetivo**: Crear la topologia de servicios, redes, y volúmenes compartidos.
+| Servicio | Implementación | Dependencias Externas |
+|---|---|---|
+| `genki-voice` FastAPI | ✅ 256 líneas (main.py) | — |
+| Kokoro TTS Client | ✅ 165 líneas (`/tts/kokoro.py`) | `KOKORO_URL=http://localhost:5001` |
+| Whisper ASR Client | ✅ 321 líneas (`/asr/whisper.py`) | `WHISPER_URL=http://localhost:8001` |
+| Silero VAD | ✅ 101 líneas (`/vad/silero.py`) | — |
+| Barge-in | ✅ Redis Pub/Sub | `genki-redis:6379` ✅ |
 
-- [x] 1.1 Crear `docker-compose.genki.yml` con servicios: genki-db, genki-vector, genki-llm, genki-voice, genki-api, genki-frontend
-- [x] 1.2 Configurar red `genki-net` (bridge) con driver bridge
-- [x] 1.3 Crear volumenes nombrados: `genki-db-data` (/var/lib/genki), `genki-qdrant` (/qdrant/storage), `genki-model-cache` (/model_cache)
-- [x] 1.4 Crear volumen compartido `/tmp/genki/ipc` para chunks de audio entre voice y api
-- [x] 1.5 Configurar health checks para cada servicio (`/health` endpoint)
-- [x] 1.6 Configurar `depends_on` con `condition: service_healthy` para encadenamiento de inicio
-
----
-
-## Phase 2: genki-db (SQLite)
-
-**Objetivo**: Persistencia de perfiles de usuario y progreso de aprendizaje.
-
-- [x] 2.1 Crear `Dockerfile.db` con SQLite + directorio de datos volume-mounted
-- [x] 2.2 Definir schema inicial: users, session_history, learning_progress, deck_progress
-- [x] 2.3 Crear script de inicialización `init-db.sql` que corre en startup
-- [x] 2.4 Exponer puerto 5432 (o usar socket Unix via volume)
-- [x] 2.5 Configurar health check: `sqlite3 /var/lib/genki/genki.db "SELECT 1"`
+**Faltan**: Servidores Kokoro y Whisper externos no corriendo en Docker.
 
 ---
 
-## Phase 3: genki-vector (Qdrant Embedded)
+## Phase 8.5: Activación de Pipeline de Voz
 
-**Objetivo**: Memoria semántica persistente para contexto de sesión.
+**Objetivo**: Integrar Kokoro y Whisper en Docker o como servicios locales, para que el pipeline de voz sea 100% funcional.
 
-- [x] 3.1 Crear `Dockerfile.vector` con Qdrant embedded mode
-- [x] 3.2 Configurar collection `sessions` con esquema: session_id, user_id, timestamp, vector, text_chunk
-- [x] 3.3 Crear script de migration `migrate-collections.sh` para schema versioning
-- [x] 3.4 Exponer puerto 6333 (REST) y 6334 (gRPC)
-- [x] 3.5 Montar volumen `genki-qdrant` para persistencia
-- [x] 3.6 Health check: `curl localhost:6333/readyz`
-
----
-
-## Phase 4: genki-llm (Ollama + Minimax 2.7)
-
-**Objetivo**: Backend de LLM local con inferencia en Apple Silicon.
-
-- [x] 4.1 Crear `Dockerfile.llm` con Ollama server
-- [x] 4.2 Pre-configurar `ollama serve` con modelo Minimax 2.7 Q4_K_M
-- [x] 4.3 Crear `modelfile` para Minimax 2.7 con optimizaciones M3 Max (Flash Attention, thread count)
-- [x] 4.4 Exponer puerto 11434 (API REST)
-- [x] 4.5 Health check: `curl localhost:11434/api/tags` (verifica modelos cargados)
-- [x] 4.6 Configurar `OLLAMA_HOST=0.0.0.0` para aceptación de conexiones externas
+- [ ] 8.5.1 Crear `Dockerfile.kokoro` con Kokoro TTS server (o usar imagen oficial)
+- [ ] 8.5.2 Crear `Dockerfile.whisper` con mlx-whisper o faster-whisper
+- [ ] 8.5.3 Agregar `genki-kokoro` y `genki-whisper` a `docker-compose.genki.yml`
+- [ ] 8.5.4 Actualizar variables de entorno en `genki-voice`: `KOKORO_URL`, `WHISPER_URL`
+- [ ] 8.5.5 Implementar health checks para ambos servicios
+- [ ] 8.5.6 Test de integración: `/v1/voice/conversation` con audio real
 
 ---
 
-## Phase 5: genki-voice Base (FastAPI + Kokoro + mlx-whisper Skeleton)
+## Phase 9: Lógica SRS (Spaced Repetition System)
 
-**Objetivo**: Servicio de voz con ASR y TTS skeleton, listo para integración concurrente.
+**Objetivo**: Implementar el algoritmo SM-2 en Python, persistido en SQLite, con analytics.
 
-- [ ] 5.1 Crear `Dockerfile.voice` con Python 3.11 + FastAPI
-- [ ] 5.2 Crear estructura `packages/genki-voice/`: app/, asr/, tts/, vad/, proto/
-- [ ] 5.3 Definir `proto/voice.proto` con servicio VoiceService, mensajes AudioChunk, VoiceEvent, Transcription, TTSChunk
-- [ ] 5.4 Crear servidor gRPC básico con stubs generados (solo signature, sin implementación)
-- [ ] 5.5 Crear endpoints HTTP de health: `GET /health` (modelos cargados), `GET /health/ready`
-- [ ] 5.6 Crear Dockerfile que instala mlx-whisper, Kokoro, y genera stubs protobuf
-- [ ] 5.7 Exponer puertos: 8092 (gRPC), 8091 (HTTP fallback)
+### 9.1 Data Model — Esquema SQL
 
----
+```sql
+-- Tablas para SRS Genki 2.0
+-- Archivo: services/genki-db/init-srs.sql
 
-## Phase 6: genki-api Gateway (FastAPI Orchestration)
+CREATE TABLE IF NOT EXISTS users (
+    id TEXT PRIMARY KEY,
+    username TEXT NOT NULL,
+    xp INTEGER DEFAULT 0,
+    level INTEGER DEFAULT 1,
+    created_at REAL DEFAULT (unixepoch())
+);
 
-**Objetivo**: Orquestación de servicios, event bus, y gestión de sesiones.
+CREATE TABLE IF NOT EXISTS decks (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id),
+    name TEXT NOT NULL,
+    source_text TEXT,
+    cefr_level TEXT CHECK(cefr_level IN ('A1','A2','B1','B2','C1','C2')),
+    created_at REAL DEFAULT (unixepoch())
+);
 
-- [ ] 6.1 Crear `Dockerfile.api` con FastAPI + Redis client
-- [ ] 6.2 Crear `packages/genki-api/`: app/, routes/, services/, middleware/
-- [ ] 6.3 Implementar cliente Redis Pub/Sub (`src/lib/event-bus.ts` o `event_bus.py`)
-- [ ] 6.4 Crear endpoint `POST /interrupt` que PUBLISH a canal `barge_in:{session_id}`
-- [ ] 6.5 Crear endpoint `POST /session/start` que inicializa estado en Redis
-- [ ] 6.6 Crear endpoint `GET /session/{id}/status` para polling de estado
-- [ ] 6.7 Implementar middleware de logging y tracing (request_id propagate)
-- [ ] 6.8 Exponer puerto 8090
+CREATE TABLE IF NOT EXISTS cards (
+    id TEXT PRIMARY KEY,
+    deck_id TEXT NOT NULL REFERENCES decks(id) ON DELETE CASCADE,
+    front TEXT NOT NULL,
+    back TEXT NOT NULL,
+    ipa TEXT,
+    spanish_phonetic TEXT,
+    explanation TEXT,
+    category TEXT CHECK(category IN ('structure','action','concept','modifier','idiom','filler')),
+    voice TEXT,
+    -- SRS fields
+    ef REAL DEFAULT 2.5,
+    interval INTEGER DEFAULT 0,
+    repetition INTEGER DEFAULT 0,
+    next_review REAL DEFAULT (unixepoch()),
+    status TEXT DEFAULT 'new' CHECK(status IN ('new','learning','review','mastered')),
+    created_at REAL DEFAULT (unixepoch())
+);
 
----
+CREATE TABLE IF NOT EXISTS card_review_log (
+    id TEXT PRIMARY KEY,
+    card_id TEXT NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
+    quality INTEGER NOT NULL CHECK(quality IN (0,3,4,5)),
+    response_time_ms INTEGER,
+    reviewed_at REAL DEFAULT (unixepoch())
+);
 
-## Phase 7: Frontend Monorepo Scaffold
+CREATE INDEX idx_cards_deck ON cards(deck_id);
+CREATE INDEX idx_cards_next_review ON cards(next_review);
+CREATE INDEX idx_card_review_log_card ON card_review_log(card_id);
+CREATE INDEX idx_cards_status ON cards(status);
+CREATE INDEX idx_cards_deck_status ON cards(deck_id, status);
+```
 
-**Objetivo**: Estructura de paquetes compartida y configuración base.
+### 9.2 Backend SRS Logic — Python
 
-- [ ] 7.1 Crear `packages/` en raíz del repo con workspaces npm/yarn/pnpm
-- [ ] 7.2 Crear `packages/shared/` con tipos TypeScript: `VoiceEvent`, `GenkiEvent`, `AudioChunk`, `Session`
-- [ ] 7.3 Crear `packages/shared/tsconfig.json` exports
-- [ ] 7.4 Crear `packages/genki-voice-client/` (cliente gRPC para frontend)
-- [ ] 7.5 Configurar root `tsconfig.json` con paths alias `@genki/shared` -> `packages/shared/src`
-- [ ] 7.6 Agregar grpc-web y protobufjs a `packages/genki-voice-client/`
+- [ ] 9.2.1 Crear `services/genki-db/app/srs.py` con función `calculate_sm2()`
+- [ ] 9.2.2 Mejoras vs V1: Hard(3) → `interval * 0.5` (no reset), Easy(5) → bonus 1.3x, cap `interval` a 365 días
+- [ ] 9.2.3 Función `get_due_cards(deck_id, filters)` con filtros por `status`, `category`, `limit`
+- [ ] 9.2.4 Métricas: `get_stats(user_id)` → streak, retention_rate_7d, review_heatmap
 
----
+### 9.3 API Endpoints SRS
 
-## Phase 8: Barge-in System (Event Bus + Interrupt Propagation)
+- [ ] 9.3.1 `GET /v1/decks` — lista de decks del usuario
+- [ ] 9.3.2 `POST /v1/decks` — crear deck
+- [ ] 9.3.3 `GET /v1/decks/{deck_id}` — detalle con cards
+- [ ] 9.3.4 `DELETE /v1/decks/{deck_id}` — eliminar deck
+- [ ] 9.3.5 `GET /v1/decks/{deck_id}/due` — cards due today (`?limit&offset&status&category`)
+- [ ] 9.3.6 `POST /v1/decks/{deck_id}/cards` — agregar card
+- [ ] 9.3.7 `POST /v1/cards/{card_id}/review` — reportar resultado (quality 0/3/4/5)
+- [ ] 9.3.8 `GET /v1/stats` — analytics (streak, retention, heatmap)
 
-**Objetivo**: Señal de interrupción que para ASR, TTS, y LLM concurrentemente.
+### 9.4 Validación y Test
 
-- [ ] 8.1 Implementar `AbortController` propagation en genki-voice:接收 barge_in event → llama ` cancel()` en ASR y TTS
-- [ ] 8.2 Implementar `cancel()` propagation en genki-llm: recibe barge_in → aborta generacion de tokens
-- [ ] 8.3 Implementar `barge_in` handler en genki-api: Redis SUBSCRIBE canal `barge_in:{session_id}` → forward a servicios
-- [ ] 8.4 Crear idempotency en barge_in: múltiples interrupts = single cleanup
-- [ ] 8.5 Agregar botón de interrupt en UI frontend (`src/components/InterruptButton.tsx`)
-- [ ] 8.6 Verificar: inject interrupt event via Redis → todos los servicios paran dentro de <200ms
-
----
-
-## Phase 9: Concurrent ASR+TTS Pipeline (Core Latency Fix)
-
-**Objetivo**: Pipeline donde ASR y TTS corren en paralelo, no secuencial.
-
-- [ ] 9.1 Implementar streaming partial transcription en mlx-whisper (chunked results)
-- [ ] 9.2 Implementar Kokoro streaming: chunks de audio de 500ms onset, no esperar finalizacion
-- [ ] 9.3 Modificar state machine: `idle → listening → processing → speaking → idle`
-- [ ] 9.4 Implementar concurrent execution: LLM tokens start arriving → Kokoro empieza a sintetizar
-- [ ] 9.5 Implementar audio chunk sequencing: timestamps + chunk_index para ordenar reproduccion
-- [ ] 9.6 Crear buffer de reproduccion en frontend: recibe chunks, ordena por index, play con WebAudio API
-- [ ] 9.7 Target: audio onset < 1s desde que LLM empieza a responder
-
----
-
-## Phase 10: GSAP Micro-interactions + UX Polish
-
-**Objetivo**: Enmascarar latencia percibida con animaciones fluidas.
-
-- [ ] 10.1 Integrar GSAP en frontend (`npm install gsap`)
-- [ ] 10.2 Animar waveform visualizer durante `listening` (scale + opacity)
-- [ ] 10.3 Animar transcription text: fade-in con stagger por palabra
-- [ ] 10.4 Animar TTS playback: waveform circular con progress ring
-- [ ] 10.5 Animar barge-in: quick fade-out + snap to idle state
-- [ ] 10.6 Crear `LoadingStates` component con skeleton animations para cada estado
-- [ ] 10.7 Implementar `useLiveVoice.ts` refactor: timer-based → Silero VAD
-- [ ] 10.8 Crear `vad.worker.ts`: Web Worker que corre Silero VAD model inference
-
----
-
-## Verification Criteria
-
-| Phase | Criterio |
-|-------|----------|
-| 1 | `docker compose -f docker-compose.genki.yml config` pasa sin errores |
-| 2 | `docker compose up genki-db` → SQLite inicializado con schema |
-| 3 | `curl localhost:6333/readyz` → 200 |
-| 4 | `curl localhost:11434/api/tags` → Minimax 2.7 listada |
-| 5 | `docker compose up genki-voice` → health check pasa con modelos cargados |
-| 6 | `POST /session/start` → crea session en Redis |
-| 7 | `ls packages/shared/` → tipos exportados |
-| 8 | Interrupt button → todos los servicios paran |
-| 9 | Audio onset < 1s (medir con timestamp LLM response start vs primer chunk TTS) |
-| 10 | Animaciones corren a 60fps sin jank |
+- [ ] 9.4.1 Test del algoritmo SM-2 contra casos known (V1 `calculateSm2`)
+- [ ] 9.4.2 Verificar que `get_due_cards` retorna solo cards con `next_review <= now`
+- [ ] 9.4.3 Test de concurrencia: múltiples reviews simultáneos
 
 ---
 
-## Suggested Work Units (PRs)
+## Phase 10: Integración Frontend SRS
 
-| PR | Contenido | Base branch |
-|----|-----------|-------------|
-| PR 1 | Phase 1-4: Docker base + DB + Vector + LLM | main |
-| PR 2 | Phase 5-6: Voice skeleton + API gateway | main (after PR1) |
-| PR 3 | Phase 7-8: Frontend scaffold + Barge-in | main (after PR2) |
-| PR 4 | Phase 9-10: Concurrent pipeline + GSAP | main (after PR3) |
+**Objetivo**: Conectar `genki-web` con los endpoints SRS del backend.
 
-**Chain strategy options** (elegir uno):
-- **stacked-to-main**: cada PR mergea a main en orden. Rápido, fix on the go.
-- **feature-branch-chain**: PR1 → tracker branch, PR2 → PR1 branch, etc. Solo tracker mergea a main. Mejor control de rollback.
+- [ ] 10.1 Crear `web/src/services/srsApi.ts` — cliente de los endpoints SRS
+- [ ] 10.2 Crear `web/src/features/decks/DeckList.tsx` — lista de decks con due count
+- [ ] 10.3 Crear `web/src/features/decks/DeckDetail.tsx` — cards del deck, filtro por estado
+- [ ] 10.4 Crear `web/src/features/study/StudySession.tsx` — sesión de estudio con grading (0/3/4/5)
+- [ ] 10.5 Integrar `updateCardSrs` del hook `useDecks` con `POST /v1/cards/{id}/review`
+- [ ] 10.6 Mostrar `next_interval_preview` antes de confirmar respuesta (como V1 `getNextIntervalPreview`)
+
+---
+
+## Phase 11: Integración XP y Gamificación
+
+**Objetivo**: Sistema de puntos y niveles como motivador.
+
+- [ ] 11.1 `POST /v1/cards/{id}/review` retorna `xp_earned`
+- [ ] 11.2 Sistema de streak: contar días consecutivos con al menos 1 review
+- [ ] 11.3 UI: barra de XP en header, badge de streak
+- [ ] 11.4 Badge "Mastered" cuando card pasa a `status='mastered'`
+
+---
+
+## Phase 12: Migración V1 → V2 (Opcional)
+
+**Objetivo**: Permitir exportar desde V1 (localStorage) e importar a V2 (SQLite).
+
+- [ ] 12.1 Endpoint `POST /v1/import` que acepta JSON exportado de V1
+- [ ] 12.2 Mapear estructura `Card` de V1 → esquema V2
+- [ ] 12.3 UI: pantalla de migración en settings
+
+---
+
+## PR Chain — Plan Actualizado
+
+| PR | Fases | Descripción |
+|---|---|---|
+| PR#1 | 1-4 | Docker base + DB + Vector + LLM ✅ |
+| PR#2 | 5-6 | Voice skeleton + API gateway ✅ |
+| PR#3 | 7-8 | Frontend scaffold + Barge-in ✅ |
+| PR#4 | 9-10 (GSAP) | GSAP polish ✅ |
+| PR#5 | **8.5** | Voice pipeline activation (Kokoro + Whisper en Docker) |
+| PR#6 | **9** | SRS Data Model + Backend Logic + API Endpoints |
+| PR#7 | **10-11** | Frontend SRS + XP/Gamificación |
+| PR#8 | **12** | Migración V1 → V2 (opcional) |
+
+---
+
+## Comparativa V1 vs V2 — SRS
+
+| Aspecto | V1 | V2 |
+|---|---|---|
+| SRS computation | Client (browser) | Server (Python) |
+| Persistencia | localStorage | SQLite |
+| Analytics | Ninguna | `card_review_log` completo |
+| Multi-device | No | Sí (user_id) |
+| Hard handling | Reset a 0 | `interval * 0.5` (no reset) |
+| Mastered cap | Sin criterio | `interval > 21 AND ef >= 2.0` |
+| Filtros de búsqueda | Solo `getDueCount` | `/due?status=&category=` |
+| Response time tracking | No | `response_time_ms` en log |
+| Interval cap | Sin límite | Max 365 días |
+
+---
+
+## Criterios de Éxito — Genki 2.0 Completo
+
+| Criterio | Método de verificación |
+|---|---|
+| Pipeline de voz funcional | `curl -X POST /v1/voice/conversation` retorna audio |
+| TTS onset < 1s | Timing desde `maya_response` hasta primer chunk |
+| Barge-in < 200ms | Medir tiempo interrupt → audio stop |
+| SRS calcula correctamente | Tests contra casos known de V1 |
+| Cards due correctas | `SELECT` vs implementación Python |
+| API responde < 100ms | Benchmark de endpoints |

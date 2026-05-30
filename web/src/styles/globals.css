@@ -1,0 +1,146 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'Outfit', system-ui, sans-serif;
+  --font-mono: 'DM Mono', 'Fira Code', monospace;
+
+  --color-bg-primary: #020617;
+  --color-bg-secondary: #0f172a;
+  --color-bg-elevated: #1e293b;
+  --color-text-primary: #f8fafc;
+  --color-text-secondary: #94a3b8;
+  --color-accent: #0ea5e9;
+  --color-accent-glow: rgba(14, 165, 233, 0.25);
+  --color-coral: #f43f5e;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-obsidian-950 text-obsidian-100 font-body;
+    font-feature-settings: 'ss01', 'ss02', 'cv01';
+    min-height: 100dvh;
+  }
+
+  ::selection {
+    @apply bg-genki-500/30 text-white;
+  }
+
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-obsidian-700 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-obsidian-600;
+  }
+}
+
+@layer components {
+  .genki-glass {
+    @apply bg-obsidian-900/70 backdrop-blur-xl border border-obsidian-700/50;
+  }
+
+  .genki-glow {
+    box-shadow:
+      0 0 20px var(--color-accent-glow),
+      0 0 60px var(--color-accent-glow),
+      0 0 100px rgba(14, 165, 233, 0.1);
+  }
+
+  .genki-btn-primary {
+    @apply px-5 py-2.5 bg-genki-500 hover:bg-genki-400 text-white font-body font-medium
+           rounded-xl transition-all duration-200
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-genki-400
+           active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .genki-btn-ghost {
+    @apply px-5 py-2.5 bg-transparent hover:bg-obsidian-800 text-obsidian-200
+           font-body font-medium rounded-xl transition-all duration-200
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-obsidian-500
+           border border-obsidian-700/60;
+  }
+
+  .genki-input {
+    @apply w-full px-4 py-3 bg-obsidian-900 border border-obsidian-700
+           rounded-xl text-obsidian-100 placeholder-obsidian-500
+           font-body text-sm transition-all duration-200
+           focus:outline-none focus:border-genki-500 focus:ring-1 focus:ring-genki-500/30;
+  }
+}
+
+@layer utilities {
+  .text-gradient-genki {
+    @apply bg-gradient-to-r from-genki-300 via-genki-400 to-genki-500
+           bg-clip-text text-transparent;
+  }
+
+  .bg-grid-pattern {
+    background-image:
+      linear-gradient(rgba(148, 163, 184, 0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(148, 163, 184, 0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* Noise texture overlay */
+  .bg-noise {
+    position: relative;
+  }
+
+  .bg-noise::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
+    pointer-events: none;
+    border-radius: inherit;
+    z-index: 0;
+  }
+
+  /* Ring pulse for audio */
+  .ring-pulse {
+    animation: ring-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes ring-pulse {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 0.6;
+    }
+    50% {
+      transform: scale(1.08);
+      opacity: 0.2;
+    }
+  }
+
+  /* Float animation for ambient elements */
+  .float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-8px); }
+  }
+}

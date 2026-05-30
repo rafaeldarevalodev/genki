@@ -7,6 +7,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
     curl \
     ca-certificates \
+    zstd \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Ollama
