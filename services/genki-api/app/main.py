@@ -148,8 +148,10 @@ async def api_health():
     async with httpx.AsyncClient(timeout=3.0) as client:
         redis_status = "ok"
         try:
-            if event_bus:
-                await event_bus.redis.ping()
+            import redis.asyncio as redis_async
+            r = redis_async.from_url(REDIS_URL)
+            await r.ping()
+            await r.aclose()
         except Exception:
             redis_status = "error"
 
