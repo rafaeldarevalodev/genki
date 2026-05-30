@@ -1,0 +1,100 @@
+// Genki Voice Service - gRPC Contract
+// Optional protocol buffer definitions for voice service communication
+
+syntax = "proto3";
+
+package genki.voice.v1;
+
+service VoiceService {
+  // Streaming conversation - bidirectional streaming
+  rpc StreamConversation(stream VoiceRequest) returns (stream VoiceResponse);
+
+  // Abort ongoing conversation
+  rpc Abort(AbortRequest) returns (AbortResponse);
+
+  // Health check
+  rpc HealthCheck(HealthRequest) returns (HealthResponse);
+}
+
+// -----------------------------------------------------------------------------
+// Messages
+// -----------------------------------------------------------------------------
+
+message VoiceRequest {
+  oneof payload {
+    AudioChunk audio_chunk = 1;
+    TranscriptionConfig transcription_config = 2;
+    TTSConfig tts_config = 3;
+  }
+}
+
+message AudioChunk {
+  string session_id = 1;
+  bytes audio_data = 2; // Raw PCM or compressed audio
+  int32 sample_rate = 3;          // e.g., 16000, 24000
+  int32 chunk_index = 4;         // For ordering
+  int32 total_chunks = 5;        // Total chunks for this utterance
+  int64 timestamp_ms = 6;       // For sequencing playback
+}
+
+message TranscriptionConfig {
+  string session_id = 1;
+  string model = 2;              // e.g., "mlx-whisper"
+  string language = 3;           // e.g., "ja", "en"
+  bool streaming = 4;            // Enable streaming transcription
+}
+
+message TTSConfig {
+  string session_id = 1;
+  string voice_id = 2;          // e.g., "af_heart"
+  float speed = 3;              // Speech rate
+}
+
+message VoiceResponse {
+  oneof payload {
+    Transcription transcription = 1;
+    TTSChunk tts_chunk = 2;
+    Error error = 3;
+  }
+}
+
+message Transcription {
+  string session_id = 1;
+  string text = 2;
+  float confidence = 3;
+  bool is_final = 4;
+  int64 timestamp_ms = 5;
+}
+
+message TTSChunk {
+  string session_id = 1;
+  bytes audio_data = 2;         // WAV chunk
+  int32 chunk_index = 3;        // For ordering playback
+  int32 total_chunks = 4;       // Total chunks for this utterance
+  int64 timestamp_ms = 5;       // For sequencing
+  bool is_last = 6;             // End of stream marker
+}
+
+message Error {
+  string session_id = 1;
+  string code = 2;
+  string message = 3;
+}
+
+message AbortRequest {
+  string session_id = 1;
+}
+
+message AbortResponse {
+  string session_id = 1;
+  bool success = 2;
+  string message = 3;
+}
+
+message HealthRequest {}
+
+message HealthResponse {
+  bool healthy = 1;
+  string version = 2;
+  bool models_loaded = 3;
+}
