@@ -1,6 +1,7 @@
 """Genki Voice Service - Streaming TTS + ASR Pipeline.
 
-Phase 8: Enhanced with BargeInHandler and AbortController propagation.
+Phase 9: Enhanced with ConcurrentASRTTSPipeline for minimal latency.
+LLM and TTS run concurrently - TTS starts synthesizing as LLM generates.
 """
 import asyncio
 import os
@@ -15,6 +16,7 @@ from pydantic import BaseModel
 KOKORO_URL = os.getenv("KOKORO_URL", "http://localhost:5001")
 SERVICE_PORT = int(os.getenv("SERVICE_PORT", "8092"))
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
+LLM_URL = os.getenv("LLM_URL", "http://genki-llm:11434")
 
 # =============================================================================
 # Models
@@ -131,11 +133,11 @@ async def voice_conversation(
     Receives audio, transcribes it, streams to LLM, and streams TTS audio back.
     Uses BargeInHandler for interrupt propagation via Redis Pub/Sub.
 
-    Phase 8: Integrated with SessionStateMachine and BargeInHandler.
+    Phase 9: Uses ConcurrentASRTTSPipeline - LLM and TTS run concurrently
+    for minimal latency. TTS starts synthesizing as LLM generates partial text.
     """
-    from app.tts.kokoro import KokoroTTSClient
-    from app.asr.whisper import WhisperASRClient
     from app.session import SessionStateMachine, BargeInHandler, SessionState
+    from app.asr.whisper import ConcurrentASRTTSPipeline
 
     # Get or create session state machine
     session = active_sessions.get(request.session_id)
@@ -151,59 +153,39 @@ async def voice_conversation(
     await barge_in_handler.start()
 
     async def audio_stream() -> AsyncGenerator[bytes, None]:
-        from app.tts.kokoro import KokoroTTSClient
-        from app.asr.whisper import WhisperASRClient
-
-        tts_client: KokoroTTSClient | None = None
-        asr_client: WhisperASRClient | None = None
+        pipeline = ConcurrentASRTTSPipeline(
+            llm_url=LLM_URL,
+            kokoro_url=KOKORO_URL,
+        )
 
         try:
             # Check abort before starting
             session.abort_controller.check()
 
-            # Create clients
-            tts_client = KokoroTTSClient(kokoro_url=KOKORO_URL)
-            asr_client = WhisperASRClient()
-
             # Transition to processing
             await session.transition(SessionState.PROCESSING)
 
-            # Step 1: Transcribe audio
-            transcription = await asr_client.transcribe(
+            # Run concurrent ASR+TTS pipeline
+            async for audio_chunk, chunk_index, total_chunks, timestamp_ms in pipeline.run(
                 audio_data=request.audio_data,
-                abort_event=session.abort_event,
-            )
-
-            if session.abort_event.is_set():
-                return
-
-            # Step 2: Stream LLM response and synthesize TTS concurrently
-            # (Placeholder - genki-llm client would be called here)
-            llm_text = f"[Simulated response to: {transcription}]"
-
-            # Transition to speaking
-            await session.transition(SessionState.SPEAKING)
-
-            # Step 3: Stream TTS audio chunks
-            async for chunk in tts_client.stream_synthesize(
-                text=llm_text,
+                session_id=request.session_id,
                 voice_id=request.voice_id,
                 speed=request.speed,
                 abort_event=session.abort_event,
             ):
                 if session.abort_event.is_set():
                     break
-                yield chunk
+
+                # Transition to speaking
+                if session.state != SessionState.SPEAKING:
+                    await session.transition(SessionState.SPEAKING)
+
+                yield audio_chunk
 
         except asyncio.CancelledError:
             await session.abort()
             raise
         finally:
-            # Cleanup
-            if tts_client:
-                await tts_client.close()
-            if asr_client:
-                await asr_client.close()
             await barge_in_handler.stop()
             await session.transition(SessionState.IDLE)
 

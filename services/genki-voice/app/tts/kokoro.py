@@ -3,11 +3,14 @@
 Connects to a remote Kokoro TTS server and streams audio chunks as they are
 generated. Handles abort via asyncio.CancelledError and converts WAV output
 to base64 PCM chunks.
+
+Phase 9: Enhanced with sentence-level streaming for concurrent ASR+TTS pipeline.
 """
 import asyncio
 import base64
 import os
-from typing import AsyncGenerator, AsyncIterator
+import re
+from typing import AsyncGenerator
 
 import httpx
 
@@ -93,8 +96,68 @@ class KokoroTTSClient:
         except asyncio.CancelledError:
             # Propagate cancellation for barge-in handling
             raise
- except Exception as e:
+        except Exception as e:
             raise RuntimeError(f"Kokoro TTS streaming failed: {e}")
+
+    async def stream_synthesize_sentences(
+        self,
+        text_iterator: AsyncGenerator[str, None],
+        voice_id: str = "af_heart",
+        speed: float = 1.0,
+        abort_event: asyncio.Event | None = None,
+    ) -> AsyncGenerator[tuple[bytes, int, int], None]:
+        """
+        Stream audio chunks sentence-by-sentence as LLM generates partial text.
+
+        This is the KEY latency fix: TTS starts synthesizing each sentence
+        as soon as the LLM completes it, rather than waiting for the full text.
+
+        Args:
+            text_iterator: Async generator yielding partial text sentences
+            voice_id: Kokoro voice identifier
+            speed: Speech speed multiplier
+            abort_event: Optional event to check for cancellation
+
+        Yields:
+            Tuple of (audio_chunk, chunk_index, total_chunks)
+        """
+        if not self.client:
+            raise RuntimeError("Client not initialized. Use async context manager.")
+
+        chunk_index = 0
+
+        async for sentence in text_iterator:
+            if abort_event and abort_event.is_set():
+                break
+
+            request_data = {
+                "text": sentence,
+                "voice": voice_id,
+                "speed": speed,
+                "stream": True,
+            }
+
+            try:
+                async with self.client.stream(
+                    "POST",
+                    f"{self.kokoro_url}/v1/tts/stream",
+                    json=request_data,
+                ) as response:
+                    if response.status_code != 200:
+                        continue
+
+                    async for audio_chunk in response.aiter_bytes(chunk_size=4096):
+                        if abort_event and abort_event.is_set():
+                            break
+                        if audio_chunk:
+                            chunk_index += 1
+                            yield (audio_chunk, chunk_index, 0)  # 0 = unknown total
+
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                # Continue to next sentence on error
+                continue
 
 
 class HTTPException(Exception):

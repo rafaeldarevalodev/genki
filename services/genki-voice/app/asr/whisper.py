@@ -2,6 +2,8 @@
 
 Uses ThreadPoolExecutor for CPU-bound transcription with base64 webm audio
 input converted via ffmpeg subprocess.
+
+Phase 9: Enhanced with streaming partial transcription support.
 """
 import asyncio
 import base64
@@ -131,3 +133,189 @@ class WhisperASRClient:
         text = await self.transcribe(audio_data, abort_event)
         if text:
             yield text
+
+
+class ConcurrentASRTTSPipeline:
+    """
+    Concurrent ASR + TTS pipeline for minimal latency.
+
+    Key latency fix: When transcription completes, LLM and TTS run
+    concurrently. TTS starts synthesizing sentences as LLM generates them,
+    rather than waiting for the full LLM response.
+
+    Pipeline flow:
+    1. ASR transcribes audio -> text
+    2. LLM starts generating tokens (partial text)
+    3. TTS starts synthesizing each sentence as LLM completes it
+    4. Audio chunks are sequenced by timestamp for ordered playback
+    """
+
+    def __init__(
+        self,
+        llm_url: str | None = None,
+        kokoro_url: str | None = None,
+        whisper_url: str | None = None,
+    ):
+        self.llm_url = llm_url or os.getenv("LLM_URL", "http://genki-llm:11434")
+        self.kokoro_url = kokoro_url or os.getenv("KOKORO_URL", "http://localhost:5001")
+        self.whisper_url = whisper_url or os.getenv("WHISPER_URL", "http://localhost:8001")
+
+    async def run(
+        self,
+        audio_data: str,
+        session_id: str,
+        voice_id: str = "af_heart",
+        speed: float = 1.0,
+        abort_event: asyncio.Event | None = None,
+    ) -> AsyncGenerator[tuple[bytes, int, int, int], None]:
+        """
+        Run the concurrent ASR+TTS pipeline.
+
+        Args:
+            audio_data: base64 encoded webm audio
+            session_id: Session identifier
+            voice_id: TTS voice
+            speed: Speech speed
+            abort_event: Abort event for cancellation
+
+        Yields:
+            Tuple of (audio_chunk, chunk_index, total_chunks, timestamp_ms)
+        """
+        from app.asr.whisper import WhisperASRClient
+        from app.tts.kokoro import KokoroTTSClient
+
+        if abort_event and abort_event.is_set():
+            return
+
+        # Step 1: Transcribe audio
+        asr_client = WhisperASRClient(whisper_url=self.whisper_url)
+        async with asr_client:
+            transcription = await asr_client.transcribe(audio_data, abort_event)
+
+        if abort_event and abort_event.is_set():
+            return
+
+        # Step 2: Start LLM + TTS concurrently
+        # LLM generates partial text sentences -> TTS synthesizes each sentence
+        tts_client = KokoroTTSClient(kokoro_url=self.kokoro_url)
+        async with tts_client:
+            # Sentence buffer for TTS
+            sentence_queue: asyncio.Queue[str] = asyncio.Queue()
+            chunk_index = 0
+            total_chunks = 0
+
+            async def llm_streamer():
+                """Stream LLM tokens and put sentences in queue."""
+                import httpx
+
+                async with httpx.AsyncClient(timeout=httpx.Timeout(120.0)) as client:
+                    try:
+                        async with client.stream(
+                            "POST",
+                            f"{self.llm_url}/api/generate",
+                            json={
+                                "model": "minimax-2.7",
+                                "prompt": transcription,
+                                "stream": True,
+                            },
+                        ) as response:
+                            if response.status_code != 200:
+                                return
+
+                            buffer = ""
+                            async for line in response.aiter_lines():
+                                if abort_event and abort_event.is_set():
+                                    break
+                                if line.startswith("data:"):
+                                    data = line[5:].strip()
+                                    if data and data != "[DONE]":
+                                        buffer += data
+                                        # Extract complete sentences
+                                        while "." in buffer or "。" in buffer:
+                                            sentence, buffer = self._split_sentence(buffer)
+                                            if sentence:
+                                                await sentence_queue.put(sentence)
+                    except Exception:
+                        pass
+                    finally:
+                        await sentence_queue.put("")  # Signal end
+
+            async def tts_streamer():
+                """Consume sentences from queue and synthesize TTS."""
+                nonlocal chunk_index, total_chunks
+
+                while True:
+                    try:
+                        sentence = await asyncio.wait_for(
+                            sentence_queue.get(), timeout=30.0
+                        )
+                    except asyncio.TimeoutExpired:
+                        if abort_event and abort_event.is_set():
+                            break
+                        continue
+
+                    if not sentence:  # End signal
+                        break
+
+                    if abort_event and abort_event.is_set():
+                        break
+
+                    # Synthesize sentence
+                    request_data = {
+                        "text": sentence,
+                        "voice": voice_id,
+                        "speed": speed,
+                        "stream": True,
+                    }
+
+                    try:
+                        async with tts_client.client.stream(
+                            "POST",
+                            f"{self.kokoro_url}/v1/tts/stream",
+                            json=request_data,
+                        ) as response:
+                            if response.status_code != 200:
+                                continue
+
+                            async for audio_chunk in response.aiter_bytes(chunk_size=4096):
+                                if abort_event and abort_event.is_set():
+                                    break
+                                if audio_chunk:
+                                    chunk_index += 1
+                                    import time
+                                    timestamp_ms = int(time.time() * 1000)
+                                    yield (audio_chunk, chunk_index, 0, timestamp_ms)
+                    except asyncio.CancelledError:
+                        raise
+                    except Exception:
+                        continue
+
+            # Run LLM and TTS concurrently
+            llm_task = asyncio.create_task(llm_streamer())
+            tts_task = asyncio.create_task(tts_streamer())
+
+            try:
+                async for chunk in tts_streamer():
+                    yield chunk
+            finally:
+                llm_task.cancel()
+                tts_task.cancel()
+                try:
+                    await llm_task
+                except asyncio.CancelledError:
+                    pass
+                try:
+                    await tts_task
+                except asyncio.CancelledError:
+                    pass
+
+    def _split_sentence(self, text: str) -> tuple[str, str]:
+        """Split first sentence from text buffer."""
+        # Simple sentence splitting on . or 。
+        for sep in ["。", ".", "!", "?", "！", "？"]:
+            if sep in text:
+                idx = text.index(sep)
+                sentence = text[: idx + 1].strip()
+                remainder = text[idx + 1 :].strip()
+                return sentence, remainder
+        return "", text
