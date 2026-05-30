@@ -140,6 +140,49 @@ async def readiness():
     return {"status": "ready"}
 
 
+@app.get("/api/health")
+async def api_health():
+    """Full system health check — checks Redis, voice, LLM, and vector services."""
+    import httpx
+
+    async with httpx.AsyncClient(timeout=3.0) as client:
+        redis_status = "ok"
+        try:
+            if event_bus:
+                await event_bus.redis.ping()
+        except Exception:
+            redis_status = "error"
+
+        voice_status = "ok"
+        try:
+            r = await client.get(f"{VOICE_SERVICE_URL}/health")
+            voice_status = "ok" if r.status_code == 200 else "error"
+        except Exception:
+            voice_status = "error"
+
+        llm_status = "ok"
+        try:
+            r = await client.get(f"{LLM_SERVICE_URL}/api/tags")
+            llm_status = "ok" if r.status_code == 200 else "error"
+        except Exception:
+            llm_status = "error"
+
+        vector_status = "ok"
+        try:
+            r = await client.get(f"{VECTOR_SERVICE_URL}/readyz")
+            vector_status = "ok" if r.status_code == 200 else "error"
+        except Exception:
+            vector_status = "error"
+
+    return {
+        "api": "ok",
+        "redis": redis_status,
+        "voice": voice_status,
+        "llm": llm_status,
+        "vector": vector_status,
+    }
+
+
 # =============================================================================
 # Session Management Endpoints
 # =============================================================================
