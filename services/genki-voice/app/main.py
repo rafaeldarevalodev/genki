@@ -1,4 +1,7 @@
-"""Genki Voice Service - Streaming TTS + ASR Pipeline"""
+"""Genki Voice Service - Streaming TTS + ASR Pipeline.
+
+Phase 8: Enhanced with BargeInHandler and AbortController propagation.
+"""
 import asyncio
 import os
 from contextlib import asynccontextmanager
@@ -11,6 +14,7 @@ from pydantic import BaseModel
 # Service configuration
 KOKORO_URL = os.getenv("KOKORO_URL", "http://localhost:5001")
 SERVICE_PORT = int(os.getenv("SERVICE_PORT", "8092"))
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 
 # =============================================================================
 # Models
@@ -56,6 +60,7 @@ class ReadinessResponse(BaseModel):
 
 models_loaded = False
 kokoro_connected = False
+active_sessions: dict[str, "SessionStateMachine"] = {}
 
 
 @asynccontextmanager
@@ -70,9 +75,12 @@ async def lifespan(app: FastAPI):
             kokoro_connected = response.status_code == 200
     except Exception:
         kokoro_connected = False
- models_loaded = True # Models loaded on first use, not at startup
+    models_loaded = True  # Models loaded on first use, not at startup
     yield
-    # Shutdown
+    # Shutdown: cleanup active sessions
+    for session in list(active_sessions.values()):
+        await session.abort()
+    active_sessions.clear()
 
 
 # =============================================================================
@@ -121,49 +129,83 @@ async def voice_conversation(
     Streaming voice conversation endpoint.
 
     Receives audio, transcribes it, streams to LLM, and streams TTS audio back.
+    Uses BargeInHandler for interrupt propagation via Redis Pub/Sub.
 
-    This is the core endpoint for the concurrent ASR+TTS pipeline.
+    Phase 8: Integrated with SessionStateMachine and BargeInHandler.
     """
     from app.tts.kokoro import KokoroTTSClient
     from app.asr.whisper import WhisperASRClient
+    from app.session import SessionStateMachine, BargeInHandler, SessionState
 
-    abort_event = asyncio.Event()
+    # Get or create session state machine
+    session = active_sessions.get(request.session_id)
+    if not session:
+        session = SessionStateMachine(session_id=request.session_id)
+        active_sessions[request.session_id] = session
+
+    # Transition to listening state
+    await session.transition(SessionState.LISTENING)
+
+    # Start barge-in handler
+    barge_in_handler = BargeInHandler(session=session, redis_url=REDIS_URL)
+    await barge_in_handler.start()
 
     async def audio_stream() -> AsyncGenerator[bytes, None]:
-        tts_client = KokoroTTSClient(kokoro_url=KOKORO_URL)
-        asr_client = WhisperASRClient()
+        from app.tts.kokoro import KokoroTTSClient
+        from app.asr.whisper import WhisperASRClient
+
+        tts_client: KokoroTTSClient | None = None
+        asr_client: WhisperASRClient | None = None
 
         try:
+            # Check abort before starting
+            session.abort_controller.check()
+
+            # Create clients
+            tts_client = KokoroTTSClient(kokoro_url=KOKORO_URL)
+            asr_client = WhisperASRClient()
+
+            # Transition to processing
+            await session.transition(SessionState.PROCESSING)
+
             # Step 1: Transcribe audio
             transcription = await asr_client.transcribe(
                 audio_data=request.audio_data,
-                abort_event=abort_event,
+                abort_event=session.abort_event,
             )
 
-            if abort_event.is_set():
+            if session.abort_event.is_set():
                 return
 
             # Step 2: Stream LLM response and synthesize TTS concurrently
             # (Placeholder - genki-llm client would be called here)
             llm_text = f"[Simulated response to: {transcription}]"
 
+            # Transition to speaking
+            await session.transition(SessionState.SPEAKING)
+
             # Step 3: Stream TTS audio chunks
             async for chunk in tts_client.stream_synthesize(
                 text=llm_text,
                 voice_id=request.voice_id,
                 speed=request.speed,
-                abort_event=abort_event,
+                abort_event=session.abort_event,
             ):
-                if abort_event.is_set():
+                if session.abort_event.is_set():
                     break
                 yield chunk
 
         except asyncio.CancelledError:
-            abort_event.set()
+            await session.abort()
             raise
         finally:
-            await tts_client.close()
-            await asr_client.close()
+            # Cleanup
+            if tts_client:
+                await tts_client.close()
+            if asr_client:
+                await asr_client.close()
+            await barge_in_handler.stop()
+            await session.transition(SessionState.IDLE)
 
     return StreamingResponse(
         audio_stream(),
@@ -186,15 +228,20 @@ async def abort_conversation(request: AbortRequest) -> dict:
     Abort the current conversation for a session.
 
     This triggers barge-in: stops ASR, LLM, and TTS processing.
+    Phase 8: Uses SessionStateMachine.abort() for coordinated cancellation.
     """
-    # In a real implementation, this would:
-    # 1. Look up the session's active abort event
-    # 2. Set the abort event
-    # 3. Return immediately (async cancellation handles the rest)
+    session = active_sessions.get(request.session_id)
+    if session:
+        await session.abort()
+        return {
+            "status": "aborted",
+            "session_id": request.session_id,
+            "message": "Abort signal sent",
+        }
     return {
-        "status": "aborted",
+        "status": "no_active_session",
         "session_id": request.session_id,
-        "message": "Abort signal sent",
+        "message": "No active session found",
     }
 
 
