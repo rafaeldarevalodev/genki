@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
-import { Mic, MicOff, Square, Zap, Sparkles, ChevronDown } from 'lucide-react'
+import { Mic, MicOff, Square, Zap, Sparkles, ChevronDown, Activity, Wifi, WifiOff } from 'lucide-react'
 import { useVoice } from '@/hooks/useVoice'
 import { useVoiceStore } from '@/services/store'
 
@@ -125,6 +125,147 @@ function Waveform({ mode }: { mode: 'idle' | 'listening' | 'processing' | 'speak
           style={{ height: '20%', transform: 'scaleY(0.15)', transformOrigin: 'center' }}
         />
       ))}
+    </div>
+  )
+}
+
+// ─── System Health ───────────────────────────────────────────────────────────
+
+interface ServiceStatus {
+  name: string
+  status: 'ok' | 'error' | 'pending'
+  latency?: number
+}
+
+function SystemHealth() {
+  const [open, setOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [services, setServices] = useState<ServiceStatus[]>([])
+  const panelRef = useRef<HTMLDivElement>(null)
+  const btnRef = useRef<HTMLButtonElement>(null)
+
+  const checkHealth = useCallback(async () => {
+    setLoading(true)
+    setServices([])
+    try {
+      const res = await fetch('/api/health')
+      const data = await res.json()
+
+      const mapped: ServiceStatus[] = [
+        { name: 'genki-api', status: res.ok ? 'ok' : 'error', latency: 0 },
+        { name: 'redis', status: data.redis === 'ok' ? 'ok' : 'error' },
+        { name: 'voice', status: data.voice === 'ok' ? 'ok' : 'error' },
+        { name: 'llm', status: data.llm === 'ok' ? 'ok' : 'error' },
+        { name: 'vector', status: data.vector === 'ok' ? 'ok' : 'error' },
+      ]
+
+      setServices(mapped)
+    } catch {
+      setServices([
+        { name: 'genki-api', status: 'error' },
+        { name: 'redis', status: 'pending' },
+        { name: 'voice', status: 'pending' },
+        { name: 'llm', status: 'pending' },
+        { name: 'vector', status: 'pending' },
+      ])
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  // Animate panel open/close
+  useEffect(() => {
+    if (!panelRef.current) return
+    if (open) {
+      gsap.fromTo(panelRef.current,
+        { opacity: 0, y: -8, scale: 0.96 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.2, ease: 'back.out(1.4)' }
+      )
+      checkHealth()
+    } else {
+      gsap.to(panelRef.current, {
+        opacity: 0, y: -8, scale: 0.96, duration: 0.15, ease: 'power2.in'
+      })
+    }
+  }, [open, checkHealth])
+
+  const allOk = services.length > 0 && services.every((s) => s.status === 'ok')
+
+  return (
+    <div className="absolute top-2 right-2 z-30">
+      {/* Toggle button */}
+      <button
+        ref={btnRef}
+        onClick={() => setOpen((v) => !v)}
+        className={`
+          w-7 h-7 rounded-full flex items-center justify-center
+          transition-all duration-200 cursor-pointer
+          ${allOk ? 'bg-emerald-500/20 text-emerald-400' : 'bg-obsidian-700 text-obsidian-400'}
+          ${open ? 'ring-2 ring-genki-500/40' : 'hover:bg-obsidian-600'}
+        `}
+        title="System Health"
+      >
+        {allOk ? <Wifi className="w-3.5 h-3.5" /> : <WifiOff className="w-3.5 h-3.5" />}
+      </button>
+
+      {/* Panel */}
+      {open && (
+        <div
+          ref={panelRef}
+          className="absolute right-0 top-9 w-52 genki-glass rounded-xl p-4 shadow-xl"
+          style={{ opacity: 0 }}
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <Activity className="w-3.5 h-3.5 text-genki-400" />
+            <span className="text-xs font-mono text-obsidian-300 uppercase tracking-widest">
+              System Health
+            </span>
+          </div>
+
+          {loading ? (
+            <div className="flex items-center justify-center py-3">
+              <div className="w-4 h-4 border-2 border-genki-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {services.map((s) => (
+                <div key={s.name} className="flex items-center justify-between">
+                  <span className="text-[11px] font-mono text-obsidian-400">{s.name}</span>
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className={`
+                        w-1.5 h-1.5 rounded-full
+                        ${s.status === 'ok' ? 'bg-emerald-400' : s.status === 'error' ? 'bg-coral-400' : 'bg-amber-400'}
+                      `}
+                    />
+                    <span
+                      className={`
+                        text-[10px] font-mono
+                        ${s.status === 'ok' ? 'text-emerald-400' : s.status === 'error' ? 'text-coral-400' : 'text-amber-400'}
+                      `}
+                    >
+                      {s.status === 'ok' ? 'up' : s.status === 'error' ? 'down' : '...'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+
+              {!services.length && (
+                <p className="text-[10px] font-mono text-obsidian-600 italic text-center py-2">
+                  Click to check
+                </p>
+              )}
+            </div>
+          )}
+
+          <button
+            onClick={checkHealth}
+            className="mt-3 w-full text-[10px] font-mono text-obsidian-600 hover:text-genki-400 transition-colors text-center py-1 border-t border-obsidian-700/50 pt-2"
+          >
+            ↻ Refresh
+          </button>
+        </div>
+      )}
     </div>
   )
 }
@@ -392,6 +533,8 @@ export function VoicePractice() {
               <Mic className="w-12 h-12 text-obsidian-300 z-10" />
             )}
           </div>
+
+          <SystemHealth />
 
           {/* State label */}
           <div className="mt-4 flex flex-col items-center gap-1.5">

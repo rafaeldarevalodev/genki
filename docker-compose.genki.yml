@@ -87,7 +87,7 @@ services:
     networks:
       - genki-net
     ports:
-      - "8090:8090"
+      - "8000:8000"
     depends_on:
       genki-voice:
         condition: service_healthy
