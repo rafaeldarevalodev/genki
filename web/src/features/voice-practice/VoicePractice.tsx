@@ -1,154 +1,437 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
-import { Mic, MicOff, Square, Zap } from 'lucide-react'
+import { Mic, MicOff, Square, Zap, Sparkles, ChevronDown } from 'lucide-react'
 import { useVoice } from '@/hooks/useVoice'
 import { useVoiceStore } from '@/services/store'
+
+// ─── Latency Masking Skeleton ────────────────────────────────────────────────
+
+function TypingIndicator() {
+  const dots = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!dots.current) return
+    gsap.set(dots.current.children, { opacity: 0.3, y: 2 })
+
+    const tl = gsap.timeline({ repeat: -1, repeatDelay: 0.3 })
+    tl.to(dots.current.children, {
+      opacity: 1,
+      y: 0,
+      duration: 0.2,
+      stagger: 0.1,
+      ease: 'power2.out',
+    })
+      .to(dots.current.children, {
+        opacity: 0.3,
+        y: 2,
+        duration: 0.2,
+        stagger: 0.05,
+        ease: 'power2.in',
+      })
+
+    return () => { tl.kill() }
+  }, [])
+
+  return (
+    <div ref={dots} className="flex items-center gap-1 px-3 py-2">
+      {[0, 1, 2].map((i) => (
+        <div
+          key={i}
+          className="w-1.5 h-1.5 rounded-full bg-genki-400"
+        />
+      ))}
+    </div>
+  )
+}
+
+// ─── Waveform Visualizer Modes ───────────────────────────────────────────────
+
+function Waveform({ mode }: { mode: 'idle' | 'listening' | 'processing' | 'speaking' }) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const barsRef = useRef<HTMLDivElement[]>([])
+
+  const barCount = 12
+  const colors: Record<string, string> = {
+    idle: 'bg-obsidian-600',
+    listening: 'bg-genki-400',
+    processing: 'bg-coral-400',
+    speaking: 'bg-genki-300',
+  }
+
+  useEffect(() => {
+    if (!containerRef.current) return
+
+    if (mode === 'idle') {
+      gsap.to(barsRef.current, {
+        scaleY: 0.15,
+        duration: 0.4,
+        ease: 'power2.out',
+        stagger: { each: 0.03, from: 'random' },
+      })
+    }
+
+    if (mode === 'listening') {
+      barsRef.current.forEach((bar) => {
+        gsap.to(bar, {
+          scaleY: () => Math.random() * 0.7 + 0.3,
+          duration: 0.12,
+          ease: 'sine.inOut',
+          repeat: -1,
+          yoyo: true,
+          delay: Math.random() * 0.3,
+        })
+      })
+    }
+
+    if (mode === 'processing') {
+      barsRef.current.forEach((bar) => {
+        gsap.to(bar, {
+          scaleY: () => Math.random() * 0.4 + 0.1,
+          duration: 0.2 + Math.random() * 0.3,
+          ease: 'sine.inOut',
+          repeat: -1,
+          yoyo: true,
+          delay: Math.random() * 0.5,
+        })
+      })
+    }
+
+    if (mode === 'speaking') {
+      // Ripple effect outward
+      gsap.to(barsRef.current, {
+        scaleY: (i) => {
+          const center = Math.abs(i - barCount / 2) / (barCount / 2)
+          return 0.3 + (1 - center) * 0.7
+        },
+        duration: 0.3,
+        ease: 'elastic.out(1, 0.5)',
+        stagger: { each: 0.04, from: 'center' },
+      })
+    }
+
+    return () => { gsap.killTweensOf(barsRef.current) }
+  }, [mode])
+
+  return (
+    <div
+      ref={containerRef}
+      className="flex items-center justify-center gap-1 h-14 px-4"
+    >
+      {Array.from({ length: barCount }).map((_, i) => (
+        <div
+          key={i}
+          ref={(el) => { if (el) barsRef.current[i] = el }}
+          className={`w-1.5 rounded-full transition-colors duration-300 ${colors[mode]}`}
+          style={{ height: '20%', transform: 'scaleY(0.15)', transformOrigin: 'center' }}
+        />
+      ))}
+    </div>
+  )
+}
+
+// ─── Audio Ring ──────────────────────────────────────────────────────────────
+
+function AudioRing({ active }: { active: boolean }) {
+  const ringsRef = useRef<HTMLDivElement[]>([])
+
+  useEffect(() => {
+    if (!active) {
+      gsap.killTweensOf(ringsRef.current)
+      gsap.set(ringsRef.current, { scale: 1, opacity: 0 })
+      return
+    }
+
+    ringsRef.current.forEach((ring, i) => {
+      gsap.fromTo(
+        ring,
+        { scale: 1, opacity: 0.5 },
+        {
+          scale: 1.8,
+          opacity: 0,
+          duration: 1.5,
+          ease: 'power2.out',
+          repeat: -1,
+          delay: i * 0.5,
+        }
+      )
+    })
+  }, [active])
+
+  return (
+    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+      {[0, 1, 2].map((i) => (
+        <div
+          key={i}
+          ref={(el) => { if (el) ringsRef.current[i] = el }}
+          className="absolute w-28 h-28 rounded-full border border-genki-400/40"
+          style={{ scale: 1, opacity: 0 }}
+        />
+      ))}
+    </div>
+  )
+}
+
+// ─── Message Bubble ───────────────────────────────────────────────────────────
+
+interface MessageBubbleProps {
+  role: 'user' | 'maya'
+  text: string
+  audioUrl?: string
+  isNew?: boolean
+}
+
+function MessageBubble({ role, text, audioUrl, isNew }: MessageBubbleProps) {
+  const bubbleRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!bubbleRef.current || !isNew) return
+
+    gsap.from(bubbleRef.current, {
+      opacity: 0,
+      x: role === 'user' ? 20 : -20,
+      duration: 0.4,
+      ease: 'back.out(1.4)',
+    })
+  }, [isNew, role])
+
+  return (
+    <div
+      ref={bubbleRef}
+      className={`
+        msg-entry flex items-end gap-2 max-w-[85%]
+        ${role === 'user' ? 'self-end flex-row-reverse' : 'self-start'}
+      `}
+    >
+      <div
+        className={`
+          w-7 h-7 rounded-xl flex items-center justify-center shrink-0
+          ${role === 'user' ? 'bg-obsidian-700' : 'bg-genki-500/15'}
+        `}
+      >
+        {role === 'user' ? (
+          <Mic className="w-3.5 h-3.5 text-obsidian-400" />
+        ) : (
+          <Sparkles className="w-3.5 h-3.5 text-genki-400" />
+        )}
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <div
+          className={`
+            px-4 py-3 rounded-2xl text-sm font-body leading-relaxed
+            ${role === 'user'
+              ? 'bg-genki-600 text-white rounded-br-md'
+              : 'bg-obsidian-800 text-obsidian-100 rounded-bl-md'
+            }
+          `}
+        >
+          {text}
+        </div>
+
+        {audioUrl && (
+          <button
+            onClick={() => window.open(audioUrl, '_blank')}
+            className="text-[10px] font-mono text-genki-500 hover:text-genki-300 ml-1 transition-colors"
+          >
+            ↓ Download audio
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── Processing Anticipation ─────────────────────────────────────────────────
+
+function ProcessingAnticipation() {
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.from('.anticipation-item', {
+        opacity: 0,
+        y: 8,
+        duration: 0.4,
+        stagger: 0.12,
+        ease: 'power2.out',
+      })
+    }, containerRef)
+    return () => ctx.revert()
+  }, [])
+
+  return (
+    <div ref={containerRef} className="flex flex-col gap-2 py-3">
+      <div className="anticipation-item flex items-center gap-2 text-xs text-coral-400">
+        <div className="w-1.5 h-1.5 rounded-full bg-coral-400 animate-pulse" />
+        <span className="font-mono">Transcribing...</span>
+      </div>
+      <div className="anticipation-item flex items-center gap-2 text-xs text-obsidian-500">
+        <Zap className="w-3 h-3" />
+        <span className="font-mono">Maya is thinking</span>
+        <TypingIndicator />
+      </div>
+      <div className="anticipation-item flex items-center gap-2 text-xs text-genki-400/60">
+        <Mic className="w-3 h-3" />
+        <span className="font-mono">Preparing response...</span>
+      </div>
+    </div>
+  )
+}
+
+// ─── Main VoicePractice ───────────────────────────────────────────────────────
 
 export function VoicePractice() {
   const { vadState, startListening, interrupt } = useVoice()
   const { userTranscript, mayaTranscript, isMayaSpeaking, messages, error } = useVoiceStore()
   const containerRef = useRef<HTMLDivElement>(null)
+  const transcriptRef = useRef<HTMLDivElement>(null)
+  const [prevMsgCount, setPrevMsgCount] = useState(0)
 
   const isListening = vadState === 'listening'
   const isProcessing = vadState === 'processing'
   const isSpeaking = vadState === 'speaking'
+  const isIdle = vadState === 'idle'
 
-  // Animate waveform when listening
+  // Entrance animation
   useEffect(() => {
-    if (!containerRef.current) return
     const ctx = gsap.context(() => {
-      if (isListening) {
-        gsap.to('.wave-bar', {
-          scaleY: () => Math.random() * 0.8 + 0.2,
-          duration: 0.15,
-          ease: 'power1.inOut',
-          stagger: { each: 0.05, from: 'random' },
-          repeat: -1,
-          yoyo: true,
-        })
-      } else {
-        gsap.killTweensOf('.wave-bar')
-        gsap.to('.wave-bar', { scaleY: 0.1, duration: 0.3 })
-      }
+      gsap.from('.vp-section', {
+        opacity: 0,
+        y: 20,
+        duration: 0.6,
+        stagger: 0.1,
+        ease: 'power3.out',
+      })
     }, containerRef)
     return () => ctx.revert()
-  }, [isListening])
+  }, [])
 
-  // Animate messages entrance
+  // Scroll to bottom when new messages
   useEffect(() => {
-    if (messages.length === 0) return
-    gsap.from('.msg-entry', {
-      opacity: 0,
-      x: -16,
-      duration: 0.35,
-      ease: 'power2.out',
-      stagger: 0.07,
-    })
-  }, [messages.length])
+    if (messages.length > prevMsgCount && transcriptRef.current) {
+      gsap.to(transcriptRef.current, {
+        scrollTop: transcriptRef.current.scrollHeight,
+        duration: 0.3,
+        ease: 'power2.out',
+      })
+      setPrevMsgCount(messages.length)
+    }
+  }, [messages.length, prevMsgCount])
 
   const handleMicClick = useCallback(() => {
     if (isListening || isProcessing) {
-      interrupt()
+      gsap.to('.mic-btn', {
+        scale: 0.9,
+        duration: 0.1,
+        yoyo: true,
+        repeat: 1,
+        ease: 'power2.inOut',
+        onComplete: () => interrupt(),
+      })
     } else {
-      startListening()
+      gsap.to('.mic-btn', {
+        scale: 0.95,
+        duration: 0.08,
+        yoyo: true,
+        repeat: 1,
+        ease: 'power2.inOut',
+        onComplete: () => startListening(),
+      })
     }
   }, [isListening, isProcessing, startListening, interrupt])
 
+  const handleInterrupt = useCallback(() => {
+    gsap.to('.interrupt-btn', {
+      scale: 0.92,
+      duration: 0.1,
+      yoyo: true,
+      repeat: 1,
+      ease: 'power2.inOut',
+      onComplete: () => interrupt(),
+    })
+  }, [interrupt])
+
   return (
-    <div ref={containerRef} className="flex flex-col gap-8">
-      {/* Hero Section */}
-      <div className="text-center py-6">
-        <h2 className="font-display text-4xl font-light text-obsidian-100 mb-2">
+    <div ref={containerRef} className="flex flex-col gap-10 pb-24">
+
+      {/* Hero */}
+      <div className="vp-section text-center pt-4">
+        <h2 className="font-display text-5xl font-light text-obsidian-50 tracking-tight mb-2">
           Voice Practice
         </h2>
         <p className="text-obsidian-500 text-sm font-body">
-          Converse naturally with Maya — your AI tutor.
+          Speak naturally. Learn effortlessly.
         </p>
       </div>
 
       {/* Mic Control */}
-      <div className="flex flex-col items-center gap-6">
-        {/* Visualizer */}
+      <div className="vp-section flex flex-col items-center gap-5">
+
+        {/* Button */}
         <div className="relative">
+          <AudioRing active={isListening || isSpeaking} />
+
           <div
             className={`
-              w-28 h-28 rounded-full flex items-center justify-center
-              transition-all duration-500 cursor-pointer
-              ${isListening ? 'bg-genki-500/20 genki-glow' : 'bg-obsidian-800'}
-              ${isProcessing ? 'bg-coral-500/20' : ''}
-              ${isSpeaking ? 'bg-genki-400/30 animate-pulse-ring' : ''}
-              border-2
-              ${isListening ? 'border-genki-400' : 'border-obsidian-700'}
-              hover:border-genki-500/60 active:scale-95
+              mic-btn relative w-32 h-32 rounded-full flex items-center justify-center
+              cursor-pointer select-none transition-all duration-300
+              ${isListening ? 'bg-genki-500/20' : isProcessing ? 'bg-coral-500/20' : isSpeaking ? 'bg-genki-400/20' : 'bg-obsidian-800'}
+              ${isListening ? 'genki-glow' : ''}
+              ${isIdle ? 'hover:bg-obsidian-700' : ''}
+              active:scale-95
             `}
             onClick={handleMicClick}
             role="button"
             tabIndex={0}
-            aria-label={isListening || isProcessing ? 'Stop recording' : 'Start voice practice'}
+            aria-label={isListening || isProcessing ? 'Stop' : 'Start voice practice'}
           >
-            <div className="flex items-end gap-1 h-10 px-8">
-              {[...Array(7)].map((_, i) => (
-                <div
-                  key={i}
-                  className="wave-bar w-1.5 bg-genki-400 rounded-full origin-bottom"
-                  style={{ height: '20%' }}
-                />
-              ))}
-            </div>
-
-            {!isListening && !isProcessing && (
-              <Mic className="absolute w-10 h-10 text-obsidian-400" />
-            )}
-            {(isListening || isProcessing) && (
-              <MicOff className="absolute w-10 h-10 text-coral-400" />
+            {/* Icon */}
+            {(isListening || isProcessing) ? (
+              <MicOff className="w-12 h-12 text-coral-400 z-10" />
+            ) : (
+              <Mic className="w-12 h-12 text-obsidian-300 z-10" />
             )}
           </div>
 
-          {/* Status ring */}
-          <div
-            className={`
-              absolute -inset-2 rounded-full border-2 transition-all duration-300
-              ${isListening ? 'border-genki-500/40 animate-spin' : 'border-transparent'}
-              ${isProcessing ? 'border-coral-500/30' : ''}
-            `}
-            style={{ animationDuration: '3s' }}
-          />
-
           {/* State label */}
-          <div className="mt-4 text-center">
+          <div className="mt-4 flex flex-col items-center gap-1.5">
             <span
               className={`
-                inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-widest px-3 py-1 rounded-full
-                ${isListening ? 'bg-genki-500/15 text-genki-300' : ''}
-                ${isProcessing ? 'bg-coral-500/15 text-coral-400' : ''}
-                ${isSpeaking ? 'bg-genki-400/15 text-genki-200' : ''}
-                ${vadState === 'idle' ? 'bg-obsidian-800 text-obsidian-500' : ''}
+                inline-flex items-center gap-2 text-xs font-mono uppercase tracking-widest px-4 py-1.5 rounded-full transition-all duration-300
+                ${isListening ? 'bg-genki-500/15 text-genki-300 ring-1 ring-genki-500/30' : ''}
+                ${isProcessing ? 'bg-coral-500/15 text-coral-400 ring-1 ring-coral-500/30' : ''}
+                ${isSpeaking ? 'bg-genki-400/15 text-genki-200 ring-1 ring-genki-400/30 animate-pulse' : ''}
+                ${isIdle ? 'bg-obsidian-800 text-obsidian-500' : ''}
               `}
             >
               {isListening && <span className="w-1.5 h-1.5 rounded-full bg-genki-400 animate-pulse" />}
-              {isProcessing && <Zap className="w-3 h-3" />}
-              {vadState === 'idle' && <span className="w-1.5 h-1.5 rounded-full bg-obsidian-600" />}
+              {isProcessing && <span className="w-1.5 h-1.5 rounded-full bg-coral-400 animate-ping" />}
+              {isSpeaking && <Zap className="w-3 h-3" />}
+              {isIdle && <span className="w-1.5 h-1.5 rounded-full bg-obsidian-600" />}
               {vadState.replace('_', ' ')}
             </span>
           </div>
         </div>
 
-        {/* Interrupt button */}
+        {/* Waveform */}
+        <Waveform mode={isIdle ? 'idle' : isListening ? 'listening' : isProcessing ? 'processing' : 'speaking'} />
+
+        {/* Interrupt */}
         {(isListening || isProcessing || isSpeaking) && (
           <button
-            onClick={interrupt}
-            className="genki-btn-ghost flex items-center gap-2 text-coral-400 border-coral-500/30 hover:bg-coral-500/10"
+            onClick={handleInterrupt}
+            className="interrupt-btn genki-btn-ghost flex items-center gap-2 text-coral-400 border-coral-500/30 hover:bg-coral-500/10 px-4 py-2 rounded-xl transition-all"
           >
             <Square className="w-3.5 h-3.5" />
-            Interrupt
+            <span className="text-xs font-mono uppercase tracking-widest">Interrupt</span>
           </button>
         )}
       </div>
 
-      {/* Transcript Display */}
-      <div className="genki-glass rounded-2xl p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xs font-mono text-obsidian-500 uppercase tracking-widest">
+      {/* Transcript */}
+      <div className="vp-section genki-glass rounded-2xl overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-obsidian-700/50">
+          <h3 className="text-[11px] font-mono text-obsidian-500 uppercase tracking-widest">
             Live Transcript
           </h3>
           {userTranscript && (
@@ -158,81 +441,67 @@ export function VoicePractice() {
           )}
         </div>
 
-        <div className="space-y-3">
+        <div ref={transcriptRef} className="p-5 space-y-4 min-h-[140px] max-h-[280px] overflow-y-auto">
+
+          {isProcessing && !userTranscript && !mayaTranscript && (
+            <ProcessingAnticipation />
+          )}
+
           {userTranscript && (
-            <div className="msg-entry flex items-start gap-3">
-              <div className="w-6 h-6 rounded-lg bg-obsidian-700 flex items-center justify-center shrink-0 mt-0.5">
-                <Mic className="w-3 h-3 text-obsidian-400" />
-              </div>
-              <p className="text-sm text-obsidian-200 font-body leading-relaxed">
-                {userTranscript}
-              </p>
-            </div>
+            <MessageBubble role="user" text={userTranscript} isNew />
           )}
 
           {mayaTranscript && (
-            <div className="msg-entry flex items-start gap-3">
-              <div className="w-6 h-6 rounded-lg bg-genki-500/20 flex items-center justify-center shrink-0 mt-0.5">
-                <Zap className="w-3 h-3 text-genki-400" />
+            <MessageBubble role="maya" text={mayaTranscript} isNew />
+          )}
+
+          {!userTranscript && !mayaTranscript && !isProcessing && (
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <div className="w-12 h-12 rounded-2xl bg-obsidian-800/60 flex items-center justify-center mb-3">
+                <Mic className="w-5 h-5 text-obsidian-600" />
               </div>
-              <p className="text-sm text-obsidian-100 font-body leading-relaxed">
-                {mayaTranscript}
+              <p className="text-sm text-obsidian-600 italic font-body">
+                Tap the mic to begin...
               </p>
             </div>
           )}
 
-          {!userTranscript && !mayaTranscript && (
-            <p className="text-sm text-obsidian-600 text-center py-4 italic">
-              Start speaking to begin your session...
-            </p>
+          {error && (
+            <div className="p-3 rounded-xl bg-coral-500/10 border border-coral-500/20">
+              <p className="text-xs font-mono text-coral-400">{error}</p>
+            </div>
           )}
         </div>
 
-        {error && (
-          <div className="mt-4 p-3 rounded-xl bg-coral-500/10 border border-coral-500/20">
-            <p className="text-xs font-mono text-coral-400">{error}</p>
+        {/* Scroll hint */}
+        {messages.length > 3 && (
+          <div className="flex justify-center pb-2">
+            <ChevronDown className="w-4 h-4 text-obsidian-600 animate-bounce" />
           </div>
         )}
       </div>
 
       {/* Message History */}
       {messages.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="text-xs font-mono text-obsidian-600 uppercase tracking-widest">
-            Session History
+        <div className="vp-section space-y-3">
+          <h3 className="text-[11px] font-mono text-obsidian-600 uppercase tracking-widest">
+            Session ({messages.length})
           </h3>
-          {messages.map((msg) => (
-            <div key={msg.id} className="msg-entry flex items-start gap-3">
-              <div
-                className={`
-                  w-6 h-6 rounded-lg flex items-center justify-center shrink-0 mt-0.5
-                  ${msg.role === 'user' ? 'bg-obsidian-700' : 'bg-genki-500/15'}
-                `}
-              >
-                {msg.role === 'user' ? (
-                  <Mic className="w-3 h-3 text-obsidian-400" />
-                ) : (
-                  <Zap className="w-3 h-3 text-genki-400" />
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-obsidian-200 font-body leading-relaxed">
-                  {msg.text}
-                </p>
-                {msg.audioUrl && (
-                  <a
-                    href={msg.audioUrl}
-                    download
-                    className="text-[10px] font-mono text-genki-500 hover:text-genki-300 mt-1 inline-block"
-                  >
-                    ↓ Download audio
-                  </a>
-                )}
-              </div>
-            </div>
-          ))}
+
+          <div className="flex flex-col gap-3">
+            {messages.map((msg, idx) => (
+              <MessageBubble
+                key={msg.id}
+                role={msg.role}
+                text={msg.text}
+                audioUrl={msg.audioUrl}
+                isNew={idx === messages.length - 1}
+              />
+            ))}
+          </div>
         </div>
       )}
+
     </div>
   )
 }

@@ -39,44 +39,47 @@
   }
 
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-obsidian-900;
+    @apply bg-transparent;
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-obsidian-600 rounded-full;
+    @apply bg-obsidian-700 rounded-full;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-obsidian-500;
+    @apply bg-obsidian-600;
   }
 }
 
 @layer components {
   .genki-glass {
-    @apply bg-obsidian-900/60 backdrop-blur-xl border border-obsidian-700/50;
+    @apply bg-obsidian-900/70 backdrop-blur-xl border border-obsidian-700/50;
   }
 
   .genki-glow {
-    box-shadow: 0 0 24px var(--color-accent-glow), 0 0 48px var(--color-accent-glow);
+    box-shadow:
+      0 0 20px var(--color-accent-glow),
+      0 0 60px var(--color-accent-glow),
+      0 0 100px rgba(14, 165, 233, 0.1);
   }
 
   .genki-btn-primary {
     @apply px-5 py-2.5 bg-genki-500 hover:bg-genki-400 text-white font-body font-medium
            rounded-xl transition-all duration-200
            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-genki-400
-           active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
+           active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .genki-btn-ghost {
     @apply px-5 py-2.5 bg-transparent hover:bg-obsidian-800 text-obsidian-200
            font-body font-medium rounded-xl transition-all duration-200
            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-obsidian-500
-           border border-obsidian-700;
+           border border-obsidian-700/60;
   }
 
   .genki-input {
@@ -94,8 +97,50 @@
   }
 
   .bg-grid-pattern {
-    background-image: linear-gradient(rgba(148, 163, 184, 0.03) 1px, transparent 1px),
-                      linear-gradient(90deg, rgba(148, 163, 184, 0.03) 1px, transparent 1px);
-    background-size: 32px 32px;
+    background-image:
+      linear-gradient(rgba(148, 163, 184, 0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(148, 163, 184, 0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* Noise texture overlay */
+  .bg-noise {
+    position: relative;
+  }
+
+  .bg-noise::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
+    pointer-events: none;
+    border-radius: inherit;
+    z-index: 0;
+  }
+
+  /* Ring pulse for audio */
+  .ring-pulse {
+    animation: ring-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes ring-pulse {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 0.6;
+    }
+    50% {
+      transform: scale(1.08);
+      opacity: 0.2;
+    }
+  }
+
+  /* Float animation for ambient elements */
+  .float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-8px); }
   }
 }
