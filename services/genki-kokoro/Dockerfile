@@ -16,7 +16,7 @@ RUN pip install --no-cache-dir \
     pydantic
 
 COPY kokoro_server.py /app/
-COPY voices /app/voices 2>/dev/null || true
+RUN mkdir -p /app/voices
 
 EXPOSE 5001
 
