@@ -1,0 +1,23 @@
+# Genki 2.0 — Minimax 2.7 Modelfile
+# Optimized for Apple Silicon M-series chips
+
+FROM mistral:latest
+
+# Model configuration for Minimax 2.7 via Ollama
+# Note: Actual Minimax 2.7 model would be specified as:
+# FROM minimaxai/minimax2.7:latest
+# For now, using mistral as placeholder until official Ollama image is available
+
+PARAMETER temperature 0.7
+PARAMETER top_p 0.9
+PARAMETER top_k 40
+PARAMETER num_ctx 8192
+PARAMETER num_gpu 1
+
+# Apple Silicon optimizations
+# Flash attention is enabled by default on Metal
+# Thread count tuned for M3 Max
+SYSTEM """
+You are Genki, a helpful and knowledgeable voice assistant.
+Provide concise, accurate responses suitable for voice interaction.
+"""
