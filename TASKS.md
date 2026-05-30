@@ -73,13 +73,13 @@ Chain strategy: pending
 
 **Objetivo**: Servicio de voz con ASR y TTS skeleton, listo para integración concurrente.
 
-- [ ] 5.1 Crear `Dockerfile.voice` con Python 3.11 + FastAPI
-- [ ] 5.2 Crear estructura `packages/genki-voice/`: app/, asr/, tts/, vad/, proto/
-- [ ] 5.3 Definir `proto/voice.proto` con servicio VoiceService, mensajes AudioChunk, VoiceEvent, Transcription, TTSChunk
-- [ ] 5.4 Crear servidor gRPC básico con stubs generados (solo signature, sin implementación)
-- [ ] 5.5 Crear endpoints HTTP de health: `GET /health` (modelos cargados), `GET /health/ready`
-- [ ] 5.6 Crear Dockerfile que instala mlx-whisper, Kokoro, y genera stubs protobuf
-- [ ] 5.7 Exponer puertos: 8092 (gRPC), 8091 (HTTP fallback)
+- [x] 5.1 Crear `Dockerfile.voice` con Python 3.11 + FastAPI
+- [x] 5.2 Crear estructura `packages/genki-voice/`: app/, asr/, tts/, vad/, proto/
+- [x] 5.3 Definir `proto/voice.proto` con servicio VoiceService, mensajes AudioChunk, VoiceEvent, Transcription, TTSChunk
+- [x] 5.4 Crear servidor gRPC básico con stubs generados (solo signature, sin implementación)
+- [x] 5.5 Crear endpoints HTTP de health: `GET /health` (modelos cargados), `GET /health/ready`
+- [x] 5.6 Crear Dockerfile que instala mlx-whisper, Kokoro, y genera stubs protobuf
+- [x] 5.7 Exponer puertos: 8092 (gRPC), 8091 (HTTP fallback)
 
 ---
 
@@ -87,14 +87,14 @@ Chain strategy: pending
 
 **Objetivo**: Orquestación de servicios, event bus, y gestión de sesiones.
 
-- [ ] 6.1 Crear `Dockerfile.api` con FastAPI + Redis client
-- [ ] 6.2 Crear `packages/genki-api/`: app/, routes/, services/, middleware/
-- [ ] 6.3 Implementar cliente Redis Pub/Sub (`src/lib/event-bus.ts` o `event_bus.py`)
-- [ ] 6.4 Crear endpoint `POST /interrupt` que PUBLISH a canal `barge_in:{session_id}`
-- [ ] 6.5 Crear endpoint `POST /session/start` que inicializa estado en Redis
-- [ ] 6.6 Crear endpoint `GET /session/{id}/status` para polling de estado
-- [ ] 6.7 Implementar middleware de logging y tracing (request_id propagate)
-- [ ] 6.8 Exponer puerto 8090
+- [x] 6.1 Crear `Dockerfile.api` con FastAPI + Redis client
+- [x] 6.2 Crear `packages/genki-api/`: app/, routes/, services/, middleware/
+- [x] 6.3 Implementar cliente Redis Pub/Sub (`src/lib/event-bus.ts` o `event_bus.py`)
+- [x] 6.4 Crear endpoint `POST /interrupt` que PUBLISH a canal `barge_in:{session_id}`
+- [x] 6.5 Crear endpoint `POST /session/start` que inicializa estado en Redis
+- [x] 6.6 Crear endpoint `GET /session/{id}/status` para polling de estado
+- [x] 6.7 Implementar middleware de logging y tracing (request_id propagate)
+- [x] 6.8 Exponer puerto 8090
 
 ---
 
@@ -115,10 +115,10 @@ Chain strategy: pending
 
 **Objetivo**: Señal de interrupción que para ASR, TTS, y LLM concurrentemente.
 
-- [ ] 8.1 Implementar `AbortController` propagation en genki-voice:接收 barge_in event → llama ` cancel()` en ASR y TTS
-- [ ] 8.2 Implementar `cancel()` propagation en genki-llm: recibe barge_in → aborta generacion de tokens
-- [ ] 8.3 Implementar `barge_in` handler en genki-api: Redis SUBSCRIBE canal `barge_in:{session_id}` → forward a servicios
-- [ ] 8.4 Crear idempotency en barge_in: múltiples interrupts = single cleanup
+- [x] 8.1 Implementar `AbortController` propagation en genki-voice:接收 barge_in event → llama ` cancel()` en ASR y TTS
+- [x] 8.2 Implementar `cancel()` propagation en genki-llm: recibe barge_in → aborta generacion de tokens
+- [x] 8.3 Implementar `barge_in` handler en genki-api: Redis SUBSCRIBE canal `barge_in:{session_id}` → forward a servicios
+- [x] 8.4 Crear idempotency en barge_in: múltiples interrupts = single cleanup
 - [ ] 8.5 Agregar botón de interrupt en UI frontend (`src/components/InterruptButton.tsx`)
 - [ ] 8.6 Verificar: inject interrupt event via Redis → todos los servicios paran dentro de <200ms
 
@@ -128,11 +128,11 @@ Chain strategy: pending
 
 **Objetivo**: Pipeline donde ASR y TTS corren en paralelo, no secuencial.
 
-- [ ] 9.1 Implementar streaming partial transcription en mlx-whisper (chunked results)
-- [ ] 9.2 Implementar Kokoro streaming: chunks de audio de 500ms onset, no esperar finalizacion
-- [ ] 9.3 Modificar state machine: `idle → listening → processing → speaking → idle`
-- [ ] 9.4 Implementar concurrent execution: LLM tokens start arriving → Kokoro empieza a sintetizar
-- [ ] 9.5 Implementar audio chunk sequencing: timestamps + chunk_index para ordenar reproduccion
+- [x] 9.1 Implementar streaming partial transcription en mlx-whisper (chunked results)
+- [x] 9.2 Implementar Kokoro streaming: chunks de audio de 500ms onset, no esperar finalizacion
+- [x] 9.3 Modificar state machine: `idle → listening → processing → speaking → idle`
+- [x] 9.4 Implementar concurrent execution: LLM tokens start arriving → Kokoro empieza a sintetizar
+- [x] 9.5 Implementar audio chunk sequencing: timestamps + chunk_index para ordenar reproduccion
 - [ ] 9.6 Crear buffer de reproduccion en frontend: recibe chunks, ordena por index, play con WebAudio API
 - [ ] 9.7 Target: audio onset < 1s desde que LLM empieza a responder
 
