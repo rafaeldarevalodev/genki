@@ -24,19 +24,17 @@ const GenerateCardsFromTextOutputSchema = z.object({
 });
 export type GenerateCardsFromTextOutput = z.infer<typeof GenerateCardsFromTextOutputSchema>;
 
-const VOXTRAL_VOICES = ['neutral_male', 'casual_female', 'cheerful_female', 'casual_male'];
 const PIPER_VOICES = ['en_GB-alan-medium', 'en_US-lessac-medium', 'en_US-ryan-high'];
+const KOKORO_VOICES = ['af_bella', 'af_nicole', 'af_sarah', 'af_sky', 'am_adam', 'am_eric', 'am_michael'];
 
 function getVoiceForCard(): { voice: string } {
-  const useVoxtral = Math.random() > 0.5;
-
-  if (useVoxtral) {
+  if (Math.random() > 0.5) {
     return {
-      voice: VOXTRAL_VOICES[Math.floor(Math.random() * VOXTRAL_VOICES.length)],
+      voice: PIPER_VOICES[Math.floor(Math.random() * PIPER_VOICES.length)],
     };
   } else {
     return {
-      voice: PIPER_VOICES[Math.floor(Math.random() * PIPER_VOICES.length)],
+      voice: KOKORO_VOICES[Math.floor(Math.random() * KOKORO_VOICES.length)],
     };
   }
 }

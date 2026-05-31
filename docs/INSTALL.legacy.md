@@ -385,7 +385,7 @@ conda create -n voice_eval python=3.11 -y
 conda activate voice_eval
 
 # Instalar dependencias
-pip install fastapi uvicorn python-multipart soundfile sounddevice httpx pydantic voxmlx numpy
+pip install fastapi uvicorn python-multipart soundfile sounddevice httpx pydantic numpy mlx-whisper
 ```
 
 ### 4.3 Iniciar el Servidor

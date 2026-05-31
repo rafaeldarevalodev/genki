@@ -139,12 +139,12 @@ pip install genkit dotenv
 ```
 
 #### voice_eval
-Para evaluación de pronunciación (VoxMLX).
+Para evaluación de pronunciación (difflib-based, sin dependencias externas de ASR).
 
 ```bash
 conda create -n voice_eval python=3.11 -y
 conda activate voice_eval
-pip install fastapi uvicorn python-multipart soundfile sounddevice httpx pydantic voxmlx numpy
+pip install fastapi uvicorn python-multipart soundfile sounddevice httpx pydantic numpy
 ```
 
 #### vibevoice7b
@@ -362,8 +362,8 @@ npm start
 
 | Evaluador | Descripción |
 |-----------|-------------|
-| `voxmlx` | VoxMLX - Alineador fonético |
-| `mfa` | Montreal Forced Aligner |
+| `whisper` | mlx-whisper ASR (Apple Silicon, default) |
+| `difflib` | Difflib-based (fallback, sin ASR externo) |
 
 ---
 
@@ -434,7 +434,7 @@ Después de una sesión de roleplay:
 **Flow:** `src/ai/flows/voice-practice.ts`
 
 Sistema completo de práctica de pronunciación:
-1. Genera audio de referencia (Voxtral TTS)
+1. Genera audio de referencia (Kokoro TTS)
 2. Graba pronunciación del usuario
 3. Evalúa fonema por fonema
 4. Devuelve:
@@ -650,15 +650,14 @@ genki/
 │
 ├── voice-eval/            # Voice Evaluation API
 │   ├── main_api.py        # FastAPI server
-│   ├── voxmlx_server.py
 │   └── src/
 │       └── ai/
 │           ├── types.py
 │           └── evaluators/
 │               ├── base.py
 │               ├── factory.py
-│               ├── mfa_eval.py
-│               └── voxmlx_eval.py
+│               ├── difflib_eval.py
+│               └── whisper_eval.py
 │
 └── models/                # Modelos descargados
     └── kokoro/           # Kokoro TTS models

@@ -75,11 +75,13 @@ install_conda_envs() {
     # Entorno voice_eval
     if conda env list | grep -q "^voice_eval "; then
         log_info "Entorno 'voice_eval' ya existe"
+        conda activate voice_eval
+        pip install mlx-whisper soundfile -q 2>/dev/null || true
     else
         log_info "Creando entorno 'voice_eval'..."
         conda create -n voice_eval python=3.11 -y -q
         conda activate voice_eval
-        pip install fastapi uvicorn python-multipart soundfile sounddevice httpx pydantic voxmlx numpy -q
+        pip install fastapi uvicorn python-multipart soundfile sounddevice httpx pydantic numpy mlx-whisper -q
     fi
     
     # Entorno vibevoice7b
@@ -128,14 +130,24 @@ generate('Hello world', output='/tmp/f5tts_test.wav')
 print('F5-TTS: Model downloaded and verified')
 " 2>&1 || log_warn "F5-TTS download failed (will retry on first use)"
     
-    # Whisper
+    # Whisper (for genki/maya_live)
     log_info "Descargando Whisper (~1.5GB)..."
     python -c "
 import mlx_whisper
 print('Whisper: Downloading model weights...')
-mlx_whisper.transcribe('/tmp/f5tts_test.wav', model='mlx-community/whisper-large-v3-turbo-mlx')
+mlx_whisper.transcribe('/tmp/f5tts_test.wav', model='mlx-community/whisper-large-v3-mlx')
 print('Whisper: Model downloaded and verified')
 " 2>&1 || log_warn "Whisper download failed (will retry on first use)"
+    
+    # Whisper for voice_eval (separate env but same HF cache)
+    log_info "Descargando Whisper para voice_eval..."
+    conda activate voice_eval
+    python -c "
+import mlx_whisper
+print('Whisper (voice_eval): Downloading model weights...')
+mlx_whisper.transcribe('/tmp/f5tts_test.wav', model='mlx-community/whisper-large-v3-mlx')
+print('Whisper (voice_eval): Model downloaded and verified')
+" 2>&1 || log_warn "Whisper (voice_eval) download failed (will retry on first use)"
     
     log_info "Modelos MLX listos"
 }

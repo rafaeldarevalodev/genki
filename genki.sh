@@ -133,7 +133,9 @@ start_vibevoice7b() {
 
 start_voice_eval() {
     conda activate voice-eval-env 2>/dev/null || { error "Entorno voice-eval-env no existe"; return 1; }
-    nohup python voice-eval/main_api.py --port $VOICE_EVAL_PORT --eval voxmlx > /tmp/voice_eval.log 2>&1 &
+    cd voice-eval
+    PYTHONPATH="$PWD" nohup python main_api.py --port $VOICE_EVAL_PORT > /tmp/voice_eval.log 2>&1 &
+    cd ..
 }
 
 start_maya_live() {
