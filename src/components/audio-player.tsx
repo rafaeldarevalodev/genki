@@ -12,6 +12,7 @@ interface AudioPlayerProps {
 export default function AudioPlayer({ audioUrl, onClose }: AudioPlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const wavesurferRef = useRef<WaveSurfer | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(0);
@@ -23,6 +24,11 @@ export default function AudioPlayer({ audioUrl, onClose }: AudioPlayerProps) {
     let isMounted = true;
     setIsLoading(true);
 
+    // Create our own AbortController — WaveSurfer will use this signal
+    // for all fetch/decode operations, so we can cancel them cleanly.
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     const ws = WaveSurfer.create({
       container: containerRef.current,
       waveColor: '#c7d2fe',
@@ -32,9 +38,8 @@ export default function AudioPlayer({ audioUrl, onClose }: AudioPlayerProps) {
       barRadius: 2,
       height: 50,
       normalize: true,
+      fetchParams: { signal: controller.signal },
     });
-
-    ws.load(audioUrl);
 
     ws.on('ready', () => {
       if (!isMounted) return;
@@ -59,11 +64,31 @@ export default function AudioPlayer({ audioUrl, onClose }: AudioPlayerProps) {
       ws.setTime(0);
     });
 
+    // WaveSurfer emits 'error' for network failures, decode errors, etc.
+    // AbortError from our controller.abort() is expected — silence it here.
+    ws.on('error', (err: Error) => {
+      if (err instanceof DOMException && err.name === 'AbortError') return;
+      console.warn('[AudioPlayer] WaveSurfer error:', err);
+    });
+
+    ws.load(audioUrl);
     wavesurferRef.current = ws;
 
     return () => {
       isMounted = false;
+
+      // Cancel any in-flight fetch/decode BEFORE destroy so WaveSurfer's
+      // internal AbortController never fires its abort signal.
+      // This prevents the async AbortError that propagates as unhandledrejection.
+      try { controller.abort(); } catch { /* noop */ }
+
+      const wsInstance = wavesurferRef.current;
       wavesurferRef.current = null;
+      abortControllerRef.current = null;
+
+      if (wsInstance) {
+        try { wsInstance.destroy(); } catch { /* noop */ }
+      }
     };
   }, [audioUrl]);
 
@@ -89,7 +114,7 @@ export default function AudioPlayer({ audioUrl, onClose }: AudioPlayerProps) {
   return (
     <div className="bg-slate-50 rounded-2xl p-4 mt-2 border border-slate-200">
       <div ref={containerRef} className="w-full" />
-      
+
       <div className="flex items-center justify-between mt-3">
         <div className="flex items-center gap-3">
           <button
@@ -105,7 +130,7 @@ export default function AudioPlayer({ audioUrl, onClose }: AudioPlayerProps) {
               <Play size={18} className="ml-0.5" />
             )}
           </button>
-          
+
           <div className="text-xs font-medium text-slate-500 font-mono">
             {formatTime(currentTime)} / {formatTime(duration)}
           </div>
@@ -119,7 +144,7 @@ export default function AudioPlayer({ audioUrl, onClose }: AudioPlayerProps) {
             <Download size={14} />
             Download
           </button>
-          
+
           {onClose && (
             <button
               onClick={onClose}

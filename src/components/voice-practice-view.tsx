@@ -236,7 +236,7 @@ export default function VoicePracticeView({ deck, onSessionEnd }: VoicePracticeV
       setError('Failed to play audio');
       setIsLoadingReference(false);
     }
-  }, [currentCard, referenceAudioUrl]);
+  }, [currentCard, referenceAudioUrl, settings]);
 
   // Record audio
   const startRecording = useCallback(async () => {
@@ -565,7 +565,7 @@ export default function VoicePracticeView({ deck, onSessionEnd }: VoicePracticeV
             </button>
 
             {/* Play recorded audio button */}
-            {recordedAudioUrl && !isRecording && !result && (
+            {recordedAudioUrl && !isRecording && (
               <div className="mt-4">
                 <AudioPlayer 
                   audioUrl={recordedAudioUrl} 
@@ -578,15 +578,6 @@ export default function VoicePracticeView({ deck, onSessionEnd }: VoicePracticeV
           {/* Result */}
           {result && result.score !== undefined && (
             <div className="space-y-6 animate-in fade-in">
-              {/* Audio player for recording */}
-              {recordedAudioUrl && (
-                <div className="mt-4">
-                  <AudioPlayer 
-                    audioUrl={recordedAudioUrl} 
-                    onClose={() => setPlayingRecorded(false)}
-                  />
-                </div>
-              )}
               
               <div className={cn('text-center space-y-2', getScoreColor(result.score))}>
                 <div className="text-6xl font-black">
