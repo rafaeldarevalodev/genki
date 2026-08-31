@@ -35,3 +35,6 @@ out/
 .cache/
 .pnpm-debug.log*
 .npm
+
+# Local isolated worktrees
+.worktrees/
