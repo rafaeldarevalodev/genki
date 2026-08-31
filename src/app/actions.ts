@@ -10,6 +10,7 @@ import { textToSpeech } from '@/ai/flows/text-to-speech';
 import { explorePhrase } from '@/ai/flows/explore-phrase';
 import { classifyTextCefr } from '@/ai/flows/classify-text-cefr';
 import { voicePractice, generateReferenceAudio } from '@/ai/flows/voice-practice';
+import { normalizeTTSProvider } from '@/lib/tts-provider';
 import type { Card, Deck } from '@/lib/types';
 
 export async function generateCardsAction(
@@ -133,35 +134,15 @@ export async function evaluateRoleplayAction(
   }
 }
 
-export async function getTTSAudio(text: string, voice?: string, provider?: string): Promise<{media: string} | null> {
+export async function getTTSAudio(text: string, voice?: string, provider?: unknown): Promise<{media: string} | null> {
   try {
-    const validProvider = (provider === 'piper' || provider === 'kokoro' || provider === 'vibevoice7b' || provider === 'f5tts')
-      ? provider as 'piper' | 'kokoro' | 'vibevoice7b' | 'f5tts'
-      : 'kokoro';
-
-    let referenceAudioData: string | undefined;
-    if (validProvider === 'vibevoice7b' && voice?.startsWith('user_')) {
-      if (typeof window !== 'undefined') {
-        try {
-          const stored = localStorage.getItem('vibevoice7b_user_voices');
-          if (stored) {
-            const userVoices = JSON.parse(stored);
-            const userVoice = userVoices.find((v: {id: string, data: string}) => v.id === voice);
-            if (userVoice) {
-              referenceAudioData = userVoice.data;
-            }
-          }
-        } catch (e) {
-          console.error('Failed to load user voice from localStorage:', e);
-        }
-      }
-    }
+    const validProvider = normalizeTTSProvider(provider);
 
     console.log('[getTTSAudio] text:', text);
     console.log('[getTTSAudio] voice:', voice);
     console.log('[getTTSAudio] provider:', validProvider);
     
-    const input = { text, provider: validProvider, voice, referenceAudioData };
+    const input = { text, provider: validProvider, voice };
     console.log('[getTTSAudio] input to textToSpeech:', JSON.stringify(input));
     
     const result = await textToSpeech(input);

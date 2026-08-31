@@ -4,7 +4,7 @@
 FastAPI server for Live Voice Mode with Maya.
 Implements Strategy B: Abort + LLM Cancel (complete cancellation on user interrupt).
 
-Pipeline: VAD → ASR (mlx-whisper) → LLM (Maya) → TTS Streaming (F5-TTS / VibeVoice)
+ Pipeline: VAD → ASR (mlx-whisper) → LLM (Maya) → TTS Streaming (F5-TTS / Kokoro)
 
 Usage:
     python maya_live_server.py                    # Port 8092
@@ -17,7 +17,6 @@ os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 import io
 import json
 import wave
-import sys
 import uuid
 import time
 import asyncio
@@ -38,7 +37,6 @@ DEFAULT_PORT = 8092
 DEFAULT_HOST = "http://localhost:8092"
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-MLX_SPEECH_DIR = os.path.join(SCRIPT_DIR, "mlx-speech", "src")
 
 DEFAULT_VOICES = [
     "en-Emma_woman",
@@ -147,7 +145,6 @@ def mark_session_aborted(session_id: str) -> None:
 class ModelCache:
     def __init__(self):
         self.f5tts_model = None
-        self.vibevoice_model = None
         self.whisper_model = None
         self.lock = threading.Lock()
         self.loading = {}
@@ -182,43 +179,6 @@ class ModelCache:
                 print(f"[WARN] F5-TTS load failed: {e}", flush=True)
                 import traceback
                 traceback.print_exc()
-                return None
-    
-    def load_vibevoice(self, model_dir: Optional[str] = None):
-        if self.vibevoice_model is not None:
-            return self.vibevoice_model
-        
-        with self.lock:
-            if self.vibevoice_model is not None:
-                return self.vibevoice_model
-            
-            print("[INIT] Loading VibeVoice...", flush=True)
-            try:
-                sys.path.insert(0, MLX_SPEECH_DIR)
-                from mlx_speech.models.vibevoice.checkpoint import load_vibevoice_model
-                from mlx_speech.models.vibevoice.tokenizer import VibeVoiceTokenizer
-                from mlx_speech.generation.vibevoice import synthesize_vibevoice
-                from mlx_speech.audio.io import write_wav
-                from mlx_speech._hub import get_model_path
-                
-                model_repo = "appautomaton/vibevoice-mlx"
-                model_local_path = get_model_path(model_repo)
-                model_int8_path = model_local_path / "mlx-int8"
-                
-                if model_int8_path.exists():
-                    loaded = load_vibevoice_model(str(model_int8_path), prefer_mlx_int8=True, strict=False)
-                    tokenizer = VibeVoiceTokenizer.from_path(str(loaded.model_dir))
-                    
-                    self.vibevoice_model = {
-                        'instance': loaded.model,
-                        'tokenizer': tokenizer,
-                        'sample_rate': loaded.config.sampling_rate,
-                        'synthesize': synthesize_vibevoice
-                    }
-                    print("[INIT] VibeVoice loaded", flush=True)
-                    return self.vibevoice_model
-            except Exception as e:
-                print(f"[WARN] VibeVoice load failed: {e}", flush=True)
                 return None
     
     def load_whisper(self):
@@ -638,7 +598,7 @@ async def generate_maya_response(
         return f"[Maya is thinking... ({str(e)[:50]})]"
 
 # =============================================================================
-# TTS - F5-TTS or VibeVoice
+# TTS - F5-TTS or Kokoro
 # =============================================================================
 
 async def stream_tts(
@@ -652,17 +612,7 @@ async def stream_tts(
     session_id: str = ""
 ) -> AsyncGenerator[dict, None]:
     """Stream TTS audio chunks using user-selected provider."""
-    import numpy as np
-    
     try:
-        # Immersive mode uses local VibeVoice model
-        if mode == "immersive":
-            model = model_cache.load_vibevoice()
-            if model:
-                async for chunk in _stream_vibevoice(text, model, signal, reference_audio_path, session_id):
-                    yield chunk
-                return
-        
         # Route to appropriate TTS provider based on user settings
         if tts_provider == 'f5tts':
             print(f"[TTS] Using F5-TTS provider with voice: {tts_voice}", flush=True)
@@ -682,21 +632,9 @@ async def stream_tts(
                     yield chunk
                 return
                 
-        elif tts_provider == 'vibevoice7b':
-            print(f"[TTS] Using VibeVoice7B provider with voice: {tts_voice}", flush=True)
-            async for chunk in _stream_vibevoice_http(text, signal, tts_voice, session_id):
-                yield chunk
-            return
-                
         elif tts_provider == 'kokoro':
             print(f"[TTS] Using Kokoro provider with voice: {tts_voice}", flush=True)
             async for chunk in _stream_kokoro_fallback(text, signal, session_id, voice=tts_voice):
-                yield chunk
-            return
-                
-        elif tts_provider == 'piper':
-            print(f"[TTS] Using Piper provider with voice: {tts_voice}", flush=True)
-            async for chunk in _stream_piper_http(text, signal, tts_voice, session_id):
                 yield chunk
             return
                 
@@ -717,76 +655,6 @@ async def stream_tts(
     except Exception as e:
         print(f"[TTS Error] {e}", flush=True)
         yield {"type": "error", "message": str(e)}
-
-async def _stream_vibevoice(
-    text: str,
-    model: dict,
-    signal: Optional[asyncio.CancelledError] = None,
-    reference_audio_path: Optional[str] = None,
-    session_id: str = ""
-) -> AsyncGenerator[dict, None]:
-    """Stream audio using VibeVoice."""
-    import numpy as np
-    
-    loop = asyncio.get_event_loop()
-    
-    config = type('obj', (object,), {
-        'max_new_tokens': 1024,
-        'cfg_scale': 1.3,
-        'diffusion_steps': 15,
-        'temperature': 0.0,
-    })()
-    
-    voice_samples = None
-    default_voice = os.path.join(SCRIPT_DIR, "reference_voices", "en_Emma_woman.wav")
-    
-    if reference_audio_path is None:
-        reference_audio_path = default_voice
-    
-    if reference_audio_path and os.path.exists(reference_audio_path):
-        from mlx_speech.audio.io import load_audio
-        waveform, sr = load_audio(reference_audio_path, sample_rate=24000, mono=True)
-        voice_samples = [waveform.reshape(1, 1, -1)]
-        print(f"[TTS] Using voice: {os.path.basename(reference_audio_path)}", flush=True)
-    
-    result = await loop.run_in_executor(
-        None,
-        lambda: model['synthesize'](
-            model['instance'],
-            model['tokenizer'],
-            text,
-            voice_samples=voice_samples,
-            config=config
-        )
-    )
-    
-    # Check for abort
-    if signal and signal.cancelled:
-        raise asyncio.CancelledError("TTS cancelled")
-    
-    audio_np = np.array(result.waveform, dtype=np.float32)
-    if audio_np.ndim > 1:
-        audio_np = audio_np.flatten()
-    
-    # Normalize
-    max_abs = max(abs(audio_np.min()), abs(audio_np.max()))
-    if max_abs > 1.0:
-        audio_np = audio_np / max_abs
-    
-    # Yield as single chunk (VibeVoice doesn't stream during generation)
-    pcm_base64 = audio_to_base64_pcm(audio_np)
-    compressed = compress_audio_data(pcm_base64)
-    
-    # Save audio as WAV for debugging/download
-    audio_path = Path(f"/tmp/maya_audio_{session_id}.wav")
-    with wave.open(str(audio_path), 'wb') as wav_file:
-        wav_file.setnchannels(1)
-        wav_file.setsampwidth(2)
-        wav_file.setframerate(int(result.sample_rate))
-        audio_int16 = (audio_np * 32767).astype(np.int16)
-        wav_file.writeframes(audio_int16.tobytes())
-    
-    yield {"type": "audio_chunk", "data": compressed, "sample_rate": result.sample_rate, "compressed": True, "download_url": f"/v1/voice/audio/{session_id}"}
 
 async def _stream_f5tts(
     text: str,
@@ -977,131 +845,6 @@ async def _stream_kokoro_fallback(
         yield {"type": "error", "message": str(e)}
 
 
-async def _stream_vibevoice_http(
-    text: str,
-    signal: Optional[asyncio.CancelledError] = None,
-    voice: str = "en-Emma_woman",
-    session_id: str = ""
-) -> AsyncGenerator[dict, None]:
-    """VibeVoice7B TTS via HTTP."""
-    import numpy as np
-    import requests
-    
-    try:
-        if signal and signal.cancelled:
-            raise asyncio.CancelledError("TTS cancelled")
-        
-        loop = asyncio.get_event_loop()
-        response = await loop.run_in_executor(
-            None,
-            lambda: requests.post(
-                "http://localhost:8091/v1/audio/speech",
-                json={
-                    "input": text,
-                    "voice": voice,
-                    "response_format": "wav"
-                },
-                timeout=60
-            )
-        )
-        
-        if response.status_code != 200:
-            raise RuntimeError(f"VibeVoice7B error: {response.status_code}")
-        
-        wav_data = response.content
-        buffer = io.BytesIO(wav_data)
-        with wave.open(buffer, 'rb') as wav:
-            frames = wav.readframes(wav.getnframes())
-            sr = wav.getframerate()
-        
-        audio_np = np.frombuffer(frames, dtype=np.int16).astype(np.float32) / 32767.0
-        
-        if signal and signal.cancelled:
-            raise asyncio.CancelledError("TTS cancelled")
-        
-        # Yield as single chunk for now (VibeVoice7B generates full audio)
-        pcm_base64 = audio_to_base64_pcm(audio_np)
-        
-        # Save for download
-        audio_path = Path(f"/tmp/maya_audio_{session_id}.wav")
-        with wave.open(str(audio_path), 'wb') as wav_file:
-            wav_file.setnchannels(1)
-            wav_file.setsampwidth(2)
-            wav_file.setframerate(sr)
-            audio_int16 = (audio_np * 32767).astype(np.int16)
-            wav_file.writeframes(audio_int16.tobytes())
-        
-        yield {"type": "audio_chunk", "data": pcm_base64, "sample_rate": sr, "compressed": False, "download_url": f"{DEFAULT_HOST}/v1/voice/audio/{session_id}"}
-        
-    except asyncio.CancelledError:
-        raise
-    except Exception as e:
-        print(f"[VibeVoice7B HTTP Error] {e}", flush=True)
-        yield {"type": "error", "message": str(e)}
-
-
-async def _stream_piper_http(
-    text: str,
-    signal: Optional[asyncio.CancelledError] = None,
-    voice: str = "en_GB-alan-medium",
-    session_id: str = ""
-) -> AsyncGenerator[dict, None]:
-    """Piper TTS via HTTP."""
-    import numpy as np
-    import requests
-    
-    try:
-        if signal and signal.cancelled:
-            raise asyncio.CancelledError("TTS cancelled")
-        
-        loop = asyncio.get_event_loop()
-        response = await loop.run_in_executor(
-            None,
-            lambda: requests.post(
-                "http://localhost:8080/tts",
-                json={
-                    "text": text,
-                    "voice": voice
-                },
-                timeout=30
-            )
-        )
-        
-        if response.status_code != 200:
-            raise RuntimeError(f"Piper error: {response.status_code}")
-        
-        wav_data = response.content
-        buffer = io.BytesIO(wav_data)
-        with wave.open(buffer, 'rb') as wav:
-            frames = wav.readframes(wav.getnframes())
-            sr = wav.getframerate()
-        
-        audio_np = np.frombuffer(frames, dtype=np.int16).astype(np.float32) / 32767.0
-        
-        if signal and signal.cancelled:
-            raise asyncio.CancelledError("TTS cancelled")
-        
-        # Yield as single chunk
-        pcm_base64 = audio_to_base64_pcm(audio_np)
-        
-        # Save for download
-        audio_path = Path(f"/tmp/maya_audio_{session_id}.wav")
-        with wave.open(str(audio_path), 'wb') as wav_file:
-            wav_file.setnchannels(1)
-            wav_file.setsampwidth(2)
-            wav_file.setframerate(sr)
-            audio_int16 = (audio_np * 32767).astype(np.int16)
-            wav_file.writeframes(audio_int16.tobytes())
-        
-        yield {"type": "audio_chunk", "data": pcm_base64, "sample_rate": sr, "compressed": False, "download_url": f"{DEFAULT_HOST}/v1/voice/audio/{session_id}"}
-        
-    except asyncio.CancelledError:
-        raise
-    except Exception as e:
-        print(f"[Piper HTTP Error] {e}", flush=True)
-        yield {"type": "error", "message": str(e)}
-
-
 # =============================================================================
 # FastAPI App
 # =============================================================================
@@ -1113,7 +856,7 @@ class VoiceConversationRequest(BaseModel):
     session_id: Optional[str] = None
     mode: str = "fast"  # "fast" or "immersive"
     vocabulary: Optional[list[str]] = None
-    tts_provider: str = "f5tts"  # TTS provider: f5tts, vibevoice7b, kokoro, piper
+    tts_provider: str = "f5tts"  # TTS provider: f5tts or kokoro
     tts_voice: str = DEFAULT_MAYA_VOICE  # Voice for the TTS provider
 
 class SessionResetRequest(BaseModel):
@@ -1341,7 +1084,6 @@ def main():
     if args.preload:
         print("[INIT] Preloading models...", flush=True)
         model_cache.load_f5tts()
-        model_cache.load_vibevoice()
         model_cache.load_whisper()
         print("[INIT] All models loaded", flush=True)
     

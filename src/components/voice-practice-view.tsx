@@ -149,7 +149,7 @@ export default function VoicePracticeView({ deck, onSessionEnd }: VoicePracticeV
     }
     
     // Si settings no loaded, usar valores por defecto en lugar de mostrar error
-    const provider = settings?.ttsProvider || 'piper';
+    const provider = settings?.ttsProvider || 'f5tts';
     const playbackSpeed = settings?.playbackSpeed || 1;
     
     setIsLoadingReference(true);
@@ -169,36 +169,22 @@ export default function VoicePracticeView({ deck, onSessionEnd }: VoicePracticeV
     
     // Get TTS config from settings (fallback values)
     const useKokoro = provider === 'kokoro';
-    const useVibeVoice7B = provider === 'vibevoice7b';
-    const useF5TTS = provider === 'f5tts';
     
     let apiUrl: string;
     let requestBody: Record<string, unknown>;
     
-    if (useVibeVoice7B) {
-      apiUrl = 'http://localhost:8091/v1/audio/speech';
-      requestBody = {
-        input: currentCard.front,
-        voice: settings?.vibevoice7bVoice || 'en-Emma_woman',
-      };
-    } else if (useKokoro) {
+    if (useKokoro) {
       apiUrl = 'http://localhost:8880/v1/audio/speech';
       requestBody = {
         input: currentCard.front,
         voice: settings?.kokoroVoice || 'af_bella',
         speed: 1.0
       };
-    } else if (useF5TTS) {
+    } else {
       apiUrl = 'http://localhost:8093/tts';
       requestBody = {
         text: currentCard.front,
         voice: settings?.f5ttsVoice || 'en-Giuseppe_man'
-      };
-    } else {
-      apiUrl = 'http://localhost:8080/tts';
-      requestBody = {
-        text: currentCard.front,
-        voice: settings?.voice || 'en_GB-alan-medium'
       };
     }
     

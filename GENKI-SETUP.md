@@ -162,9 +162,8 @@ CLOUD_BASE_URL=https://api.nvidia.com/v1/experimental/mistral-ai/codestral-lates
 ```
 
 Esto inicia todos los servicios necesarios:
-- Piper TTS (8080)
 - Kokoro TTS (8880)
-- VibeVoice 7B TTS (8091)
+- F5-TTS (8093)
 - Maya Live Voice (8092)
 - Voice Eval (10301)
 - Next.js (9002)
@@ -189,9 +188,8 @@ Esto inicia todos los servicios necesarios:
 | Servicio | Puerto |
 |----------|--------|
 | App web | 9002 |
-| Piper TTS | 8080 |
 | Kokoro TTS | 8880 |
-| VibeVoice 7B TTS | 8091 |
+| F5-TTS | 8093 |
 | Maya Live Voice | 8092 |
 | Voice Eval | 10301 |
 

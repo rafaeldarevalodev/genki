@@ -11,7 +11,7 @@ Without this file, Maya will use a default female voice (af_bella from Kokoro).
 
 ---
 
-## How to Add a New Voice for F5-TTS / VibeVoice 7B
+## How to Add a New Voice for F5-TTS
 
 ### 1. Extract Audio from Source
 
@@ -29,7 +29,7 @@ ffmpeg -y -i complete_audio_reference.mp3 -ss 73 -t 10 -ar 24000 -ac 1 reference
 Parameters:
 - `-ss <seconds>`: Start time in seconds
 - `-t 10`: Duration (10 seconds)
-- `-ar 24000`: Sample rate (24kHz - required by F5-TTS/VibeVoice)
+- `-ar 24000`: Sample rate (24kHz - required by F5-TTS)
 - `-ac 1`: Mono channel
 - `-y`: Overwrite existing file
 
@@ -62,16 +62,10 @@ Add to:
 - `VOICE_ID_TO_FILE`: `"en-VoiceName_gender": "en_VoiceName_gender.wav"`
 - `VOICE_ID_TO_REF_TEXT`: `"en-VoiceName_gender": "<transcription>"`
 
-#### vibevoice7b_server.py
-Add to:
-- `DEFAULT_VOICES`: `"en-VoiceName_gender"`
-- `VOICE_TO_REFERENCE`: `"en-VoiceName_gender": "en_VoiceName_gender.wav"`
-
 ### 4. Update Frontend UI
 
 #### src/components/settings-modal.tsx
 Add to:
-- `vibevoice7bVoices`: `{ id: 'en-VoiceName_gender', name: 'Name (Gender)', accent: 'Custom', source: 'preset' }`
 - `mayaVoices`: `{ id: 'en-VoiceName_gender', name: 'Name (Gender)', accent: 'Custom' }`
 
 ### 5. Rebuild the App

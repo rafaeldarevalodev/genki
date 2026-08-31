@@ -1,6 +1,7 @@
 import { config, parse } from 'dotenv';
 import path from 'path';
 import { readFileSync, existsSync } from 'fs';
+import { normalizeTTSProvider, type TTSProvider } from '@/lib/tts-provider';
 
 const envPath = path.resolve(process.cwd(), '.env.local');
 
@@ -29,7 +30,6 @@ function reloadEnv(): Record<string, string> {
 const ENV = loadEnv();
 
 export type LLMProvider = 'local' | 'cloud';
-export type TTSProvider = 'piper' | 'kokoro' | 'vibevoice7b' | 'f5tts';
 export type LocalModelName = 'gemma';
 
 const LOCAL_MODEL_MAP: Record<LocalModelName, string> = {
@@ -47,7 +47,6 @@ export interface TTSConfig {
   provider: TTSProvider;
   endpoint: string;
   voice: string;
-  lmstudioVoice?: string;
 }
 
 export interface LLMMessage {
@@ -86,38 +85,8 @@ function getLLMConfig(): LLMConfig {
 
 export function getTTSConfig(): TTSConfig {
   const env = reloadEnv();
-  const provider = (env.TTS_PROVIDER || 'piper') as TTSProvider;
-  
-  if (provider === 'piper') {
-    return {
-      provider: 'piper',
-      endpoint: env.TTS_ENDPOINT || 'http://localhost:8080',
-      voice: env.TTS_VOICE || 'en_GB-alan-medium',
-    };
-  }
-  
-  if (provider === 'kokoro') {
-    return getKokoroConfig();
-  }
-
-if (provider === 'vibevoice7b') {
-    return getVibeVoice7BConfig();
-  }
-
-  if (provider === 'f5tts') {
-    return getF5TTSConfig();
-  }
-  
-  return getKokoroConfig();
-}
-
-export function getVibeVoice7BConfig(): TTSConfig {
-  const env = reloadEnv();
-  return {
-    provider: 'vibevoice7b',
-    endpoint: env.TTS_VIBEVOICE7B_BASE_URL || 'http://localhost:8091',
-    voice: env.TTS_VIBEVOICE7B_VOICE || 'en-Emma_woman',
-  };
+  const provider = normalizeTTSProvider(env.TTS_PROVIDER);
+  return provider === 'kokoro' ? getKokoroConfig() : getF5TTSConfig();
 }
 
 export function getKokoroConfig(): TTSConfig {

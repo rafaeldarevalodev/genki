@@ -1,7 +1,8 @@
 'use server';
 
 import { z } from 'genkit';
-import { getTTSConfig } from '@/ai/llm';
+import { getF5TTSConfig, getKokoroConfig, getTTSConfig } from '@/ai/llm';
+import { normalizeTTSProvider } from '@/lib/tts-provider';
 
 // Helper para asegurar puntuación final en texto para TTS
 // Sin puntuación, los modelos TTS pueden truncar la última palabra
@@ -17,9 +18,8 @@ function ensureEndingPunctuation(text: string): string {
 
 const TextToSpeechInputSchema = z.object({
   text: z.string(),
-  provider: z.enum(['piper', 'kokoro', 'vibevoice7b', 'f5tts']).optional(),
+  provider: z.unknown().optional(),
   voice: z.string().optional(),
-  referenceAudioData: z.string().optional(),
 });
 export type TextToSpeechInput = z.infer<typeof TextToSpeechInputSchema>;
 
@@ -29,73 +29,24 @@ const TextToSpeechOutputSchema = z.object({
 export type TextToSpeechOutput = z.infer<typeof TextToSpeechOutputSchema>;
 
 export async function textToSpeech(input: TextToSpeechInput): Promise<TextToSpeechOutput> {
-  const ttsConfig = getTTSConfig();
   const rawText = typeof input === 'string' ? input : input.text;
   const text = ensureEndingPunctuation(rawText); // Ensure proper ending for complete audio
-  const provider = input?.provider || ttsConfig.provider;
+  const provider = normalizeTTSProvider(input?.provider ?? getTTSConfig().provider);
+  const ttsConfig = provider === 'f5tts' ? getF5TTSConfig() : getKokoroConfig();
   
   console.log('[textToSpeech] Provider:', provider);
 
-  if (provider === 'piper') {
-    const voice = input?.voice || ttsConfig.voice || 'en_GB-alan-medium';
-    return textToSpeechPiper(text, voice);
-  }
-  
-  if (provider === 'kokoro') {
-    const voice = input?.voice || ttsConfig.voice || 'af_bella';
-    return textToSpeechKokoro(text, voice);
-  }
-
-  if (provider === 'vibevoice7b') {
-    const voice = input?.voice || ttsConfig.voice || 'en-Emma_woman';
-    const referenceAudioData = input?.referenceAudioData;
-    return textToSpeechVibeVoice7B(text, voice, referenceAudioData);
-  }
-
   if (provider === 'f5tts') {
     const voice = input?.voice || ttsConfig.voice || 'en-Giuseppe_man';
-    return textToSpeechF5TTS(text, voice);
+    return textToSpeechF5TTS(text, voice, ttsConfig.endpoint);
   }
-  
-  return textToSpeechKokoro(text, ttsConfig.voice || 'af_bella');
+  return textToSpeechKokoro(text, input?.voice || ttsConfig.voice || 'af_bella', ttsConfig.endpoint);
 }
 
-async function textToSpeechPiper(text: string, voice: string): Promise<TextToSpeechOutput> {
-  const ttsConfig = getTTSConfig();
+async function textToSpeechKokoro(text: string, voice: string, endpoint: string): Promise<TextToSpeechOutput> {
   
   try {
-    const response = await fetch(`${ttsConfig.endpoint}/tts`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, voice })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Piper TTS failed: ${response.status}`);
-    }
-
-    const arrayBuffer = await response.arrayBuffer();
-    const uint8Array = new Uint8Array(arrayBuffer);
-    
-    let binary = '';
-    for (let i = 0; i < uint8Array.length; i++) {
-      binary += String.fromCharCode(uint8Array[i]);
-    }
-    const base64 = btoa(binary);
-    const mediaUrl = `data:audio/wav;base64,${base64}`;
-    
-    return { media: mediaUrl };
-  } catch (error) {
-    console.error('[textToSpeechPiper] Error:', error);
-    throw error;
-  }
-}
-
-async function textToSpeechKokoro(text: string, voice: string): Promise<TextToSpeechOutput> {
-  const ttsConfig = getTTSConfig();
-  
-  try {
-    const response = await fetch(`${ttsConfig.endpoint}/v1/audio/speech`, {
+    const response = await fetch(`${endpoint}/v1/audio/speech`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -127,56 +78,13 @@ async function textToSpeechKokoro(text: string, voice: string): Promise<TextToSp
   }
 }
 
-async function textToSpeechVibeVoice7B(text: string, voice: string, referenceAudioData?: string): Promise<TextToSpeechOutput> {
-  const ttsConfig = getTTSConfig();
-
-  const requestBody: Record<string, unknown> = {
-    input: text,
-    voice: voice,
-    response_format: 'wav'
-  };
-
-  if (referenceAudioData) {
-    requestBody.reference_audio_data = referenceAudioData;
-  }
-
-  try {
-    const response = await fetch(`${ttsConfig.endpoint}/v1/audio/speech`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestBody)
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`VibeVoice-7B TTS failed: ${response.status} - ${errorText}`);
-    }
-
-    const arrayBuffer = await response.arrayBuffer();
-    const uint8Array = new Uint8Array(arrayBuffer);
-
-    let binary = '';
-    for (let i = 0; i < uint8Array.length; i++) {
-      binary += String.fromCharCode(uint8Array[i]);
-    }
-    const base64 = btoa(binary);
-    const mediaUrl = `data:audio/wav;base64,${base64}`;
-
-    return { media: mediaUrl };
-  } catch (error) {
-    console.error('[textToSpeechVibeVoice7B] Error:', error);
-    throw error;
-  }
-}
-
-async function textToSpeechF5TTS(text: string, voice: string): Promise<TextToSpeechOutput> {
-  const ttsConfig = getTTSConfig();
+async function textToSpeechF5TTS(text: string, voice: string, endpoint: string): Promise<TextToSpeechOutput> {
   
   console.log('[F5-TTS] Input text:', text);
   console.log('[F5-TTS] Input voice:', voice);
   
   try {
-    const response = await fetch(`${ttsConfig.endpoint}/tts`, {
+    const response = await fetch(`${endpoint}/tts`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text, voice })

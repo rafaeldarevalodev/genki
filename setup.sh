@@ -39,7 +39,7 @@ check_command() {
 }
 
 install_node_deps() {
-    log_step "1" "6" "Instalando dependencias Node.js..."
+    log_step "1" "5" "Instalando dependencias Node.js..."
     
     if ! check_command node; then
         log_error "Node.js no encontrado. Instalar primero:"
@@ -58,9 +58,9 @@ install_node_deps() {
 }
 
 install_conda_envs() {
-    log_step "2" "6" "Creando entornos Conda..."
+    log_step "2" "5" "Creando entornos Conda..."
     
-    # Entorno genki (Piper + Kokoro + Maya Live Voice)
+    # Entorno genki (Kokoro + Maya Live Voice)
     if conda env list | grep -q "^genki "; then
         log_info "Entorno 'genki' ya existe"
         conda activate genki
@@ -84,41 +84,16 @@ install_conda_envs() {
         pip install fastapi uvicorn python-multipart soundfile sounddevice httpx pydantic numpy mlx-whisper -q
     fi
     
-    # Entorno vibevoice7b
-    if conda env list | grep -q "^vibevoice7b "; then
-        log_info "Entorno 'vibevoice7b' ya existe"
-    else
-        log_info "Creando entorno 'vibevoice7b'..."
-        conda create -n vibevoice7b python=3.11 -y -q
-        conda activate vibevoice7b
-        pip install mlx huggingface_hub[hf_xet] soundfile numpy -q
-    fi
-    
     log_info "Entornos Conda listos"
 }
 
 download_models() {
-    log_step "3" "6" "Descargando modelos de TTS..."
-    
-    mkdir -p tts/models
-    
-    # Modelos Piper
-    if ls tts/models/*.onnx 2>/dev/null | head -1 | grep -q .; then
-        log_info "Modelos Piper ya existen"
-    else
-        log_info "Modelos Piper no encontrados en tts/models/"
-        echo "  Descargar desde: https://github.com/rhasspy/piper"
-    fi
-    
-    log_info "Modelos TTS listos"
-    
-    # Descargar modelos MLX (F5-TTS + Whisper)
+    log_step "3" "5" "Descargando modelos MLX (F5-TTS + Whisper)..."
+
     download_ml_models
 }
 
 download_ml_models() {
-    log_step "4" "6" "Descargando modelos MLX (F5-TTS + Whisper)..."
-    
     conda activate genki
     
     # F5-TTS
@@ -153,7 +128,7 @@ print('Whisper (voice_eval): Model downloaded and verified')
 }
 
 build_app() {
-    log_step "5" "6" "Build de producción..."
+    log_step "4" "5" "Build de producción..."
     
     npm run build || {
         log_warn "Build falló, usando modo desarrollo"
@@ -163,7 +138,7 @@ build_app() {
 }
 
 start_servers() {
-    log_step "6" "6" "Iniciando servidores..."
+    log_step "5" "5" "Iniciando servidores..."
     
     chmod +x genki.sh
     ./genki.sh start || {
@@ -179,9 +154,8 @@ verify_setup() {
     echo ""
     echo "Servicios activos:"
     echo "  - Next.js:        http://localhost:9002"
-    echo "  - Piper TTS:      localhost:8080"
     echo "  - Kokoro TTS:     localhost:8880"
-    echo "  - VibeVoice 7B:   localhost:8091"
+    echo "  - F5-TTS:         localhost:8093"
     echo "  - Maya Live Voice: localhost:8092 (Live Voice Mode)"
     echo "  - Voice Eval:     localhost:10301"
     echo ""

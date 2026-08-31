@@ -70,14 +70,15 @@ Copia y pega estos comandos en tu terminal según lo que necesites:
 
 ## Servicios de Voz (TTS)
 
-Genki usa 4 motores de voz:
+Genki usa servicios de voz y aplicación locales:
 
 | Servicio | Puerto | Calidad | Uso |
 |----------|--------|---------|-----|
-| **Piper** | 8080 | Rápido | TTS básico |
 | **Kokoro** | 8880 | Buena | TTS alternativo |
-| **VibeVoice 7B** | 8091 | La mejor | TTS con voice cloning |
+| **F5-TTS** | 8093 | Alta | TTS con voces de referencia |
 | **Maya Live Voice** | 8092 | Streaming | Live Voice Mode (conversación) |
+| **Voice Eval** | 10301 | Evaluación | Práctica de pronunciación |
+| **Next.js** | 9002 | App web | Interfaz de Genki |
 
 ---
 
