@@ -71,6 +71,8 @@ export async function GET() {
       ttsProvider,
       kokoroVoice: env.TTS_KOKORO_VOICE || 'af_bella',
       f5ttsVoice: env.TTS_F5TTS_VOICE || 'en-Emma_woman',
+      kokoroBaseUrl: env.TTS_KOKORO_BASE_URL || 'http://localhost:8880',
+      f5ttsBaseUrl: env.TTS_F5TTS_BASE_URL || 'http://localhost:8093',
       playbackSpeed: parseFloat(env.TTS_PLAYBACK_SPEED || '1'),
     });
   } catch (error) {

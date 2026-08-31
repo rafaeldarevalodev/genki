@@ -149,4 +149,18 @@ describe('/api/settings retired TTS migration', () => {
     expect(body).not.toHaveProperty('voice');
     expect(body).not.toHaveProperty('vibevoice7bVoice');
   });
+
+  it('returns retained TTS base URLs during GET', async () => {
+    envFile.contents = [
+      'TTS_F5TTS_BASE_URL=http://f5.test',
+      'TTS_KOKORO_BASE_URL=http://kokoro.test',
+    ].join('\n');
+
+    const body = await (await GET()).json();
+
+    expect(body).toMatchObject({
+      f5ttsBaseUrl: 'http://f5.test',
+      kokoroBaseUrl: 'http://kokoro.test',
+    });
+  });
 });

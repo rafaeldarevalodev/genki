@@ -45,6 +45,19 @@ class KokoroTTSHandler(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
 
+    def send_error(self, code, message=None, explain=None):
+        """Add CORS headers to standard library error responses."""
+        self._sending_error = True
+        try:
+            super().send_error(code, message, explain)
+        finally:
+            self._sending_error = False
+
+    def end_headers(self):
+        if getattr(self, "_sending_error", False):
+            self._cors()
+        super().end_headers()
+
     def do_OPTIONS(self):
         self.send_response(200)
         self._cors()
