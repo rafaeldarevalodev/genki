@@ -1,15 +1,14 @@
 'use client';
 
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
+import { normalizeTTSProvider, type TTSProvider } from '@/lib/tts-provider';
 
 interface Settings {
   provider: 'local' | 'cloud';
   localModel: 'gemma';
   cloudModel: string;
-  ttsProvider: 'piper' | 'kokoro' | 'vibevoice7b' | 'f5tts';
-  voice: string;
+  ttsProvider: TTSProvider;
   kokoroVoice: string;
-  vibevoice7bVoice: string;
   f5ttsVoice: string;
   playbackSpeed: number;
 }
@@ -25,9 +24,7 @@ const defaultSettings: Settings = {
   localModel: 'gemma',
   cloudModel: 'moonshotai/kimi-k2.6',
   ttsProvider: 'f5tts',
-  voice: 'en_GB-alan-medium',
   kokoroVoice: 'af_bella',
-  vibevoice7bVoice: 'en-Emma_woman',
   f5ttsVoice: 'en-Emma_woman',
   playbackSpeed: 1,
 };
@@ -57,10 +54,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           provider: data.provider || 'cloud',
           localModel: 'gemma',
           cloudModel: data.cloudModel || 'moonshotai/kimi-k2.6',
-          ttsProvider: data.ttsProvider || 'f5tts',
-          voice: data.voice || 'en_GB-alan-medium',
+          ttsProvider: normalizeTTSProvider(data.ttsProvider),
           kokoroVoice: data.kokoroVoice || 'af_bella',
-          vibevoice7bVoice: data.vibevoice7bVoice || 'en-Emma_woman',
           f5ttsVoice: data.f5ttsVoice || 'en-Emma_woman',
           playbackSpeed: data.playbackSpeed || 1,
         });

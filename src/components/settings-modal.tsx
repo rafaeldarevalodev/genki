@@ -3,6 +3,7 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { X, Bot, Volume2, Check, Loader2 } from 'lucide-react';
 import { useSettings } from '@/hooks/use-settings';
+import { normalizeTTSProvider, type TTSProvider } from '@/lib/tts-provider';
 
 interface SettingsModalContextType {
   isOpen: boolean;
@@ -42,14 +43,11 @@ export function SettingsModal() {
   
   const [provider, setProvider] = useState<'local' | 'cloud'>('cloud');
   const [cloudModel, setCloudModel] = useState('moonshotai/kimi-k2.6');
-  const [ttsProvider, setTtsProvider] = useState<'piper' | 'kokoro' | 'vibevoice7b' | 'f5tts'>('f5tts');
+  const [ttsProvider, setTtsProvider] = useState<TTSProvider>('f5tts');
   
-  const [selectedVoice, setSelectedVoice] = useState('en_GB-alan-medium');
   const [selectedKokoroVoice, setSelectedKokoroVoice] = useState('af_bella');
-  const [selectedVibeVoice7B, setSelectedVibeVoice7B] = useState('en-Emma_woman');
   const [selectedF5TTSVoice, setSelectedF5TTSVoice] = useState('en-Emma_woman');
   const [selectedPlaybackSpeed, setSelectedPlaybackSpeed] = useState(1);
-  const [userVoices7B, setUserVoices7B] = useState<Array<{id: string, name: string, data: string}>>([]);
 
   const [testingVoice, setTestingVoice] = useState<string | null>(null);
   const [testAudio, setTestAudio] = useState<string | null>(null);
@@ -64,10 +62,8 @@ export function SettingsModal() {
         const data = await res.json();
         if (data.provider) setProvider(data.provider);
         if (data.cloudModel) setCloudModel(data.cloudModel);
-        if (data.ttsProvider) setTtsProvider(data.ttsProvider as 'piper' | 'kokoro' | 'vibevoice7b' | 'f5tts');
-        if (data.voice) setSelectedVoice(data.voice);
+        setTtsProvider(normalizeTTSProvider(data.ttsProvider));
         if (data.kokoroVoice) setSelectedKokoroVoice(data.kokoroVoice);
-        if (data.vibevoice7bVoice) setSelectedVibeVoice7B(data.vibevoice7bVoice);
         if (data.f5ttsVoice) setSelectedF5TTSVoice(data.f5ttsVoice);
         if (data.playbackSpeed) setSelectedPlaybackSpeed(data.playbackSpeed);
       } catch (e) {
@@ -77,15 +73,6 @@ export function SettingsModal() {
     
     loadSettings();
 
-    // Load user voices from localStorage
-    try {
-      const stored = localStorage.getItem('vibevoice7b_user_voices');
-      if (stored) {
-        setUserVoices7B(JSON.parse(stored));
-      }
-    } catch (e) {
-      console.error('Failed to load user voices:', e);
-    }
   }, [isOpen]);
 
   useEffect(() => {
@@ -104,9 +91,7 @@ export function SettingsModal() {
           provider,
           cloudModel,
           ttsProvider,
-          voice: selectedVoice,
           kokoroVoice: selectedKokoroVoice,
-          vibevoice7bVoice: selectedVibeVoice7B,
           f5ttsVoice: selectedF5TTSVoice,
           playbackSpeed: selectedPlaybackSpeed,
         }),
@@ -124,7 +109,7 @@ export function SettingsModal() {
     setTestingVoice(voiceId);
     setTestAudio(null);
 
-    let url = 'http://localhost:8080/tts';
+    let url = 'http://localhost:8093/tts';
     let body: Record<string, string> = { text: 'Hello, this is a voice test.', voice: voiceId };
 
     if (tts === 'kokoro') {
@@ -132,19 +117,6 @@ export function SettingsModal() {
       body = { input: 'Hello, this is a voice test.', voice: voiceId, speed: '1.0' };
     }
 
-    if (tts === 'vibevoice7b') {
-      url = 'http://localhost:8091/v1/audio/speech';
-      body = { input: 'Hello, this is a voice test.', voice: voiceId };
-      const userVoice = userVoices7B.find(v => v.id === voiceId);
-      if (userVoice) {
-        body = { ...body, reference_audio_data: userVoice.data };
-      }
-    }
-
-    if (tts === 'f5tts') {
-      url = 'http://localhost:8093/tts';
-      body = { text: 'Hello, this is a voice test.', voice: voiceId };
-    }
     
     try {
       const response = await fetch(url, {
@@ -166,19 +138,9 @@ export function SettingsModal() {
 
   
 
-  const ttsProviders = [
+  const ttsProviders: Array<{ id: TTSProvider; name: string; description: string }> = [
     { id: 'f5tts', name: 'F5-TTS', description: 'Fast, high quality voice cloning' },
-    { id: 'vibevoice7b', name: 'VibeVoice 7B', description: 'Microsoft large model, best quality, 22GB RAM' },
     { id: 'kokoro', name: 'Kokoro', description: 'High quality neural voices' },
-    { id: 'piper', name: 'Piper', description: 'Local, fast, UK/US voices' },
-  ];
-
-  const piperVoices = [
-    { id: 'en_GB-alan-medium', name: 'Alan (UK Male)', language: 'English (UK)' },
-    { id: 'en_GB-semaine-medium', name: 'Semaine (UK Female)', language: 'English (UK)' },
-    { id: 'en_US-lessac-high', name: 'Lessac (US Male)', language: 'English (US) - High' },
-    { id: 'en_US-ryan-high', name: 'Ryan (US Male)', language: 'English (US) - High' },
-    { id: 'en_US-lessac-medium', name: 'Lessac (US Male)', language: 'English (US) - Medium' },
   ];
 
   const kokoroVoices = [
@@ -194,7 +156,7 @@ export function SettingsModal() {
     { id: 'bm_lewis', name: 'Lewis (Male)', accent: 'UK' },
   ];
 
-  const vibevoice7bVoices = [
+  const f5ttsVoices = [
     { id: 'en-Emma_woman', name: 'Emma (Female)', accent: 'US', source: 'preset' },
     { id: 'en-Davis_man', name: 'Davis (Male)', accent: 'US', source: 'preset' },
     { id: 'en-Carter_man', name: 'Carter (Male)', accent: 'US', source: 'preset' },
@@ -211,8 +173,6 @@ export function SettingsModal() {
     { id: 'en-Hanel_male', name: 'Hanel (Male)', accent: 'Custom', source: 'preset' },
     { id: 'en-Mark_Eng', name: 'Mark (Male)', accent: 'Custom', source: 'preset' },
   ];
-
-  const f5ttsVoices = vibevoice7bVoices; // F5-TTS uses same voices as VibeVoice
 
   const PLAYBACK_SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
@@ -291,7 +251,7 @@ export function SettingsModal() {
               {ttsProviders.map((p) => (
                 <button
                   key={p.id}
-                  onClick={() => setTtsProvider(p.id as 'piper' | 'kokoro' | 'vibevoice7b')}
+                  onClick={() => setTtsProvider(p.id)}
                   className={`w-full flex items-center justify-between p-3 rounded-xl text-left ${
                     ttsProvider === p.id 
                       ? 'bg-indigo-50 border-2 border-indigo-600' 
@@ -311,42 +271,6 @@ export function SettingsModal() {
               ))}
             </div>
           </div>
-
-          {/* TTS Voice (Piper) */}
-          {ttsProvider === 'piper' && (
-            <div>
-              <span className="text-sm font-medium text-slate-600 mb-2 block">Voice</span>
-              <div className="space-y-2">
-                {piperVoices.map((voice) => (
-                  <div
-                    key={voice.id}
-                    className={`flex items-center justify-between p-3 rounded-xl ${
-                      selectedVoice === voice.id 
-                        ? 'bg-indigo-50 border-2 border-indigo-600' 
-                        : 'bg-slate-50 border-2 border-transparent'
-                    }`}
-                  >
-                    <button
-                      onClick={() => setSelectedVoice(voice.id)}
-                      className="flex-1 text-left"
-                    >
-                      <span className="font-bold text-sm">{voice.name}</span>
-                      <span className="text-xs text-slate-500 ml-2">{voice.language}</span>
-                    </button>
-                    <button
-                      onClick={() => testTtsVoice(voice.id, 'piper')}
-                      disabled={testingVoice !== null}
-                      className="text-xs bg-slate-200 px-2 py-1 rounded-lg disabled:opacity-50"
-                    >
-                      Test
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          
 
           {/* TTS Voice (Kokoro) */}
           {ttsProvider === 'kokoro' && (
@@ -417,132 +341,6 @@ export function SettingsModal() {
                     </button>
                   </div>
                 ))}
-              </div>
-            </div>
-          )}
-
-          {/* TTS Voice (VibeVoice 7B) */}
-          {ttsProvider === 'vibevoice7b' && (
-            <div className="space-y-4">
-              <div>
-                <span className="text-xs text-slate-500 mb-2 block">
-                  7B model — best quality, requires ~22GB RAM
-                </span>
-                <span className="text-sm font-medium text-slate-600 mb-2 block">Voice</span>
-                <div className="space-y-2">
-                  {vibevoice7bVoices.map((voice) => (
-                    <div
-                      key={voice.id}
-                      className={`flex items-center justify-between p-3 rounded-xl ${
-                        selectedVibeVoice7B === voice.id
-                          ? 'bg-indigo-50 border-2 border-indigo-600'
-                          : 'bg-slate-50 border-2 border-transparent'
-                      }`}
-                    >
-                      <button
-                        onClick={() => setSelectedVibeVoice7B(voice.id)}
-                        className="flex-1 text-left"
-                      >
-                        <span className="font-bold text-sm">{voice.name}</span>
-                        <span className="text-xs text-slate-500 ml-2">{voice.accent}</span>
-                      </button>
-                      <button
-                        onClick={() => testTtsVoice(voice.id, 'vibevoice7b')}
-                        disabled={testingVoice !== null}
-                        className="text-xs bg-slate-200 px-2 py-1 rounded-lg disabled:opacity-50"
-                      >
-                        Test
-                      </button>
-                    </div>
-                  ))}
-                </div>
-
-                {/* User voices */}
-                {userVoices7B.length > 0 && (
-                  <div className="mt-4">
-                    <span className="text-sm font-medium text-slate-600 mb-2 block">Your Voices</span>
-                    <div className="space-y-2">
-                      {userVoices7B.map((voice) => (
-                        <div
-                          key={voice.id}
-                          className={`flex items-center justify-between p-3 rounded-xl ${
-                            selectedVibeVoice7B === voice.id
-                              ? 'bg-indigo-50 border-2 border-indigo-600'
-                              : 'bg-slate-50 border-2 border-transparent'
-                          }`}
-                        >
-                          <button
-                            onClick={() => setSelectedVibeVoice7B(voice.id)}
-                            className="flex-1 text-left"
-                          >
-                            <span className="font-bold text-sm">{voice.name}</span>
-                            <span className="text-xs text-slate-500 ml-2">Custom</span>
-                          </button>
-                          <button
-                            onClick={() => testTtsVoice(voice.id, 'vibevoice7b')}
-                            disabled={testingVoice !== null}
-                            className="text-xs bg-slate-200 px-2 py-1 rounded-lg disabled:opacity-50 mr-2"
-                          >
-                            Test
-                          </button>
-                          <button
-                            onClick={() => {
-                              const updated = userVoices7B.filter(v => v.id !== voice.id);
-                              setUserVoices7B(updated);
-                              localStorage.setItem('vibevoice7b_user_voices', JSON.stringify(updated));
-                            }}
-                            className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-lg hover:bg-red-200"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Upload new voice */}
-                <div className="mt-4">
-                  <input
-                    type="file"
-                    id="voice-upload"
-                    accept="audio/*"
-                    className="hidden"
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-
-                      if (file.size > 5 * 1024 * 1024) {
-                        alert('File too large. Maximum size is 5MB.');
-                        return;
-                      }
-
-                      const reader = new FileReader();
-                      reader.onload = () => {
-                        const base64 = (reader.result as string).split(',')[1];
-                        const voiceName = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
-                        const newVoice = {
-                          id: `user_${Date.now()}`,
-                          name: voiceName,
-                          data: base64,
-                        };
-                        const updated = [...userVoices7B, newVoice];
-                        setUserVoices7B(updated);
-                        localStorage.setItem('vibevoice7b_user_voices', JSON.stringify(updated));
-                        setSelectedVibeVoice7B(newVoice.id);
-                      };
-                      reader.readAsDataURL(file);
-                      e.target.value = '';
-                    }}
-                  />
-                  <label
-                    htmlFor="voice-upload"
-                    className="flex items-center justify-center gap-2 p-3 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer hover:border-indigo-400 hover:bg-indigo-50 transition-colors"
-                  >
-                    <span className="text-sm font-medium text-slate-600">Upload Voice Reference</span>
-                    <span className="text-xs text-slate-400">(max 5MB)</span>
-                  </label>
-                </div>
               </div>
             </div>
           )}

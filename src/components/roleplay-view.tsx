@@ -131,11 +131,7 @@ export default function RoleplayView({ deck }: RoleplayViewProps) {
         const provider = settings.ttsProvider;
         const voice = provider === 'kokoro'
           ? settings.kokoroVoice
-          : provider === 'vibevoice7b'
-            ? settings.vibevoice7bVoice
-            : provider === 'f5tts'
-              ? settings.f5ttsVoice
-              : settings.voice;
+          : settings.f5ttsVoice;
 
         // Check cache first (only for short texts)
         console.log('[roleplay-view] Calling getTTSAudio with:', { textForTTS, voice, provider });

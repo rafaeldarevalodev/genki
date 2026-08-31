@@ -30,7 +30,7 @@ Genki Sensei es una aplicación web para aprender idiomas mediante flashcards in
 - **Roleplay**: Conversación simulada con Maya (tutor de inglés)
 - **Live Voice Mode**: Conversación inmersiva con voz real tiempo real
 - **Voice Practice**: Evaluación de pronunciación fonema por fonema
-- **TTS**: Pronunciación nativa con Piper/Kokoro/VibeVoice 7B
+- **TTS**: Pronunciación nativa con F5-TTS y Kokoro
 - **CEFR Classification**: Clasificación automática de nivel (A1-C2)
 - **Phrase Explorer**: Feedback educativo sobre uso de vocabulario
 - **Cloud LLM**: NVIDIA API para respuestas de IA (configurable a local)
@@ -55,10 +55,9 @@ Genki Sensei es una aplicación web para aprender idiomas mediante flashcards in
 │  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐      │
 │  │sessionStorage│    │   TTS        │    │ Voice Eval   │      │
 │  │ (Audio Cache)│    │  Servers     │    │  :10301     │      │
-│  └──────────────┘    │ 8080/8880/   │    └──────────────┘      │
-│                      │ 8091/8092    │                          │
-│                      │              │                          │
-│                      │ 8092: Maya    │                          │
+│  └──────────────┘    │ 8880: Kokoro │    └──────────────┘      │
+│                      │ 8093: F5-TTS │                          │
+│                      │ 8092: Maya   │                          │
 │                      │ Live Voice   │                          │
 │                      └──────────────┘                          │
 │                                                                  │
@@ -71,9 +70,8 @@ Genki Sensei es una aplicación web para aprender idiomas mediante flashcards in
 |----------|--------|-------------|
 | Next.js | 9002 | Aplicación web |
 | Cloud LLM API | 443 | NVIDIA API (moonshotai/kimi-k2.6) |
-| Piper TTS | 8080 | TTS rápido |
 | Kokoro TTS | 8880 | TTS alternativo |
-| VibeVoice 7B TTS | 8091 | TTS alta calidad con voice cloning |
+| F5-TTS | 8093 | TTS con voces de referencia |
 | Maya Live Voice | 8092 | Live Voice Mode con streaming |
 | Voice Eval | 10301 | Evaluación de pronunciación |
 
@@ -130,7 +128,7 @@ conda env create -f environment.yml
 ### Entornos individuales
 
 #### genki (Base)
-Para Piper TTS, Kokoro TTS y funciones básicas de IA.
+Para F5-TTS, Kokoro TTS y funciones básicas de IA.
 
 ```bash
 conda create -n genki python=3.11 -y
@@ -147,45 +145,9 @@ conda activate voice_eval
 pip install fastapi uvicorn python-multipart soundfile sounddevice httpx pydantic numpy
 ```
 
-#### vibevoice7b
-Para VibeVoice 7B TTS con voice cloning (requiere ~22GB RAM).
-
-```bash
-conda create -n vibevoice7b python=3.11 -y
-conda activate vibevoice7b
-pip install mlx huggingface_hub[hf_xet] soundfile numpy
-```
-
----
-
 ## 5. Servidores TTS
 
-### 5.1. Piper TTS
-
-Piper es un TTS rápido y ligero.
-
-```bash
-conda activate genki
-cd tts
-python server.py
-# Servidor disponible en http://localhost:8080
-```
-
-**API:**
-```
-POST http://localhost:8080/tts
-{"text": "Hello world", "voice": "en_GB-alan-medium"}
-```
-
-**Voces Disponibles:**
-
-| Voz | Descripción |
-|-----|-------------|
-| `en_GB-alan-medium` | Británico, varón |
-| `en_US-lessac-medium` | Estadounidense, varón |
-| `en_US-ryan-high` | Estadounidense, varón (agudo) |
-
-### 5.2. Kokoro TTS
+### 5.1. Kokoro TTS
 
 TTS basado en Kokoro con múltiples voces.
 
@@ -200,55 +162,17 @@ python kokoro_server.py
 - `am_adam`, `am_eric`, `am_fen`, `am_michael`
 - Y muchas más...
 
-### 5.3. VibeVoice 7B TTS
+### 5.2. F5-TTS
 
-VibeVoice Large es un modelo de 7B parámetros con voice cloning y mejor calidad de audio.
-
-**Modelo:** `appautomaton/vibevoice-mlx` (7B, int8 quantized, ~10 GB)
+F5-TTS usa voces de referencia para generar pronunciación natural.
 
 ```bash
-conda activate vibevoice7b
-python vibevoice7b_server.py
-# Servidor disponible en http://localhost:8091
+conda activate genki
+python f5tts_server.py
+# Servidor disponible en http://localhost:8093
 ```
 
-**API:**
-```
-POST http://localhost:8091/v1/audio/speech
-{
-  "input": "Hello world",
-  "voice": "en-Emma_woman"
-}
-```
-
-**Voces Disponibles:**
-
-| Voz | Descripción | Tipo |
-|-----|-------------|------|
-| `en-Emma_woman` | Mujer americana | preset |
-| `en-Davis_man` | Hombre americano | preset |
-| `en-Carter_man` | Hombre americano formal | preset |
-| `en-Grace_woman` | Mujer americana joven | preset |
-| `en-Mike_man` | Hombre americano casual | preset |
-
-**Voces personalizadas:**
-- Subir audio de referencia desde Settings (max 5MB)
-- Se almacenan en localStorage (temporal)
-
-**Multi-speaker:**
-```
-POST http://localhost:8091/v1/audio/speech
-{
-  "input": "Speaker 0: Hello!\nSpeaker 1: Hi there!",
-  "voice": "en-Emma_woman"
-}
-```
-
-**Archivos de referencia:**
-Los clips de referencia están en `/reference_voices/`:
-- `en_Emma_woman.wav`, `en_Davis_man.wav`, etc.
-
-### 5.4. Iniciar Todos los Servidores
+### 5.3. Iniciar Todos los Servidores
 
 ```
 ./genki.sh start
@@ -327,9 +251,8 @@ npm start
 
 | Servicio | Puerto | Endpoint | Formato |
 |----------|--------|----------|---------|
-| Piper | 8080 | `/tts` | `{"text": "...", "voice": "..."}` |
 | Kokoro | 8880 | `/v1/audio/speech` | `{"input": "...", "voice": "..."}` |
-| VibeVoice 7B | 8091 | `/v1/audio/speech` | `{"input": "...", "voice": "...", "reference_audio_data": "..."}` |
+| F5-TTS | 8093 | `/v1/audio/speech` | `{"input": "...", "voice": "..."}` |
 
 ### Maya Live Voice API
 
@@ -480,9 +403,8 @@ Evalúa uso de vocabulario en frases del usuario:
 **Flow:** `src/ai/flows/text-to-speech.ts`
 
 Soporta múltiples proveedores TTS:
-- **Piper** (rápido, ligero)
 - **Kokoro** (buena calidad, múltiples voces)
-- **VibeVoice 7B** (la mejor calidad, voice cloning)
+- **F5-TTS** (voces de referencia)
 
 **Cacheo de audio (temporal):**
 - Usa `sessionStorage` para cachear audios generados
@@ -507,12 +429,11 @@ CLOUD_API_KEY=your-key
 CLOUD_BASE_URL=https://api.nvidia.com/v1/experimental/mistral-ai/codestral-latest
 
 # TTS Configuration
-TTS_PROVIDER=vibevoice7b    # 'piper', 'kokoro', 'vibevoice7b'
-TTS_ENDPOINT=http://localhost:8080
-TTS_VOICE=en_GB-alan-medium
+TTS_PROVIDER=f5tts           # 'f5tts' o 'kokoro'
+TTS_F5TTS_BASE_URL=http://localhost:8093
+TTS_F5TTS_VOICE=en-Emma_woman
+TTS_KOKORO_BASE_URL=http://localhost:8880
 TTS_KOKORO_VOICE=af_bella
-TTS_VIBEVOICE7B_BASE_URL=http://localhost:8091
-TTS_VIBEVOICE7B_VOICE=en-Sara_woman
 TTS_PLAYBACK_SPEED=1
 ```
 
@@ -585,7 +506,6 @@ genki/
 ├── setup.sh              # Instalación completa
 ├── environment.yml       # Entornos Conda
 ├── kokoro_server.py       # Servidor Kokoro TTS
-├── vibevoice7b_server.py  # Servidor VibeVoice 7B TTS
 ├── README.md              # Este manual
 ├── QUICKSTART.md          # Guía rápida
 ├── │
@@ -633,20 +553,13 @@ genki/
 │   │   ├── srs.ts        # SM-2 algorithm
 │   │   └── utils.ts
 │
-├── tts/                   # Servidor Piper
-│   └── server.py
-│
 ├── kokoro_server.py       # Servidor Kokoro TTS (8880)
-├── vibevoice7b_server.py   # Servidor VibeVoice 7B TTS (8091)
+├── f5tts_server.py         # Servidor F5-TTS (8093)
 ├── maya_live_server.py     # Servidor Maya Live Voice (8092) - FastAPI
 │
-├── reference_voices/      # Voice cloning reference audio files
-│   ├── en_Emma_woman.wav
-│   ├── en_Sara_woman.mp3
+├── reference_voices/      # F5-TTS reference audio files
 │   ├── maya_ref.wav      # (opcional) Voice reference para Maya
 │   └── ...
-│
-├── mlx-speech/            # appautomaton/mlx-speech (VibeVoice 7B runtime)
 │
 ├── voice-eval/            # Voice Evaluation API
 │   ├── main_api.py        # FastAPI server

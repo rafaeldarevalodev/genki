@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useSettings } from '@/hooks/use-settings';
+import type { TTSProvider } from '@/lib/tts-provider';
 
 function generateId(): string {
   return crypto.randomUUID();
@@ -43,13 +44,27 @@ export interface UseLiveVoiceReturn {
   startListening: () => Promise<void>;
   interrupt: () => void;
   toggleMode: (mode: LiveVoiceMode) => void;
-  setMayaVoice: (voiceId: string) => void;
   isRecording: boolean;
 }
 
 const DEFAULT_ENDPOINT = '/api/maya/conversation';
-const MAYA_VOICE_STORAGE_KEY = 'maya_voice_id';
-const DEFAULT_MAYA_VOICE = 'en-Emma_woman';
+
+type MayaTTSSettings = {
+  ttsProvider?: unknown;
+  kokoroVoice?: string;
+  f5ttsVoice?: string;
+};
+
+export function getMayaTTSSelection(
+  settings: MayaTTSSettings | null | undefined,
+  settingsLoaded: boolean,
+): { provider: TTSProvider; voice: string } {
+  if (settingsLoaded && settings?.ttsProvider === 'kokoro') {
+    return { provider: 'kokoro', voice: settings.kokoroVoice || 'af_bella' };
+  }
+
+  return { provider: 'f5tts', voice: settings?.f5ttsVoice || 'en-Emma_woman' };
+}
 
 export function useLiveVoice(options: UseLiveVoiceOptions = {}): UseLiveVoiceReturn {
   const {
@@ -76,26 +91,6 @@ export function useLiveVoice(options: UseLiveVoiceOptions = {}): UseLiveVoiceRet
 
   // Get TTS settings from user preferences
   const { settings, isLoaded: settingsLoaded } = useSettings();
-
-  // Get TTS provider and voice from settings
-  const getTTSVoice = useCallback(() => {
-    if (!settings || !settingsLoaded) return { provider: 'f5tts', voice: 'en-Emma_woman' };
-    
-    const provider = settings.ttsProvider || 'f5tts';
-    let voice = 'en-Emma_woman';
-    
-    if (provider === 'kokoro') {
-      voice = settings.kokoroVoice || 'af_bella';
-    } else if (provider === 'vibevoice7b') {
-      voice = settings.vibevoice7bVoice || 'en-Emma_woman';
-    } else if (provider === 'f5tts') {
-      voice = settings.f5ttsVoice || 'en-Emma_woman';
-    } else if (provider === 'piper') {
-      voice = settings.voice || 'en_GB-alan-medium';
-    }
-    
-    return { provider, voice };
-  }, [settings, settingsLoaded]);
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -285,6 +280,7 @@ export function useLiveVoice(options: UseLiveVoiceOptions = {}): UseLiveVoiceRet
       abortControllerRef.current = new AbortController();
 
       try {
+        const ttsSelection = getMayaTTSSelection(settings, settingsLoaded);
         const response = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -293,8 +289,8 @@ export function useLiveVoice(options: UseLiveVoiceOptions = {}): UseLiveVoiceRet
             session_id: state.sessionId,
             mode: mode,
             vocabulary: vocabulary,
-            tts_provider: getTTSVoice().provider,
-            tts_voice: getTTSVoice().voice
+            tts_provider: ttsSelection.provider,
+            tts_voice: ttsSelection.voice
           }),
           signal: abortControllerRef.current.signal
         });
@@ -478,7 +474,7 @@ const reader = response.body.getReader();
       }
     }, 5000);
 
-  }, [endpoint, mode, vocabulary, state.sessionId, interrupt, onUserTranscript, onMayaResponse, onMayaSpeaking, onError]);
+  }, [endpoint, mode, vocabulary, state.sessionId, interrupt, onUserTranscript, onMayaResponse, onMayaSpeaking, onError, settings, settingsLoaded]);
 
   const toggleMode = useCallback((newMode: LiveVoiceMode) => {
     if (newMode === 'voice') {
@@ -491,20 +487,11 @@ const reader = response.body.getReader();
     }));
   }, [resetSession]);
 
-  const setMayaVoice = useCallback((voiceId: string) => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(MAYA_VOICE_STORAGE_KEY, voiceId);
-    }
-    setMayaVoiceId(voiceId);
-    console.log('[useLiveVoice] Maya voice set to:', voiceId);
-  }, []);
-
   return {
     state,
     startListening,
     interrupt,
     toggleMode,
-    setMayaVoice,
     isRecording: state.vadState === 'listening'
   };
 }

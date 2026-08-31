@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 F5-TTS HTTP Server - Expose F5-TTS as REST API
-Compatible with standard TTS API format (like Kokoro, VibeVoice7B)
+Compatible with the standard TTS API format used by Kokoro
 """
 
 import os

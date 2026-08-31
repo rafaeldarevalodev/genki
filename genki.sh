@@ -6,10 +6,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 # Puertos
-PIPER_PORT=8080
 KOKORO_PORT=8880
 F5TTS_PORT=8093
-VIBEVOICE7B_PORT=8091
 MAYA_LIVE_PORT=8092
 VOICE_EVAL_PORT=10301
 NEXT_PORT=9002
@@ -53,12 +51,10 @@ cmd_status() {
     echo ""
     
     local running=0
-    local total=7
+    local total=5
     
-    service_status $PIPER_PORT "Piper TTS" || ((running++))
     service_status $KOKORO_PORT "Kokoro TTS" || ((running++))
     service_status $F5TTS_PORT "F5-TTS" || ((running++))
-    service_status $VIBEVOICE7B_PORT "VibeVoice 7B TTS" || ((running++))
     service_status $MAYA_LIVE_PORT "Maya Live Voice" || ((running++))
     service_status $VOICE_EVAL_PORT "Voice Eval" || ((running++))
     service_status $NEXT_PORT "Next.js" || ((running++))
@@ -72,9 +68,6 @@ cmd_status() {
     fi
     if check_port $KOKORO_PORT; then
         echo -e "  ${CYAN}http://localhost:$KOKORO_PORT/health${NC} - Kokoro"
-    fi
-    if check_port $VIBEVOICE7B_PORT; then
-        echo -e "  ${CYAN}http://localhost:$VIBEVOICE7B_PORT/health${NC} - VibeVoice 7B"
     fi
     if check_port $MAYA_LIVE_PORT; then
         echo -e "  ${CYAN}http://localhost:$MAYA_LIVE_PORT/health${NC} - Maya Live Voice"
@@ -111,11 +104,6 @@ start_service() {
     return 1
 }
 
-start_piper() {
-    conda activate genki 2>/dev/null || { error "Entorno genki no existe"; return 1; }
-    nohup python tts/server.py > /tmp/piper.log 2>&1 &
-}
-
 start_kokoro() {
     conda activate genki 2>/dev/null || { error "Entorno genki no existe"; return 1; }
     nohup python kokoro_server.py > /tmp/kokoro.log 2>&1 &
@@ -124,11 +112,6 @@ start_kokoro() {
 start_f5tts() {
     conda activate f5-mlx 2>/dev/null || { error "Entorno f5-mlx no existe"; return 1; }
     nohup python f5tts_server.py > /tmp/f5tts.log 2>&1 &
-}
-
-start_vibevoice7b() {
-    conda activate vibevoice7b 2>/dev/null || { error "Entorno vibevoice7b no existe"; return 1; }
-    nohup python vibevoice7b_server.py > /tmp/vibevoice7b.log 2>&1 &
 }
 
 start_voice_eval() {
@@ -155,10 +138,8 @@ cmd_start() {
     
     local failed=0
     
-    start_service "Piper TTS" $PIPER_PORT start_piper || ((failed++))
     start_service "Kokoro TTS" $KOKORO_PORT start_kokoro || ((failed++))
     start_service "F5-TTS" $F5TTS_PORT start_f5tts || ((failed++))
-    start_service "VibeVoice 7B TTS" $VIBEVOICE7B_PORT start_vibevoice7b || ((failed++))
     start_service "Maya Live Voice" $MAYA_LIVE_PORT start_maya_live || ((failed++))
     start_service "Voice Eval" $VOICE_EVAL_PORT start_voice_eval || ((failed++))
     
@@ -192,7 +173,7 @@ cmd_stop() {
     log "Deteniendo Genki Sensei..."
     echo ""
     
-    for port in $NEXT_PORT $PIPER_PORT $KOKORO_PORT $F5TTS_PORT $VIBEVOICE7B_PORT $MAYA_LIVE_PORT $VOICE_EVAL_PORT; do
+    for port in $NEXT_PORT $KOKORO_PORT $F5TTS_PORT $MAYA_LIVE_PORT $VOICE_EVAL_PORT; do
         PIDS=$(lsof -ti :$port 2>/dev/null) || continue
         if [ -n "$PIDS" ]; then
             echo "$PIDS" | xargs kill -9 2>/dev/null || true

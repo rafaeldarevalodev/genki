@@ -47,12 +47,8 @@ export default function TTSButton({ text, ipa }: TTSButtonProps) {
 
     const provider = settings.ttsProvider;
     const voice = provider === 'kokoro'
-        ? settings.kokoroVoice
-        : provider === 'vibevoice7b'
-          ? settings.vibevoice7bVoice
-          : provider === 'f5tts'
-            ? settings.f5ttsVoice
-            : settings.voice;
+      ? settings.kokoroVoice
+      : settings.f5ttsVoice;
     
     console.log('[TTSButton] Using provider:', provider, 'voice:', voice);
 

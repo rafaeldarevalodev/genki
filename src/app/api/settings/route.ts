@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { writeFileSync, readFileSync, existsSync } from 'fs';
 import { join } from 'path';
+import { DEFAULT_TTS_PROVIDER, normalizeTTSProvider, type TTSProvider } from '../../../lib/tts-provider';
 
 const ENV_PATH = join(process.cwd(), '.env.local');
 
@@ -8,10 +9,8 @@ interface SettingsData {
   provider?: 'local' | 'cloud';
   localModel?: 'gemma';
   cloudModel?: string;
-  ttsProvider?: 'piper' | 'kokoro' | 'vibevoice7b' | 'f5tts';
-  voice?: string;
+  ttsProvider?: TTSProvider;
   kokoroVoice?: string;
-  vibevoice7bVoice?: string;
   f5ttsVoice?: string;
   playbackSpeed?: number;
 }
@@ -40,17 +39,37 @@ function writeEnvFile(env: Record<string, string>) {
   writeFileSync(ENV_PATH, lines + '\n');
 }
 
+function removeRetiredTTSSettings(env: Record<string, string>) {
+  const supportedKeys = new Set([
+    'TTS_PROVIDER',
+    'TTS_KOKORO_VOICE',
+    'TTS_KOKORO_BASE_URL',
+    'TTS_F5TTS_VOICE',
+    'TTS_F5TTS_BASE_URL',
+    'TTS_PLAYBACK_SPEED',
+  ]);
+
+  for (const key of Object.keys(env)) {
+    if (key.startsWith('TTS_') && !supportedKeys.has(key)) {
+      delete env[key];
+    }
+  }
+}
+
 export async function GET() {
   try {
     const env = readEnvFile();
+    const ttsProvider = normalizeTTSProvider(env.TTS_PROVIDER);
+    env.TTS_PROVIDER = ttsProvider;
+    removeRetiredTTSSettings(env);
+    writeEnvFile(env);
+
     return NextResponse.json({
       provider: env.LLM_PROVIDER || 'cloud',
       localModel: 'gemma',
       cloudModel: env.CLOUD_MODEL || 'moonshotai/kimi-k2.6',
-      ttsProvider: env.TTS_PROVIDER || 'kokoro',
-      voice: env.TTS_VOICE || 'en_GB-alan-medium',
+      ttsProvider,
       kokoroVoice: env.TTS_KOKORO_VOICE || 'af_bella',
-      vibevoice7bVoice: env.TTS_VIBEVOICE7B_VOICE || 'en-Emma_woman',
       f5ttsVoice: env.TTS_F5TTS_VOICE || 'en-Emma_woman',
       playbackSpeed: parseFloat(env.TTS_PLAYBACK_SPEED || '1'),
     });
@@ -74,25 +93,18 @@ export async function POST(request: NextRequest) {
     if (data.cloudModel) {
       env.CLOUD_MODEL = data.cloudModel;
     }
-    if (data.ttsProvider) {
-      env.TTS_PROVIDER = data.ttsProvider;
-    }
-    if (data.voice) {
-      env.TTS_VOICE = data.voice;
-    }
-    if (data.kokoroVoice) {
+    env.TTS_PROVIDER = normalizeTTSProvider(data.ttsProvider ?? DEFAULT_TTS_PROVIDER);
+    if (data.kokoroVoice !== undefined) {
       env.TTS_KOKORO_VOICE = data.kokoroVoice;
     }
-    if (data.vibevoice7bVoice) {
-      env.TTS_VIBEVOICE7B_VOICE = data.vibevoice7bVoice;
-    }
-    if (data.f5ttsVoice) {
+    if (data.f5ttsVoice !== undefined) {
       env.TTS_F5TTS_VOICE = data.f5ttsVoice;
     }
-    if (data.playbackSpeed) {
+    if (data.playbackSpeed !== undefined) {
       env.TTS_PLAYBACK_SPEED = data.playbackSpeed.toString();
     }
     
+    removeRetiredTTSSettings(env);
     writeEnvFile(env);
     
     return NextResponse.json({ success: true });
