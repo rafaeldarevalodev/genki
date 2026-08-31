@@ -5,6 +5,8 @@ import { X, Bot, Volume2, Check, Loader2 } from 'lucide-react';
 import { useSettings } from '@/hooks/use-settings';
 import { normalizeTTSProvider, type TTSProvider } from '@/lib/tts-provider';
 
+const TTS_TEST_TIMEOUT_MS = 20_000;
+
 interface SettingsModalContextType {
   isOpen: boolean;
   open: () => void;
@@ -47,6 +49,8 @@ export function SettingsModal() {
   
   const [selectedKokoroVoice, setSelectedKokoroVoice] = useState('af_bella');
   const [selectedF5TTSVoice, setSelectedF5TTSVoice] = useState('en-Emma_woman');
+  const [kokoroBaseUrl, setKokoroBaseUrl] = useState('http://localhost:8880');
+  const [f5ttsBaseUrl, setF5TTSBaseUrl] = useState('http://localhost:8093');
   const [selectedPlaybackSpeed, setSelectedPlaybackSpeed] = useState(1);
 
   const [testingVoice, setTestingVoice] = useState<string | null>(null);
@@ -65,6 +69,8 @@ export function SettingsModal() {
         setTtsProvider(normalizeTTSProvider(data.ttsProvider));
         if (data.kokoroVoice) setSelectedKokoroVoice(data.kokoroVoice);
         if (data.f5ttsVoice) setSelectedF5TTSVoice(data.f5ttsVoice);
+        if (data.kokoroBaseUrl) setKokoroBaseUrl(data.kokoroBaseUrl);
+        if (data.f5ttsBaseUrl) setF5TTSBaseUrl(data.f5ttsBaseUrl);
         if (data.playbackSpeed) setSelectedPlaybackSpeed(data.playbackSpeed);
       } catch (e) {
         console.error('Failed to load settings:', e);
@@ -109,11 +115,13 @@ export function SettingsModal() {
     setTestingVoice(voiceId);
     setTestAudio(null);
 
-    let url = 'http://localhost:8093/tts';
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), TTS_TEST_TIMEOUT_MS);
+    let url = `${f5ttsBaseUrl}/tts`;
     let body: Record<string, string> = { text: 'Hello, this is a voice test.', voice: voiceId };
 
     if (tts === 'kokoro') {
-      url = 'http://localhost:8880/v1/audio/speech';
+      url = `${kokoroBaseUrl}/v1/audio/speech`;
       body = { input: 'Hello, this is a voice test.', voice: voiceId, speed: '1.0' };
     }
 
@@ -123,6 +131,7 @@ export function SettingsModal() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
+        signal: controller.signal,
       });
 
       if (!response.ok) throw new Error('TTS failed');
@@ -132,6 +141,7 @@ export function SettingsModal() {
       console.error('TTS test failed:', error);
       alert('TTS not available. Make sure the service is running.');
     } finally {
+      window.clearTimeout(timeoutId);
       setTestingVoice(null);
     }
   };
