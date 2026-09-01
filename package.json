@@ -73,6 +73,7 @@
     "@vitejs/plugin-react": "^6.0.2",
     "@vitest/ui": "^4.1.7",
     "express": "4.21.2",
+    "fake-indexeddb": "^6.2.5",
     "genkit-cli": "1.33.0",
     "happy-dom": "^20.9.0",
     "postcss": "^8",
