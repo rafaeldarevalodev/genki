@@ -1,63 +1,14 @@
 
 'use server';
 
-import { generateCardsFromText } from '@/ai/flows/generate-cards-from-text';
-import { cleanText } from '@/utils/text-cleaner';
 import { generateQuizQuestions } from '@/ai/flows/generate-quiz-questions';
 import { simulateLanguageRoleplay } from '@/ai/flows/simulate-language-roleplay';
 import { evaluateRoleplayPerformance } from '@/ai/flows/evaluate-roleplay-performance';
 import { textToSpeech } from '@/ai/flows/text-to-speech';
 import { explorePhrase } from '@/ai/flows/explore-phrase';
-import { classifyTextCefr } from '@/ai/flows/classify-text-cefr';
 import { voicePractice, generateReferenceAudio } from '@/ai/flows/voice-practice';
 import { normalizeTTSProvider } from '@/lib/tts-provider';
-import type { Card, Deck } from '@/lib/types';
-
-export async function generateCardsAction(
-  deckName: string,
-  text: string,
-  images: string[],
-  mode: 'words' | 'chunks' = 'chunks'
-): Promise<Deck | { error: string }> {
-  try {
-    let cefrLevel: string | undefined = undefined;
-    if (text.trim()) {
-      try {
-        const cefrResult = await classifyTextCefr({ text });
-        cefrLevel = cefrResult.cefrLevel;
-      } catch (cefrError) {
-        console.warn('CEFR Classification failed, continuing without it.');
-      }
-    }
-
-    const result = await generateCardsFromText({ text, images, mode });
-
-    if (!result || !result.cards || result.cards.length === 0) {
-      throw new Error('AI failed to generate cards or the result was empty.');
-    }
-
-    const enrichedCards: Card[] = result.cards.map((c) => ({
-      ...c,
-      srs: { interval: 0, repetition: 0, ef: 2.5, nextReview: Date.now(), status: 'new' },
-    }));
-
-    const newDeck: Deck = {
-      id: Date.now().toString(),
-      name: deckName || 'Chunks Deck',
-      cards: enrichedCards,
-      createdAt: new Date().toLocaleDateString(),
-      sourceText: text,
-      sourceImages: images,
-      cefrLevel: cefrLevel,
-    };
-
-    return newDeck;
-
-  } catch (err) {
-    console.error('ERROR in generateCardsAction:', err);
-    return { error: `Failed to generate AI deck: ${err instanceof Error ? err.message : String(err)}` };
-  }
-}
+import type { Card } from '@/lib/types';
 
 export async function generateQuizQuestionAction(card: Card) {
   try {

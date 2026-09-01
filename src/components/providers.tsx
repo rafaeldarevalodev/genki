@@ -10,7 +10,7 @@ import { getModelConnectionsUiReadiness } from '@/lib/model-connection-execution
 
 export function isModelConnectionsFeatureEnabled(
   value = process.env.NEXT_PUBLIC_MODEL_CONNECTIONS_ENABLED,
-  firstBrowserClientSliceMigrated = false,
+  firstBrowserClientSliceMigrated = true,
 ) {
   return value === 'true' && getModelConnectionsUiReadiness(firstBrowserClientSliceMigrated).enabled;
 }

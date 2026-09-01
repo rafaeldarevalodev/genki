@@ -42,8 +42,8 @@ Chain strategy: feature-branch-chain
 
 ## Phase 3: Browser Execution Boundary
 
-- [ ] 3.1 Create `src/lib/model-connection-client.ts` with browser-only active-connection resolution and completion transport; test that credentials stay client-side and inactive/unvalidated records cannot execute.
-- [ ] 3.2 Migrate the approved entry-point slice from `src/ai/llm.ts`, affected `src/ai/flows/*.ts`, and `src/app/actions.ts` to the client transport; test selected-model execution and explicit unavailable behavior.
+- [x] 3.1 Create `src/lib/model-connection-client.ts` with browser-only active-connection resolution and completion transport; test that credentials stay client-side and inactive/unvalidated records cannot execute.
+- [x] 3.2 Migrate the approved entry-point slice from `src/ai/llm.ts`, affected `src/ai/flows/*.ts`, and `src/app/actions.ts` to the client transport; test selected-model execution and explicit unavailable behavior.
 - [ ] 3.3 Remove LLM fields from `src/app/api/settings/route.ts` and related settings state/tests; retain the existing Voice contract and stop `.env.local` LLM reads/writes only after the migrated path passes.
 
 ## Phase 4: Release Proof and Documentation

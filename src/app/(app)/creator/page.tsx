@@ -17,7 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { generateCardsAction } from '@/app/actions';
+import { createModelConnectionClient } from '@/lib/model-connection-client';
 import type { Deck } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -94,16 +94,39 @@ export default function CreatorPage() {
       return;
     }
     setIsLoading(true);
-    const result = await generateCardsAction(deckName, textInput, pastedImages, mode);
-
-    if ('error' in result) {
-      toast({ title: 'Error', description: result.error, variant: 'destructive' });
-      setIsLoading(false);
-    } else {
-      const newDeck = result as Deck;
+    try {
+      const client = createModelConnectionClient();
+      let cefrLevel: string | undefined;
+      if (textInput.trim()) {
+        try {
+          cefrLevel = (await client.classifyTextCefr({ text: textInput })).cefrLevel;
+        } catch {
+          // Card generation remains available when the optional CEFR preflight fails.
+        }
+      }
+      const result = await client.generateCards({ text: textInput, images: pastedImages, mode });
+      const newDeck: Deck = {
+        id: Date.now().toString(),
+        name: deckName || 'Chunks Deck',
+        cards: result.cards.map((card) => ({
+          ...card,
+          srs: { interval: 0, repetition: 0, ef: 2.5, nextReview: Date.now(), status: 'new' },
+        })),
+        createdAt: new Date().toLocaleDateString(),
+        sourceText: textInput,
+        sourceImages: pastedImages,
+        cefrLevel,
+      };
       addDeck(newDeck);
       toast({ title: '¡Éxito!', description: `Se generaron ${newDeck.cards.length} tarjetas.` });
       router.push(`/creator/analysis/${newDeck.id}`);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to generate AI deck.',
+        variant: 'destructive',
+      });
+      setIsLoading(false);
     }
   }, [mode, deckName, textInput, pastedImages, toast, router, addDeck]);
 
