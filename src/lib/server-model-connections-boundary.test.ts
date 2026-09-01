@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 const serverBoundaryRoots = ['src/app/api', 'src/ai/flows'];
 const serverAction = 'src/app/actions.ts';
+const serverLLM = 'src/ai/llm.ts';
 
 function collectTypeScriptFiles(path: string): string[] {
   return readdirSync(path, { withFileTypes: true }).flatMap((entry) => {
@@ -18,6 +19,7 @@ function serverBoundarySources() {
   const root = process.cwd();
   const files = [
     join(root, serverAction),
+    join(root, serverLLM),
     ...serverBoundaryRoots.flatMap((path) => collectTypeScriptFiles(join(root, path))),
   ];
 
@@ -39,6 +41,7 @@ describe('model connection server boundary', () => {
     const sources = serverBoundarySources();
 
     expect(sources.some(({ path }) => path === serverAction)).toBe(true);
+    expect(sources.some(({ path }) => path === serverLLM)).toBe(true);
     expect(sources.filter(({ source }) => /\bcredential\b/.test(source))).toEqual([]);
   });
 });

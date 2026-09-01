@@ -22,6 +22,12 @@ const validatedConnection: ModelConnection = {
   updatedAt: '2026-09-01T00:00:00.000Z',
 };
 
+const otherValidatedConnection: ModelConnection = {
+  ...validatedConnection,
+  id: 'other-validated',
+  name: 'Other validated model',
+};
+
 function deleteDatabase() {
   return new Promise<void>((resolve, reject) => {
     const request = indexedDB.deleteDatabase(MODEL_CONNECTIONS_DATABASE);
@@ -31,7 +37,7 @@ function deleteDatabase() {
 }
 
 function ConnectionState() {
-  const { activeConnectionId, connections, deactivate, enabled, error, isLoaded, save } = useModelConnections();
+  const { activate, activeConnectionId, connections, deactivate, deleteConnection, enabled, error, isLoaded, save } = useModelConnections();
 
   return (
     <>
@@ -41,7 +47,9 @@ function ConnectionState() {
       <output>{connections.map((connection) => connection.name).join(', ') || 'no connections'}</output>
       <output>{error ?? 'no storage error'}</output>
       <button onClick={() => void save(validatedConnection, { active: true })}>Save active</button>
+      <button onClick={() => void activate(validatedConnection.id)}>Activate validated</button>
       <button onClick={() => void deactivate()}>Deactivate</button>
+      <button onClick={() => void deleteConnection(validatedConnection.id)}>Delete validated</button>
     </>
   );
 }
@@ -108,5 +116,72 @@ describe('ModelConnectionsProvider', () => {
     await waitFor(() => expect(screen.getByText('Validated model')).toBeTruthy());
     expect(screen.getByText('Model connection was not saved.')).toBeTruthy();
     expect(screen.getByText('no active connection')).toBeTruthy();
+  });
+
+  it('retains the visible active connection when activation storage fails', async () => {
+    const failingRepository: ModelConnectionsRepository = {
+      load: async () => ({ connections: [validatedConnection, otherValidatedConnection], activeConnectionId: otherValidatedConnection.id }),
+      save: async () => undefined,
+      activate: async () => { throw new Error('unavailable'); },
+      deactivate: async () => undefined,
+      delete: async () => undefined,
+    };
+
+    render(
+      <ModelConnectionsProvider enabled repository={failingRepository}>
+        <ConnectionState />
+      </ModelConnectionsProvider>,
+    );
+
+    await waitFor(() => expect(screen.getByText(otherValidatedConnection.id)).toBeTruthy());
+    fireEvent.click(screen.getByRole('button', { name: 'Activate validated' }));
+
+    await waitFor(() => expect(screen.getByText('Model connection could not be activated.')).toBeTruthy());
+    expect(screen.getByText(otherValidatedConnection.id)).toBeTruthy();
+  });
+
+  it('retains the visible active connection when deactivation storage fails', async () => {
+    const failingRepository: ModelConnectionsRepository = {
+      load: async () => ({ connections: [validatedConnection], activeConnectionId: validatedConnection.id }),
+      save: async () => undefined,
+      activate: async () => undefined,
+      deactivate: async () => { throw new Error('unavailable'); },
+      delete: async () => undefined,
+    };
+
+    render(
+      <ModelConnectionsProvider enabled repository={failingRepository}>
+        <ConnectionState />
+      </ModelConnectionsProvider>,
+    );
+
+    await waitFor(() => expect(screen.getByText(validatedConnection.id)).toBeTruthy());
+    fireEvent.click(screen.getByRole('button', { name: 'Deactivate' }));
+
+    await waitFor(() => expect(screen.getByText('Model connection could not be deactivated.')).toBeTruthy());
+    expect(screen.getByText(validatedConnection.id)).toBeTruthy();
+  });
+
+  it('retains visible records and selection when deletion storage fails', async () => {
+    const failingRepository: ModelConnectionsRepository = {
+      load: async () => ({ connections: [validatedConnection], activeConnectionId: validatedConnection.id }),
+      save: async () => undefined,
+      activate: async () => undefined,
+      deactivate: async () => undefined,
+      delete: async () => { throw new Error('unavailable'); },
+    };
+
+    render(
+      <ModelConnectionsProvider enabled repository={failingRepository}>
+        <ConnectionState />
+      </ModelConnectionsProvider>,
+    );
+
+    await waitFor(() => expect(screen.getByText(validatedConnection.id)).toBeTruthy());
+    fireEvent.click(screen.getByRole('button', { name: 'Delete validated' }));
+
+    await waitFor(() => expect(screen.getByText('Model connection could not be deleted.')).toBeTruthy());
+    expect(screen.getByText(validatedConnection.id)).toBeTruthy();
+    expect(screen.getByText('Validated model')).toBeTruthy();
   });
 });

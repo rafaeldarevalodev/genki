@@ -7,7 +7,11 @@ describe('model connections feature flag', () => {
     expect(isModelConnectionsFeatureEnabled('false')).toBe(false);
   });
 
-  it('enables model connections only when the rollback flag is explicitly true', () => {
-    expect(isModelConnectionsFeatureEnabled('true')).toBe(true);
+  it('keeps model connections disabled until the browser execution slice is migrated', () => {
+    expect(isModelConnectionsFeatureEnabled('true')).toBe(false);
+  });
+
+  it('enables model connections only when the rollback flag is true and browser execution is ready', () => {
+    expect(isModelConnectionsFeatureEnabled('true', true)).toBe(true);
   });
 });

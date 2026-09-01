@@ -28,7 +28,7 @@ Chain strategy: feature-branch-chain
 
 ## Phase 1: Boundary and Persistence Foundation
 
-- [ ] 1.1 Inventory `src/ai/flows/*.ts` and their `src/app/actions.ts` callers; decide the first browser-callable AI path and an explicit server-only fallback/disable policy before enabling the flag.
+- [x] 1.1 Inventory `src/ai/flows/*.ts` and their `src/app/actions.ts` callers; decide the first browser-callable AI path and an explicit server-only fallback/disable policy before enabling the flag.
 - [x] 1.2 Create `src/lib/model-connections.ts` and unit tests for record/lifecycle types, HTTP(S) normalization, URL rejection, route disclosure, redaction, and status classification.
 - [x] 1.3 Create `src/lib/model-connections-db.ts` and `model-connections-db.test.ts`: v0→v1 stores/indexes, future-version read-only failure, atomic record/active-ID lifecycle, restore, and storage-failure retention.
 - [x] 1.4 Extend `src/hooks/use-settings.tsx` and `src/components/providers.tsx` with `ModelConnectionsProvider`, a disabled-by-default feature flag, lifecycle commands, and provider tests; retain Voice data/API boundary.
