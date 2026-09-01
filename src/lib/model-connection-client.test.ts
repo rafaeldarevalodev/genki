@@ -25,6 +25,16 @@ function repositoryWith(connection?: ModelConnection): ModelConnectionsRepositor
   };
 }
 
+function repositoryWithInactiveValidatedConnection(): ModelConnectionsRepository {
+  return {
+    load: async () => ({ connections: [activeConnection], activeConnectionId: undefined }),
+    save: async () => undefined,
+    activate: async () => undefined,
+    deactivate: async () => undefined,
+    delete: async () => undefined,
+  };
+}
+
 describe('browser model connection client', () => {
   it('generates cards and classifies CEFR through the selected validated browser connection', async () => {
     const fetchImpl = vi.fn()
@@ -52,6 +62,15 @@ describe('browser model connection client', () => {
   it('returns an explicit unavailable result instead of falling back when no validated active connection exists', async () => {
     const fetchImpl = vi.fn();
     const client = createModelConnectionClient({ repository: repositoryWith({ ...activeConnection, lifecycle: 'draft' }), fetchImpl });
+
+    await expect(client.generateCards({ text: 'Hello', images: [], mode: 'words' }))
+      .rejects.toMatchObject({ message: 'No validated active browser model connection is available.' });
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it('returns an explicit unavailable result without requesting an inactive validated connection', async () => {
+    const fetchImpl = vi.fn();
+    const client = createModelConnectionClient({ repository: repositoryWithInactiveValidatedConnection(), fetchImpl });
 
     await expect(client.generateCards({ text: 'Hello', images: [], mode: 'words' }))
       .rejects.toMatchObject({ message: 'No validated active browser model connection is available.' });
