@@ -87,6 +87,42 @@ describe('model connections IndexedDB repository', () => {
     });
   });
 
+  it('does not restore a deleted connection when activation and deletion overlap', async () => {
+    const repository = createModelConnectionsRepository();
+    await repository.save(validatedConnection);
+
+    await Promise.allSettled([
+      repository.activate(validatedConnection.id),
+      repository.delete(validatedConnection.id),
+    ]);
+
+    expect(await repository.load()).toEqual({
+      connections: [],
+      activeConnectionId: undefined,
+    });
+  });
+
+  it('reports a storage failure without overwriting an existing persisted record', async () => {
+    const repository = createModelConnectionsRepository();
+    await repository.save(validatedConnection);
+    const originalPut = IDBObjectStore.prototype.put;
+
+    IDBObjectStore.prototype.put = function failingPut() {
+      throw new DOMException('Storage quota exceeded.', 'QuotaExceededError');
+    } as typeof IDBObjectStore.prototype.put;
+
+    try {
+      await expect(repository.save({ ...draftConnection, id: 'unsaved' })).rejects.toBeInstanceOf(ModelConnectionsStorageError);
+    } finally {
+      IDBObjectStore.prototype.put = originalPut;
+    }
+
+    expect(await repository.load()).toEqual({
+      connections: [validatedConnection],
+      activeConnectionId: undefined,
+    });
+  });
+
   it('fails safely when the browser contains a newer database version', async () => {
     await new Promise<void>((resolve, reject) => {
       const request = indexedDB.open(MODEL_CONNECTIONS_DATABASE, MODEL_CONNECTIONS_DATABASE_VERSION + 1);

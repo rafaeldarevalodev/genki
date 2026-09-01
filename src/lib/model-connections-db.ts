@@ -111,12 +111,24 @@ export function createModelConnectionsRepository(): ModelConnectionsRepository {
     },
 
     async activate(connectionId) {
-      const state = await this.load();
-      const connection = state.connections.find((record) => record.id === connectionId);
-      if (connection?.lifecycle !== 'validated') {
-        throw new Error('Only validated model connections can be activated.');
+      const database = await openModelConnectionsDatabase();
+      try {
+        const transaction = database.transaction([connectionsStore, metaStore], 'readwrite');
+        const connection = await requestResult<ModelConnection | undefined>(
+          transaction.objectStore(connectionsStore).get(connectionId),
+        );
+        if (connection?.lifecycle !== 'validated') {
+          transaction.abort();
+          throw new Error('Only validated model connections can be activated.');
+        }
+        transaction.objectStore(metaStore).put({ key: activeConnectionIdKey, value: connectionId });
+        await transactionComplete(transaction);
+      } catch (error) {
+        if (error instanceof Error && error.message === 'Only validated model connections can be activated.') throw error;
+        throw new ModelConnectionsStorageError();
+      } finally {
+        database.close();
       }
-      await this.save(connection, { active: true });
     },
 
     async deactivate() {
