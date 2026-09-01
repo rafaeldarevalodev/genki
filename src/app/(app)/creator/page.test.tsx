@@ -77,8 +77,12 @@ describe('CreatorPage model connection recovery', () => {
 
     await submitCreator();
 
-    expect(screen.getByRole('button', { name: 'Analizando...' }).disabled).toBe(true);
-    await waitFor(() => expect(screen.getByRole('button', { name: /Generar Deck de Chunks/ }).disabled).toBe(false));
+    const analyzeButton = screen.getByRole('button', { name: 'Analizando...' }) as HTMLButtonElement;
+    expect(analyzeButton.disabled).toBe(true);
+    await waitFor(() => {
+      const generateButton = screen.getByRole('button', { name: /Generar Deck de Chunks/ }) as HTMLButtonElement;
+      expect(generateButton.disabled).toBe(false);
+    });
     expect(toast).toHaveBeenCalledWith({
       title: 'Error',
       description: 'No validated active browser model connection is available.',
@@ -93,7 +97,10 @@ describe('CreatorPage model connection recovery', () => {
 
     await submitCreator();
 
-    await waitFor(() => expect(screen.getByRole('button', { name: /Generar Deck de Chunks/ }).disabled).toBe(false));
+    await waitFor(() => {
+      const generateButton = screen.getByRole('button', { name: /Generar Deck de Chunks/ }) as HTMLButtonElement;
+      expect(generateButton.disabled).toBe(false);
+    });
     expect(toast).toHaveBeenCalledWith(expect.objectContaining({
       description: 'The browser model request failed (503).',
       variant: 'destructive',
@@ -106,7 +113,10 @@ describe('CreatorPage model connection recovery', () => {
 
     await submitCreator();
 
-    await waitFor(() => expect(screen.getByRole('button', { name: /Generar Deck de Chunks/ }).disabled).toBe(false));
+    await waitFor(() => {
+      const generateButton = screen.getByRole('button', { name: /Generar Deck de Chunks/ }) as HTMLButtonElement;
+      expect(generateButton.disabled).toBe(false);
+    });
     expect(toast).toHaveBeenCalledWith(expect.objectContaining({
       description: 'The model returned an invalid JSON response.',
       variant: 'destructive',
