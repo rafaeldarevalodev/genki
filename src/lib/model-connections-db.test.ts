@@ -123,6 +123,57 @@ describe('model connections IndexedDB repository', () => {
     });
   });
 
+  it('rolls back both a new record and the active ID when activation metadata cannot be written', async () => {
+    const repository = createModelConnectionsRepository();
+    await repository.save(validatedConnection, { active: true });
+    const originalPut = IDBObjectStore.prototype.put;
+
+    IDBObjectStore.prototype.put = function failingActiveMetadataPut(this: IDBObjectStore, value: unknown) {
+      if (this.name === 'meta') {
+        throw new DOMException('Storage quota exceeded.', 'QuotaExceededError');
+      }
+
+      return originalPut.call(this, value);
+    } as typeof IDBObjectStore.prototype.put;
+
+    try {
+      await expect(repository.save({ ...draftConnection, id: 'new-active', lifecycle: 'validated' }, { active: true }))
+        .rejects.toBeInstanceOf(ModelConnectionsStorageError);
+    } finally {
+      IDBObjectStore.prototype.put = originalPut;
+    }
+
+    expect(await repository.load()).toEqual({
+      connections: [validatedConnection],
+      activeConnectionId: validatedConnection.id,
+    });
+  });
+
+  it('rolls back both an active record deletion and its active ID removal when metadata cannot be deleted', async () => {
+    const repository = createModelConnectionsRepository();
+    await repository.save(validatedConnection, { active: true });
+    const originalDelete = IDBObjectStore.prototype.delete;
+
+    IDBObjectStore.prototype.delete = function failingActiveMetadataDelete(this: IDBObjectStore, key: IDBValidKey | IDBKeyRange) {
+      if (this.name === 'meta') {
+        throw new DOMException('Storage quota exceeded.', 'QuotaExceededError');
+      }
+
+      return originalDelete.call(this, key);
+    } as typeof IDBObjectStore.prototype.delete;
+
+    try {
+      await expect(repository.delete(validatedConnection.id)).rejects.toBeInstanceOf(ModelConnectionsStorageError);
+    } finally {
+      IDBObjectStore.prototype.delete = originalDelete;
+    }
+
+    expect(await repository.load()).toEqual({
+      connections: [validatedConnection],
+      activeConnectionId: validatedConnection.id,
+    });
+  });
+
   it('fails safely when the browser contains a newer database version', async () => {
     await new Promise<void>((resolve, reject) => {
       const request = indexedDB.open(MODEL_CONNECTIONS_DATABASE, MODEL_CONNECTIONS_DATABASE_VERSION + 1);

@@ -95,14 +95,16 @@ export function createModelConnectionsRepository(): ModelConnectionsRepository {
       }
 
       const database = await openModelConnectionsDatabase();
+      let transaction: IDBTransaction | undefined;
       try {
-        const transaction = database.transaction([connectionsStore, metaStore], 'readwrite');
+        transaction = database.transaction([connectionsStore, metaStore], 'readwrite');
         transaction.objectStore(connectionsStore).put(connection);
         if (active) {
           transaction.objectStore(metaStore).put({ key: activeConnectionIdKey, value: connection.id });
         }
         await transactionComplete(transaction);
       } catch (error) {
+        if (transaction?.error === null) transaction.abort();
         if (error instanceof Error && error.message === 'Only validated model connections can be activated.') throw error;
         throw new ModelConnectionsStorageError();
       } finally {
@@ -146,8 +148,9 @@ export function createModelConnectionsRepository(): ModelConnectionsRepository {
 
     async delete(connectionId) {
       const database = await openModelConnectionsDatabase();
+      let transaction: IDBTransaction | undefined;
       try {
-        const transaction = database.transaction([connectionsStore, metaStore], 'readwrite');
+        transaction = database.transaction([connectionsStore, metaStore], 'readwrite');
         const meta = await requestResult<{ key: string; value?: string } | undefined>(
           transaction.objectStore(metaStore).get(activeConnectionIdKey),
         );
@@ -157,6 +160,7 @@ export function createModelConnectionsRepository(): ModelConnectionsRepository {
         }
         await transactionComplete(transaction);
       } catch {
+        if (transaction?.error === null) transaction.abort();
         throw new ModelConnectionsStorageError();
       } finally {
         database.close();
