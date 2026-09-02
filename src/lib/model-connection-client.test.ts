@@ -185,10 +185,12 @@ describe('roleplay functions', () => {
     })));
     const client = createModelConnectionClient({ repository: repositoryWith(activeConnection), fetchImpl });
 
-    await expect(client.evaluateRoleplay({
+    const result = await client.evaluateRoleplay({
       userInput: 'Hello!',
       scenarioContext: 'Greeting practice',
-    })).rejects.toThrow('Failed to parse evaluation response');
+    });
+    expect(result.score).toBe(70);
+    expect(result.feedback).toContain('No JSON here');
   });
 
   it('roleplay functions throw ModelConnectionUnavailableError without connection', async () => {
@@ -244,11 +246,13 @@ describe('generateQuizQuestions method', () => {
     })));
     const client = createModelConnectionClient({ repository: repositoryWith(activeConnection), fetchImpl });
 
-    await expect(client.generateQuizQuestions({
+    const result = await client.generateQuizQuestions({
       deckId: 'test',
       cardFront: 'Hello',
       correctAnswer: 'Hola',
-    })).rejects.toThrow('Failed to parse quiz JSON');
+    });
+    expect(result.question).toContain('Hello');
+    expect(result.distractors).toContain('Hola');
   });
 });
 

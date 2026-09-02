@@ -240,15 +240,26 @@ export function createModelConnectionClient({
         maxTokens: 800,
       });
 
-      const jsonMatch = result.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) throw new Error('Failed to parse evaluation response');
+      // Resilient JSON extraction
+      let jsonString = result;
+      const codeBlockMatch = result.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (codeBlockMatch) jsonString = codeBlockMatch[1];
+      const jsonMatch = jsonString.match(/\{[\s\S]*\}/);
 
-      const parsed = JSON.parse(jsonMatch[0]);
-      return {
-        score: typeof parsed.score === 'number' ? parsed.score : 70,
-        feedback: parsed.feedback || 'Good attempt!',
-        tips: Array.isArray(parsed.tips) ? parsed.tips.slice(0, 3) : ['Keep practicing!'],
-      };
+      if (!jsonMatch) {
+        return { score: 70, feedback: result.slice(0, 500) || 'Good attempt!', tips: ['Keep practicing!'] };
+      }
+
+      try {
+        const parsed = JSON.parse(jsonMatch[0]);
+        return {
+          score: typeof parsed.score === 'number' ? parsed.score : 70,
+          feedback: parsed.feedback || 'Good attempt!',
+          tips: Array.isArray(parsed.tips) ? parsed.tips.slice(0, 3) : ['Keep practicing!'],
+        };
+      } catch {
+        return { score: 70, feedback: result.slice(0, 500) || 'Good attempt!', tips: ['Keep practicing!'] };
+      }
     },
 
     async generateQuizQuestions(input: {
@@ -271,14 +282,31 @@ Return JSON: {"question": "text", "distractors": ["w1", "w2", "w3"]}`;
         maxTokens: 500,
       });
 
-      const jsonMatch = result.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) throw new Error('Failed to parse quiz JSON');
+      // Resilient JSON extraction
+      let jsonString = result;
+      const codeBlockMatch = result.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (codeBlockMatch) jsonString = codeBlockMatch[1];
+      const jsonMatch = jsonString.match(/\{[\s\S]*\}/);
 
-      const parsed = JSON.parse(jsonMatch[0]);
-      return {
-        question: parsed.question || `What does "${input.cardFront}" mean?`,
-        distractors: Array.isArray(parsed.distractors) ? parsed.distractors.slice(0, 3) : [],
-      };
+      if (!jsonMatch) {
+        return {
+          question: `What does "${input.cardFront}" mean?`,
+          distractors: [input.correctAnswer],
+        };
+      }
+
+      try {
+        const parsed = JSON.parse(jsonMatch[0]);
+        return {
+          question: parsed.question || `What does "${input.cardFront}" mean?`,
+          distractors: Array.isArray(parsed.distractors) ? parsed.distractors.slice(0, 3) : [],
+        };
+      } catch {
+        return {
+          question: `What does "${input.cardFront}" mean?`,
+          distractors: [input.correctAnswer],
+        };
+      }
     },
 
     async explorePhrase(input: {
@@ -300,15 +328,37 @@ Return JSON: {"isCorrect": true/false, "feedback": "message", "annotatedSentence
         maxTokens: 500,
       });
 
-      const jsonMatch = result.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) throw new Error('Failed to parse explore phrase JSON');
+      // Try to extract JSON from response (handles markdown code blocks and plain text)
+      let jsonString = result;
+      const codeBlockMatch = result.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (codeBlockMatch) {
+        jsonString = codeBlockMatch[1];
+      }
+      const jsonMatch = jsonString.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        // Fallback: return default values instead of crashing
+        return {
+          isCorrect: true,
+          feedback: result.slice(0, 500) || 'Unable to parse model response.',
+          annotatedSentence: input.userSentence,
+        };
+      }
 
-      const parsed = JSON.parse(jsonMatch[0]);
-      return {
-        isCorrect: parsed.isCorrect ?? true,
-        feedback: parsed.feedback ?? 'Good attempt!',
-        annotatedSentence: parsed.annotatedSentence ?? input.userSentence,
-      };
+      try {
+        const parsed = JSON.parse(jsonMatch[0]);
+        return {
+          isCorrect: parsed.isCorrect ?? true,
+          feedback: parsed.feedback ?? 'Good attempt!',
+          annotatedSentence: parsed.annotatedSentence ?? input.userSentence,
+        };
+      } catch {
+        // JSON parse failed — return model text as feedback
+        return {
+          isCorrect: true,
+          feedback: result.slice(0, 500) || 'Unable to parse model response.',
+          annotatedSentence: input.userSentence,
+        };
+      }
     },
   };
 }
