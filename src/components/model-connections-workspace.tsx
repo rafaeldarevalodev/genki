@@ -189,6 +189,7 @@ interface EditorDraft {
   url: string;
   credential: string;
   modelId: string;
+  maxTokens: number;
 }
 
 function EditorForm({
@@ -207,6 +208,7 @@ function EditorForm({
   const [url, setUrl] = useState(cachedDraft?.url ?? '');
   const [credential, setCredential] = useState(cachedDraft?.credential ?? '');
   const [modelId, setModelId] = useState(cachedDraft?.modelId ?? '');
+  const [maxTokens, setMaxTokens] = useState(cachedDraft?.maxTokens ?? 2000);
   const [isSaving, setIsSaving] = useState(false);
   const [validation, setValidation] = useState<ConnectionValidation>();
   const [isTesting, setIsTesting] = useState(false);
@@ -218,6 +220,7 @@ function EditorForm({
     url: cachedDraft?.url ?? '',
     credential: cachedDraft?.credential ?? '',
     modelId: cachedDraft?.modelId ?? '',
+    maxTokens: cachedDraft?.maxTokens ?? 2000,
   });
 
   const canTest = url.trim().length > 0;
@@ -267,6 +270,7 @@ function EditorForm({
         baseUrl: d.url.trim(),
         modelId: d.modelId.trim(),
         credential: d.credential || undefined,
+        maxTokens: d.maxTokens || 2000,
         lifecycle,
         validation,
         createdAt: new Date().toISOString(),
@@ -316,6 +320,18 @@ function EditorForm({
           value={modelId}
           onChange={(e) => { setModelId(e.target.value); reportDraft({ modelId: e.target.value }); }}
           placeholder="llama3"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="conn-max-tokens">Max Tokens</Label>
+        <Input
+          id="conn-max-tokens"
+          type="number"
+          min={256}
+          max={32000}
+          value={maxTokens}
+          onChange={(e) => { setMaxTokens(Number(e.target.value)); reportDraft({ maxTokens: Number(e.target.value) }); }}
+          placeholder="2000"
         />
       </div>
       <div className="flex gap-2">

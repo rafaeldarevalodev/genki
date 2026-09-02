@@ -22,6 +22,7 @@ export interface ModelConnection {
   baseUrl: string;
   modelId: string;
   credential?: string;
+  maxTokens?: number;
   lifecycle: ConnectionLifecycle;
   validation?: ConnectionValidation;
   createdAt: string;

@@ -154,7 +154,7 @@ export function createModelConnectionClient({
       body: JSON.stringify({
         model: connection.modelId,
         temperature: options.temperature ?? 0.7,
-        max_tokens: options.maxTokens ?? 2000,
+        max_tokens: options.maxTokens ?? connection.maxTokens ?? 2000,
         messages: options.messages,
       }),
     });
