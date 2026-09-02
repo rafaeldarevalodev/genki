@@ -160,9 +160,31 @@ export function createModelConnectionClient({
     });
 
     if (!response.ok) throw new Error(`The browser model request failed (${response.status}).`);
-    const payload = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
-    const result = payload.choices?.[0]?.message?.content;
-    if (!result) throw new Error('The model returned an empty response.');
+    const payload = await response.json() as Record<string, unknown>;
+    
+    // Try multiple response formats (some local models use different structures)
+    const choices = payload.choices as Array<{ message?: { content?: string } }> | undefined;
+    let result = choices?.[0]?.message?.content;
+    
+    // Fallback: some models return content directly
+    if (!result && typeof payload.content === 'string') {
+      result = payload.content;
+    }
+    // Fallback: some models return text
+    if (!result && typeof payload.text === 'string') {
+      result = payload.text;
+    }
+    // Fallback: some models return response
+    if (!result && typeof payload.response === 'string') {
+      result = payload.response;
+    }
+    
+    if (!result) {
+      // Return raw payload as string for debugging
+      const debug = JSON.stringify(payload).slice(0, 500);
+      console.warn('[model-connection-client] Empty response, raw payload:', debug);
+      return `Model returned no content. Raw response: ${debug}`;
+    }
     return result;
   };
 
