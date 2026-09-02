@@ -13,6 +13,16 @@ vi.mock('@/lib/model-connection-validator', () => ({
   validateModelConnection: vi.fn(),
 }));
 
+// happy-dom doesn't provide crypto.randomUUID
+if (!globalThis.crypto?.randomUUID) {
+  Object.defineProperty(globalThis, 'crypto', {
+    value: {
+      ...globalThis.crypto,
+      randomUUID: () => `test-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    },
+  });
+}
+
 // --- Helpers ---
 
 function makeConnection(overrides: Partial<ModelConnection> = {}): ModelConnection {
