@@ -163,8 +163,13 @@ export function createModelConnectionClient({
     const payload = await response.json() as Record<string, unknown>;
     
     // Try multiple response formats (some local models use different structures)
-    const choices = payload.choices as Array<{ message?: { content?: string } }> | undefined;
+    const choices = payload.choices as Array<{ message?: { content?: string; reasoning_content?: string } }> | undefined;
     let result = choices?.[0]?.message?.content;
+    
+    // Fallback: reasoning models put thinking in reasoning_content
+    if (!result && choices?.[0]?.message?.reasoning_content) {
+      result = choices[0].message.reasoning_content;
+    }
     
     // Fallback: some models return content directly
     if (!result && typeof payload.content === 'string') {
@@ -301,7 +306,7 @@ Return JSON: {"question": "text", "distractors": ["w1", "w2", "w3"]}`;
           { role: 'user', content: prompt },
         ],
         temperature: 0.7,
-        maxTokens: 500,
+        maxTokens: 2000,
       });
 
       // Resilient JSON extraction
@@ -347,7 +352,7 @@ Return JSON: {"isCorrect": true/false, "feedback": "message", "annotatedSentence
           { role: 'user', content: prompt },
         ],
         temperature: 0.5,
-        maxTokens: 500,
+        maxTokens: 2000,
       });
 
       // Try to extract JSON from response (handles markdown code blocks and plain text)
