@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
-import { X, Bot, Volume2, Check, Loader2 } from 'lucide-react';
+import { X, Volume2, Check, Loader2 } from 'lucide-react';
 import { useSettings } from '@/hooks/use-settings';
 import { normalizeTTSProvider, type TTSProvider } from '@/lib/tts-provider';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { ModelConnectionsWorkspace } from '@/components/model-connections-workspace';
 
 const TTS_TEST_TIMEOUT_MS = 20_000;
 
@@ -43,8 +45,6 @@ export function SettingsModal() {
   const { isOpen, close } = useSettingsModal();
   const { refresh } = useSettings();
   
-  const [provider, setProvider] = useState<'local' | 'cloud'>('cloud');
-  const [cloudModel, setCloudModel] = useState('moonshotai/kimi-k2.6');
   const [ttsProvider, setTtsProvider] = useState<TTSProvider>('f5tts');
   
   const [selectedKokoroVoice, setSelectedKokoroVoice] = useState('af_bella');
@@ -64,8 +64,6 @@ export function SettingsModal() {
       try {
         const res = await fetch('/api/settings');
         const data = await res.json();
-        if (data.provider) setProvider(data.provider);
-        if (data.cloudModel) setCloudModel(data.cloudModel);
         setTtsProvider(normalizeTTSProvider(data.ttsProvider));
         if (data.kokoroVoice) setSelectedKokoroVoice(data.kokoroVoice);
         if (data.f5ttsVoice) setSelectedF5TTSVoice(data.f5ttsVoice);
@@ -94,15 +92,13 @@ export function SettingsModal() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          provider,
-          cloudModel,
           ttsProvider,
           kokoroVoice: selectedKokoroVoice,
           f5ttsVoice: selectedF5TTSVoice,
           playbackSpeed: selectedPlaybackSpeed,
         }),
       });
-      await refresh();  // Refresh settings in context
+      await refresh();
       close();
     } catch (e) {
       console.error('Failed to save settings:', e);
@@ -197,204 +193,164 @@ export function SettingsModal() {
           </button>
         </div>
         
-        <div className="p-4 space-y-6">
-          {/* LLM Provider */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <Bot size={18} className="text-indigo-600" />
-              <h3 className="font-bold text-slate-700">AI Model Provider</h3>
-            </div>
-            <div className="space-y-2">
-              {[
-                { id: 'cloud', name: 'Cloud (NVIDIA API)', description: 'Uses NVIDIA NIM cloud service' },
-                { id: 'local', name: 'Local (LM Studio)', description: 'Runs offline on your computer' },
-              ].map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setProvider(p.id as 'local' | 'cloud')}
-                  className={`w-full flex items-center justify-between p-3 rounded-xl text-left ${
-                    provider === p.id 
-                      ? 'bg-indigo-50 border-2 border-indigo-600' 
-                      : 'bg-slate-50 border-2 border-transparent hover:border-slate-200'
-                  }`}
-                >
-                  <div>
-                    <span className="font-bold text-sm">{p.name}</span>
-                    <span className="text-xs text-slate-500 block">{p.description}</span>
-                  </div>
-                  {provider === p.id && (
-                    <div className="bg-indigo-600 text-white p-1 rounded-full">
-                      <Check size={12} />
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
+        <Tabs defaultValue="voice" className="p-4">
+          <TabsList className="w-full">
+            <TabsTrigger value="models" className="flex-1">Models &amp; connections</TabsTrigger>
+            <TabsTrigger value="voice" className="flex-1">Voice</TabsTrigger>
+          </TabsList>
 
-          
+          <TabsContent value="models">
+            <ModelConnectionsWorkspace />
+          </TabsContent>
 
-          {/* Cloud Model Input */}
-          {provider === 'cloud' && (
-            <div>
-              <span className="text-sm font-medium text-slate-600 mb-2 block">Cloud Model</span>
-              <input
-                type="text"
-                value={cloudModel}
-                onChange={(e) => setCloudModel(e.target.value)}
-                placeholder="z-ai/glm-5.1"
-                className="w-full p-3 rounded-xl border-2 border-slate-200 focus:border-indigo-500 outline-none text-sm"
-              />
-              <span className="text-xs text-slate-500 mt-1 block">
-                Enter the model name from NVIDIA API
-              </span>
-            </div>
-          )}
-
-          {/* TTS Provider */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <Volume2 size={18} className="text-indigo-600" />
-              <h3 className="font-bold text-slate-700">TTS Provider</h3>
-            </div>
-            <div className="space-y-2">
-              {ttsProviders.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setTtsProvider(p.id)}
-                  className={`w-full flex items-center justify-between p-3 rounded-xl text-left ${
-                    ttsProvider === p.id 
-                      ? 'bg-indigo-50 border-2 border-indigo-600' 
-                      : 'bg-slate-50 border-2 border-transparent hover:border-slate-200'
-                  }`}
-                >
-                  <div>
-                    <span className="font-bold text-sm">{p.name}</span>
-                    <span className="text-xs text-slate-500 block">{p.description}</span>
-                  </div>
-                  {ttsProvider === p.id && (
-                    <div className="bg-indigo-600 text-white p-1 rounded-full">
-                      <Check size={12} />
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* TTS Voice (Kokoro) */}
-          {ttsProvider === 'kokoro' && (
-            <div className="space-y-4">
+          <TabsContent value="voice">
+            <div className="space-y-6">
+              {/* TTS Provider */}
               <div>
-                <span className="text-sm font-medium text-slate-600 mb-2 block">Voice</span>
+                <div className="flex items-center gap-2 mb-3">
+                  <Volume2 size={18} className="text-indigo-600" />
+                  <h3 className="font-bold text-slate-700">TTS Provider</h3>
+                </div>
                 <div className="space-y-2">
-                  {kokoroVoices.map((voice) => (
-                    <div
-                      key={voice.id}
-                      className={`flex items-center justify-between p-3 rounded-xl ${
-                        selectedKokoroVoice === voice.id 
+                  {ttsProviders.map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => setTtsProvider(p.id)}
+                      className={`w-full flex items-center justify-between p-3 rounded-xl text-left ${
+                        ttsProvider === p.id 
                           ? 'bg-indigo-50 border-2 border-indigo-600' 
-                          : 'bg-slate-50 border-2 border-transparent'
+                          : 'bg-slate-50 border-2 border-transparent hover:border-slate-200'
                       }`}
                     >
-                      <button
-                        onClick={() => setSelectedKokoroVoice(voice.id)}
-                        className="flex-1 text-left"
-                      >
-                        <span className="font-bold text-sm">{voice.name}</span>
-                        <span className="text-xs text-slate-500 ml-2">{voice.accent}</span>
-                      </button>
-                      <button
-                        onClick={() => testTtsVoice(voice.id, 'kokoro')}
-                        disabled={testingVoice !== null}
-                        className="text-xs bg-slate-200 px-2 py-1 rounded-lg disabled:opacity-50"
-                      >
-                        Test
-                      </button>
-                    </div>
+                      <div>
+                        <span className="font-bold text-sm">{p.name}</span>
+                        <span className="text-xs text-slate-500 block">{p.description}</span>
+                      </div>
+                      {ttsProvider === p.id && (
+                        <div className="bg-indigo-600 text-white p-1 rounded-full">
+                          <Check size={12} />
+                        </div>
+                      )}
+                    </button>
                   ))}
                 </div>
               </div>
-            </div>
-          )}
 
-          {/* TTS Voice (F5-TTS) */}
-          {ttsProvider === 'f5tts' && (
-            <div className="space-y-4">
-              <span className="text-xs text-slate-500 mb-2 block">
-                Fast, high quality voice cloning — uses reference audio
-              </span>
-              <span className="text-sm font-medium text-slate-600 mb-2 block">Voice</span>
-              <div className="space-y-2">
-                {f5ttsVoices.map((voice) => (
-                  <div
-                    key={voice.id}
-                    className={`flex items-center justify-between p-3 rounded-xl ${
-                      selectedF5TTSVoice === voice.id
-                        ? 'bg-indigo-50 border-2 border-indigo-600'
-                        : 'bg-slate-50 border-2 border-transparent'
-                    }`}
-                  >
-                    <button
-                      onClick={() => setSelectedF5TTSVoice(voice.id)}
-                      className="flex-1 text-left"
-                    >
-                      <span className="font-bold text-sm">{voice.name}</span>
-                      <span className="text-xs text-slate-500 ml-2">{voice.accent}</span>
-                    </button>
-                    <button
-                      onClick={() => testTtsVoice(voice.id, 'f5tts')}
-                      disabled={testingVoice !== null}
-                      className="text-xs bg-slate-200 px-2 py-1 rounded-lg disabled:opacity-50"
-                    >
-                      Test
-                    </button>
+              {/* TTS Voice (Kokoro) */}
+              {ttsProvider === 'kokoro' && (
+                <div className="space-y-4">
+                  <div>
+                    <span className="text-sm font-medium text-slate-600 mb-2 block">Voice</span>
+                    <div className="space-y-2">
+                      {kokoroVoices.map((voice) => (
+                        <div
+                          key={voice.id}
+                          className={`flex items-center justify-between p-3 rounded-xl ${
+                            selectedKokoroVoice === voice.id 
+                              ? 'bg-indigo-50 border-2 border-indigo-600' 
+                              : 'bg-slate-50 border-2 border-transparent'
+                          }`}
+                        >
+                          <button
+                            onClick={() => setSelectedKokoroVoice(voice.id)}
+                            className="flex-1 text-left"
+                          >
+                            <span className="font-bold text-sm">{voice.name}</span>
+                            <span className="text-xs text-slate-500 ml-2">{voice.accent}</span>
+                          </button>
+                          <button
+                            onClick={() => testTtsVoice(voice.id, 'kokoro')}
+                            disabled={testingVoice !== null}
+                            className="text-xs bg-slate-200 px-2 py-1 rounded-lg disabled:opacity-50"
+                          >
+                            Test
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                ))}
+                </div>
+              )}
+
+              {/* TTS Voice (F5-TTS) */}
+              {ttsProvider === 'f5tts' && (
+                <div className="space-y-4">
+                  <span className="text-xs text-slate-500 mb-2 block">
+                    Fast, high quality voice cloning — uses reference audio
+                  </span>
+                  <span className="text-sm font-medium text-slate-600 mb-2 block">Voice</span>
+                  <div className="space-y-2">
+                    {f5ttsVoices.map((voice) => (
+                      <div
+                        key={voice.id}
+                        className={`flex items-center justify-between p-3 rounded-xl ${
+                          selectedF5TTSVoice === voice.id
+                            ? 'bg-indigo-50 border-2 border-indigo-600'
+                            : 'bg-slate-50 border-2 border-transparent'
+                        }`}
+                      >
+                        <button
+                          onClick={() => setSelectedF5TTSVoice(voice.id)}
+                          className="flex-1 text-left"
+                        >
+                          <span className="font-bold text-sm">{voice.name}</span>
+                          <span className="text-xs text-slate-500 ml-2">{voice.accent}</span>
+                        </button>
+                        <button
+                          onClick={() => testTtsVoice(voice.id, 'f5tts')}
+                          disabled={testingVoice !== null}
+                          className="text-xs bg-slate-200 px-2 py-1 rounded-lg disabled:opacity-50"
+                        >
+                          Test
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Audio Test */}
+              {testAudio && (
+                <div className="mt-3 p-3 bg-green-50 rounded-xl">
+                  <audio controls className="w-full" src={testAudio} />
+                </div>
+              )}
+
+              {/* Audio Playback Speed */}
+              <div className="mt-6 pt-4 border-t border-slate-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <Volume2 size={18} className="text-indigo-600" />
+                  <h3 className="font-bold text-slate-700">Audio Playback Speed</h3>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {PLAYBACK_SPEEDS.map((speed) => (
+                    <button
+                      key={speed}
+                      onClick={() => setSelectedPlaybackSpeed(speed)}
+                      className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${
+                        selectedPlaybackSpeed === speed
+                          ? 'bg-indigo-600 text-white'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      {speed}x
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
 
-          {/* Audio Test */}
-          {testAudio && (
-            <div className="mt-3 p-3 bg-green-50 rounded-xl">
-              <audio controls className="w-full" src={testAudio} />
+              {/* Save Button — Voice settings only */}
+              <button
+                onClick={saveSettings}
+                disabled={savingSettings}
+                className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-indigo-700 disabled:opacity-50"
+              >
+                {savingSettings && <Loader2 className="animate-spin" size={18} />}
+                {savingSettings ? 'Saving...' : 'Save Settings'}
+              </button>
             </div>
-          )}
-
-          {/* Audio Playback Speed */}
-          <div className="mt-6 pt-4 border-t border-slate-200">
-            <div className="flex items-center gap-2 mb-3">
-              <Volume2 size={18} className="text-indigo-600" />
-              <h3 className="font-bold text-slate-700">Audio Playback Speed</h3>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {PLAYBACK_SPEEDS.map((speed) => (
-                <button
-                  key={speed}
-                  onClick={() => setSelectedPlaybackSpeed(speed)}
-                  className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${
-                    selectedPlaybackSpeed === speed
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  {speed}x
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Save Button */}
-          <button
-            onClick={saveSettings}
-            disabled={savingSettings}
-            className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-indigo-700 disabled:opacity-50"
-          >
-            {savingSettings && <Loader2 className="animate-spin" size={18} />}
-            {savingSettings ? 'Saving...' : 'Save Settings'}
-          </button>
-        </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
