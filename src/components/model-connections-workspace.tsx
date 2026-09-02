@@ -262,7 +262,7 @@ function EditorForm({
     try {
       const lifecycle = validation?.status === 'connected' ? 'validated' : 'draft';
       const connection: ModelConnection = {
-        id: crypto.randomUUID(),
+        id: globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`,
         name: d.name.trim(),
         baseUrl: d.url.trim(),
         modelId: d.modelId.trim(),
