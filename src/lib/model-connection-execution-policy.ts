@@ -33,10 +33,10 @@ export const modelConnectionExecutionInventory: ModelConnectionExecutionInventor
   },
   {
     flow: 'generate-quiz-questions',
-    action: 'generateQuizQuestionAction',
+    action: 'generateQuizQuestions',
     callers: ['src/components/quiz-view.tsx'],
-    execution: 'server-only-legacy',
-    fallback: 'legacy-server-only',
+    execution: 'first-browser-client-slice',
+    fallback: 'browser-only-no-server-fallback',
   },
   {
     flow: 'simulate-language-roleplay',
@@ -54,10 +54,10 @@ export const modelConnectionExecutionInventory: ModelConnectionExecutionInventor
   },
   {
     flow: 'explore-phrase',
-    action: 'explorePhraseAction',
+    action: 'explorePhrase',
     callers: ['src/components/phrase-explorer.tsx'],
-    execution: 'server-only-legacy',
-    fallback: 'legacy-server-only',
+    execution: 'first-browser-client-slice',
+    fallback: 'browser-only-no-server-fallback',
   },
   {
     flow: 'text-to-speech',

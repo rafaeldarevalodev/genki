@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Target, CheckCircle2, Loader2, Heart, RefreshCw } from 'lucide-react';
 import * as Tone from 'tone';
 import type { Deck } from '@/lib/types';
-import { generateQuizQuestionAction } from '@/app/actions';
+import { createModelConnectionClient } from '@/lib/model-connection-client';
 import { useDecks } from '@/hooks/use-decks';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
@@ -60,18 +60,23 @@ export default function QuizView({ deck, onSessionEnd }: QuizViewProps) {
     setQuizQuestion(null);
     setFeedback(null);
     const card = deck.cards[index];
-    const result = await generateQuizQuestionAction(card);
-    if ('error' in result) {
-      // Fallback to simple distractors
-      const correctAnswer = (card.back.split(' / ')[0] || card.back).trim();
+    const correctAnswer = (card.back.split(' / ')[0] || card.back).trim();
+    try {
+      const client = createModelConnectionClient();
+      const result = await client.generateQuizQuestions({
+        deckId: 'temp',
+        cardFront: card.front,
+        correctAnswer,
+      });
+      const options = [...result.distractors, correctAnswer].sort(() => Math.random() - 0.5);
+      setQuizQuestion({ question: result.question, options });
+    } catch {
+      // Fallback to simple distractors when browser connection unavailable
       const otherCards = deck.cards.filter((_, i) => i !== index);
       let distractors = otherCards.map(c => (c.back.split(' / ')[0] || c.back).trim()).sort(() => 0.5 - Math.random()).slice(0, 3);
       while (distractors.length < 3) distractors.push("Incorrect option");
       const options = [...distractors, correctAnswer].sort(() => 0.5 - Math.random());
       setQuizQuestion({ question: `What is the meaning of "${card.front}"?`, options });
-
-    } else {
-      setQuizQuestion(result as QuizQuestion);
     }
     setLoading(false);
   }, [deck.cards]);

@@ -5,7 +5,7 @@ import { Lightbulb, Loader2, Send, CheckCircle2, Info } from 'lucide-react';
 
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { explorePhraseAction } from '@/app/actions';
+import { createModelConnectionClient } from '@/lib/model-connection-client';
 import { cn } from '@/lib/utils';
 
 interface PhraseExplorerProps {
@@ -27,12 +27,12 @@ export default function PhraseExplorer({ chunk }: PhraseExplorerProps) {
     if (!userSentence.trim()) return;
     setIsLoading(true);
     setFeedback(null);
-    const result = await explorePhraseAction(chunk, userSentence);
-    if ('error' in result) {
-      // Handle error, maybe show a toast
-      console.error(result.error);
-    } else {
+    try {
+      const client = createModelConnectionClient();
+      const result = await client.explorePhrase({ chunk, userSentence });
       setFeedback(result as Feedback);
+    } catch (error) {
+      console.error(error);
     }
     setIsLoading(false);
   };

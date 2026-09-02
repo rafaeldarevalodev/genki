@@ -250,5 +250,65 @@ export function createModelConnectionClient({
         tips: Array.isArray(parsed.tips) ? parsed.tips.slice(0, 3) : ['Keep practicing!'],
       };
     },
+
+    async generateQuizQuestions(input: {
+      deckId: string;
+      cardFront: string;
+      correctAnswer: string;
+    }): Promise<{ question: string; distractors: string[] }> {
+      const QUIZ_SYSTEM_PROMPT = 'You are a pedagogical quiz designer for English language learning. Create effective multiple-choice questions with plausible distractors.';
+
+      const prompt = `Generate a quiz question for "${input.cardFront}" (answer: "${input.correctAnswer}"). Provide 3 wrong distractors.
+
+Return JSON: {"question": "text", "distractors": ["w1", "w2", "w3"]}`;
+
+      const result = await chat({
+        messages: [
+          { role: 'system', content: QUIZ_SYSTEM_PROMPT },
+          { role: 'user', content: prompt },
+        ],
+        temperature: 0.7,
+        maxTokens: 500,
+      });
+
+      const jsonMatch = result.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error('Failed to parse quiz JSON');
+
+      const parsed = JSON.parse(jsonMatch[0]);
+      return {
+        question: parsed.question || `What does "${input.cardFront}" mean?`,
+        distractors: Array.isArray(parsed.distractors) ? parsed.distractors.slice(0, 3) : [],
+      };
+    },
+
+    async explorePhrase(input: {
+      chunk: string;
+      userSentence: string;
+    }): Promise<{ isCorrect: boolean; feedback: string; annotatedSentence: string }> {
+      const EXPLORE_SYSTEM_PROMPT = 'You are Dr. James Morrison, a senior English language tutor. Provide detailed, educational feedback. Be encouraging but precise.';
+
+      const prompt = `Evaluate: chunk="${input.chunk}", sentence="${input.userSentence}"
+
+Return JSON: {"isCorrect": true/false, "feedback": "message", "annotatedSentence": "corrected"}`;
+
+      const result = await chat({
+        messages: [
+          { role: 'system', content: EXPLORE_SYSTEM_PROMPT },
+          { role: 'user', content: prompt },
+        ],
+        temperature: 0.5,
+        maxTokens: 500,
+      });
+
+      const jsonMatch = result.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error('Failed to parse explore phrase JSON');
+
+      const parsed = JSON.parse(jsonMatch[0]);
+      return {
+        isCorrect: parsed.isCorrect ?? true,
+        feedback: parsed.feedback ?? 'Good attempt!',
+        annotatedSentence: parsed.annotatedSentence ?? input.userSentence,
+      };
+    },
   };
 }

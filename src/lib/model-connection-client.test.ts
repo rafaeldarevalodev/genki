@@ -204,3 +204,99 @@ describe('roleplay functions', () => {
     expect(fetchImpl).not.toHaveBeenCalled();
   });
 });
+
+describe('generateQuizQuestions method', () => {
+  it('generates quiz question with distractors through the validated browser connection', async () => {
+    const fetchImpl = vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({
+      choices: [{ message: { content: '{"question": "What does \\"Bonjour\\" mean?", "distractors": ["Goodbye", "Thank you", "Please"]}' } }],
+    })));
+    const client = createModelConnectionClient({ repository: repositoryWith(activeConnection), fetchImpl });
+
+    const result = await client.generateQuizQuestions({
+      deckId: 'test-deck',
+      cardFront: 'Bonjour',
+      correctAnswer: 'Hello',
+    });
+
+    expect(result.question).toBe('What does "Bonjour" mean?');
+    expect(result.distractors).toEqual(['Goodbye', 'Thank you', 'Please']);
+    expect(fetchImpl).toHaveBeenCalledWith('https://models.example.test/v1/chat/completions', expect.objectContaining({
+      method: 'POST',
+      body: expect.stringContaining('pedagogical quiz designer'),
+    }));
+  });
+
+  it('throws ModelConnectionUnavailableError without connection', async () => {
+    const fetchImpl = vi.fn();
+    const client = createModelConnectionClient({ repository: repositoryWith(), fetchImpl });
+
+    await expect(client.generateQuizQuestions({
+      deckId: 'test',
+      cardFront: 'Hello',
+      correctAnswer: 'Hola',
+    })).rejects.toMatchObject({ message: 'No validated active browser model connection is available.' });
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it('handles malformed JSON response gracefully', async () => {
+    const fetchImpl = vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({
+      choices: [{ message: { content: 'The question is: what does it mean?' } }],
+    })));
+    const client = createModelConnectionClient({ repository: repositoryWith(activeConnection), fetchImpl });
+
+    await expect(client.generateQuizQuestions({
+      deckId: 'test',
+      cardFront: 'Hello',
+      correctAnswer: 'Hola',
+    })).rejects.toThrow('Failed to parse quiz JSON');
+  });
+});
+
+describe('explorePhrase method', () => {
+  it('evaluates phrase correctness through the validated browser connection', async () => {
+    const fetchImpl = vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({
+      choices: [{ message: { content: '{"isCorrect": true, "feedback": "Great usage of the chunk!", "annotatedSentence": "The story went beyond just reading."}' } }],
+    })));
+    const client = createModelConnectionClient({ repository: repositoryWith(activeConnection), fetchImpl });
+
+    const result = await client.explorePhrase({
+      chunk: 'beyond',
+      userSentence: 'The story went beyond just reading.',
+    });
+
+    expect(result.isCorrect).toBe(true);
+    expect(result.feedback).toBe('Great usage of the chunk!');
+    expect(result.annotatedSentence).toBe('The story went beyond just reading.');
+    expect(fetchImpl).toHaveBeenCalledWith('https://models.example.test/v1/chat/completions', expect.objectContaining({
+      method: 'POST',
+      body: expect.stringContaining('Dr. James Morrison'),
+    }));
+  });
+
+  it('returns feedback with defaults for missing fields', async () => {
+    const fetchImpl = vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({
+      choices: [{ message: { content: '{"isCorrect": false}' } }],
+    })));
+    const client = createModelConnectionClient({ repository: repositoryWith(activeConnection), fetchImpl });
+
+    const result = await client.explorePhrase({
+      chunk: 'beyond',
+      userSentence: 'The story went beyond reading.',
+    });
+
+    expect(result.isCorrect).toBe(false);
+    expect(result.feedback).toBe('Good attempt!');
+    expect(result.annotatedSentence).toBe('The story went beyond reading.');
+  });
+
+  it('throws ModelConnectionUnavailableError without connection', async () => {
+    const fetchImpl = vi.fn();
+    const client = createModelConnectionClient({ repository: repositoryWith(), fetchImpl });
+
+    await expect(client.explorePhrase({
+      chunk: 'beyond',
+      userSentence: 'Test sentence',
+    })).rejects.toMatchObject({ message: 'No validated active browser model connection is available.' });
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+});
