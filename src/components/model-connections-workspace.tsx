@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useModelConnections } from '@/hooks/use-settings';
-import type { ModelConnection, RouteDisclosure, ConnectionStatus } from '@/lib/model-connections';
+import type { ModelConnection, RouteDisclosure, ConnectionStatus, ConnectionValidation } from '@/lib/model-connections';
 import { getRouteDisclosure } from '@/lib/model-connections';
+import { validateModelConnection } from '@/lib/model-connection-validator';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -183,40 +184,100 @@ function SavedConnectionRow({
 
 // --- Editor Form ---
 
-function EditorForm({ onSaved }: { onSaved: () => void }) {
-  const { save, activate } = useModelConnections();
-  const [name, setName] = useState('');
-  const [url, setUrl] = useState('');
-  const [credential, setCredential] = useState('');
-  const [modelId, setModelId] = useState('');
+interface EditorDraft {
+  name: string;
+  url: string;
+  credential: string;
+  modelId: string;
+}
+
+function EditorForm({
+  onSaved,
+  editingId,
+  onDraftChange,
+}: {
+  onSaved: () => void;
+  editingId: string | null;
+  onDraftChange?: (draft: EditorDraft) => void;
+}) {
+  const { save } = useModelConnections();
+  const draftKey = editingId ?? NEW_DRAFT_KEY;
+  const cachedDraft = draftCache.get(draftKey);
+  const [name, setName] = useState(cachedDraft?.name ?? '');
+  const [url, setUrl] = useState(cachedDraft?.url ?? '');
+  const [credential, setCredential] = useState(cachedDraft?.credential ?? '');
+  const [modelId, setModelId] = useState(cachedDraft?.modelId ?? '');
   const [isSaving, setIsSaving] = useState(false);
+  const [validation, setValidation] = useState<ConnectionValidation>();
+  const [isTesting, setIsTesting] = useState(false);
+  const abortRef = useRef<AbortController | null>(null);
+
+  // Refs to always have current values for draft reporting (avoids stale closure)
+  const draftRef = useRef<EditorDraft>({
+    name: cachedDraft?.name ?? '',
+    url: cachedDraft?.url ?? '',
+    credential: cachedDraft?.credential ?? '',
+    modelId: cachedDraft?.modelId ?? '',
+  });
 
   const canTest = url.trim().length > 0;
 
+  const reportDraft = useCallback(
+    (partial: Partial<EditorDraft>) => {
+      if (!onDraftChange) return;
+      const current = { ...draftRef.current, ...partial };
+      draftRef.current = current;
+      onDraftChange(current);
+    },
+    [onDraftChange],
+  );
+
   const handleTest = useCallback(async () => {
-    // TODO: validation logic will be added in a later task
+    if (!draftRef.current.url.trim()) return;
+
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    setIsTesting(true);
+    setValidation(undefined);
+    try {
+      const result = await validateModelConnection({
+        baseUrl: draftRef.current.url.trim(),
+        credential: draftRef.current.credential || undefined,
+        signal: controller.signal,
+      });
+      setValidation(result);
+    } catch {
+      // AbortError from unmount or rapid re-test — ignore
+    } finally {
+      setIsTesting(false);
+    }
   }, []);
 
   const handleSave = useCallback(async () => {
-    if (!name.trim() || !url.trim() || !modelId.trim()) return;
+    const d = draftRef.current;
+    if (!d.name.trim() || !d.url.trim() || !d.modelId.trim()) return;
     setIsSaving(true);
     try {
+      const lifecycle = validation?.status === 'connected' ? 'validated' : 'draft';
       const connection: ModelConnection = {
         id: crypto.randomUUID(),
-        name: name.trim(),
-        baseUrl: url.trim(),
-        modelId: modelId.trim(),
-        credential: credential || undefined,
-        lifecycle: 'draft',
+        name: d.name.trim(),
+        baseUrl: d.url.trim(),
+        modelId: d.modelId.trim(),
+        credential: d.credential || undefined,
+        lifecycle,
+        validation,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
-      await save(connection);
+      await save(connection, { active: lifecycle === 'validated' });
       onSaved();
     } finally {
       setIsSaving(false);
     }
-  }, [name, url, credential, modelId, save, onSaved]);
+  }, [validation, save, onSaved]);
 
   return (
     <div className="space-y-4">
@@ -225,7 +286,7 @@ function EditorForm({ onSaved }: { onSaved: () => void }) {
         <Input
           id="conn-name"
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={(e) => { setName(e.target.value); reportDraft({ name: e.target.value }); }}
           placeholder="My model connection"
         />
       </div>
@@ -234,7 +295,7 @@ function EditorForm({ onSaved }: { onSaved: () => void }) {
         <Input
           id="conn-url"
           value={url}
-          onChange={(e) => setUrl(e.target.value)}
+          onChange={(e) => { setUrl(e.target.value); reportDraft({ url: e.target.value }); }}
           placeholder="http://localhost:11434"
         />
       </div>
@@ -244,7 +305,7 @@ function EditorForm({ onSaved }: { onSaved: () => void }) {
           id="conn-credential"
           type="password"
           value={credential}
-          onChange={(e) => setCredential(e.target.value)}
+          onChange={(e) => { setCredential(e.target.value); reportDraft({ credential: e.target.value }); }}
           placeholder="API key"
         />
       </div>
@@ -253,21 +314,35 @@ function EditorForm({ onSaved }: { onSaved: () => void }) {
         <Input
           id="conn-model-id"
           value={modelId}
-          onChange={(e) => setModelId(e.target.value)}
+          onChange={(e) => { setModelId(e.target.value); reportDraft({ modelId: e.target.value }); }}
           placeholder="llama3"
         />
       </div>
       <div className="flex gap-2">
-        <Button variant="outline" onClick={handleTest} disabled={!canTest}>
+        <Button variant="outline" onClick={handleTest} disabled={!canTest || isTesting}>
           Test
         </Button>
         <Button onClick={handleSave} disabled={isSaving}>
           Activate
         </Button>
       </div>
+      {validation && (
+        <div className="flex items-center gap-2">
+          <span
+            className={`inline-block h-2.5 w-2.5 rounded-full ${statusIndicatorClass(validation.status)}`}
+            aria-hidden="true"
+          />
+          <span className="text-sm text-muted-foreground">{statusLabel(validation.status)}</span>
+        </div>
+      )}
     </div>
   );
 }
+
+// --- Draft Persistence ---
+
+const draftCache = new Map<string, EditorDraft>();
+const NEW_DRAFT_KEY = '__new__';
 
 // --- Workspace ---
 
@@ -278,6 +353,7 @@ export function ModelConnectionsWorkspace() {
     activate,
     deactivate,
     deleteConnection,
+    error,
   } = useModelConnections();
 
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -291,18 +367,36 @@ export function ModelConnectionsWorkspace() {
   }, []);
 
   const handleChangeActive = useCallback(() => {
+    const active = connections.find((c) => c.id === activeConnectionId);
+    if (active && !draftCache.has(active.id)) {
+      draftCache.set(active.id, {
+        name: active.name,
+        url: active.baseUrl,
+        credential: active.credential ?? '',
+        modelId: active.modelId,
+      });
+    }
     setShowAddForm(true);
     setEditingId(activeConnectionId ?? null);
-  }, [activeConnectionId]);
+  }, [activeConnectionId, connections]);
 
   const handleDeactivate = useCallback(async () => {
     await deactivate();
   }, [deactivate]);
 
   const handleEdit = useCallback((id: string) => {
+    const conn = connections.find((c) => c.id === id);
+    if (conn) {
+      draftCache.set(id, {
+        name: conn.name,
+        url: conn.baseUrl,
+        credential: conn.credential ?? '',
+        modelId: conn.modelId,
+      });
+    }
     setEditingId(id);
     setShowAddForm(true);
-  }, []);
+  }, [connections]);
 
   const handleActivate = useCallback(async (id: string) => {
     await activate(id);
@@ -317,11 +411,25 @@ export function ModelConnectionsWorkspace() {
     setEditingId(null);
   }, []);
 
+  const handleDraftChange = useCallback((draft: EditorDraft) => {
+    const key = editingId ?? NEW_DRAFT_KEY;
+    draftCache.set(key, draft);
+  }, [editingId]);
+
+  const draftKey = editingId ?? NEW_DRAFT_KEY;
+
   const hasConnections = connections.length > 0;
   const showEmpty = !hasConnections && !showAddForm;
 
   return (
     <div className="space-y-6">
+      {/* Storage error */}
+      {error && (
+        <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
+          {error}
+        </div>
+      )}
+
       {/* Active model summary */}
       {activeConnection && (
         <ActiveModelSummary
@@ -334,7 +442,14 @@ export function ModelConnectionsWorkspace() {
       {showEmpty && <EmptyState onAddConnection={handleAddConnection} />}
 
       {/* Tabs */}
-      <Tabs defaultValue="connections">
+      <Tabs value={showAddForm ? 'add' : 'connections'} onValueChange={(v) => {
+        if (v === 'add') {
+          setShowAddForm(true);
+        } else {
+          setShowAddForm(false);
+          setEditingId(null);
+        }
+      }}>
         <TabsList>
           <TabsTrigger value="connections">Connections</TabsTrigger>
           <TabsTrigger value="add">Add connection</TabsTrigger>
@@ -357,7 +472,11 @@ export function ModelConnectionsWorkspace() {
           )}
         </TabsContent>
         <TabsContent value="add">
-          <EditorForm onSaved={handleSaved} />
+          <EditorForm
+            onSaved={handleSaved}
+            editingId={editingId}
+            onDraftChange={handleDraftChange}
+          />
         </TabsContent>
       </Tabs>
     </div>

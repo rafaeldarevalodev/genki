@@ -37,7 +37,7 @@ Chain strategy: feature-branch-chain
 
 - [ ] 2.1 Create `src/lib/model-connection-validator.ts` and tests for `/models`, manual model entry, `/chat/completions`, 15-second timeout, cancellation, stale-attempt suppression, and redacted auth/CORS/offline/incompatible results.
 - [ ] 2.2 Create `src/components/model-connections-workspace.tsx` with active/no-active summary, route-labelled recommendations, saved rows, resumable editor, explicit Test then Activate, and no automatic fallback.
-- [ ] 2.3 Modify `src/components/settings-modal.tsx` and `settings-modal.test.tsx` to use Radix Tabs/Dialog/AlertDialog, preserve Voice unchanged, and test keyboard flow, focus return/result announcement, delete-active no-active state, and narrow sticky actions.
+- [x] 2.3 Modify `src/components/settings-modal.tsx` and `settings-modal.test.tsx` to use Radix Tabs/Dialog/AlertDialog, preserve Voice unchanged, and test keyboard flow, focus return/result announcement, delete-active no-active state, and narrow sticky actions.
 - [ ] 2.4 Test mocked IndexedDB/fetch integration: discovery/probe/retry, active preservation on every failure, draft reload, unavailable storage, and no credential in UI diagnostics.
 
 ## Phase 3: Browser Execution Boundary
