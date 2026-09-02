@@ -77,3 +77,130 @@ describe('browser model connection client', () => {
     expect(fetchImpl).not.toHaveBeenCalled();
   });
 });
+
+describe('chat method', () => {
+  it('sends a full messages array through the validated browser connection', async () => {
+    const fetchImpl = vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({
+      choices: [{ message: { content: '¡Hola! ¿Cómo estás?' } }],
+    })));
+    const client = createModelConnectionClient({ repository: repositoryWith(activeConnection), fetchImpl });
+
+    const result = await client.chat({
+      messages: [
+        { role: 'system', content: 'You are a Spanish tutor.' },
+        { role: 'user', content: 'Hello!' },
+      ],
+      temperature: 0.7,
+      maxTokens: 600,
+    });
+
+    expect(result).toBe('¡Hola! ¿Cómo estás?');
+    expect(fetchImpl).toHaveBeenCalledWith('https://models.example.test/v1/chat/completions', expect.objectContaining({
+      method: 'POST',
+      body: JSON.stringify({
+        model: 'gpt-test',
+        temperature: 0.7,
+        max_tokens: 600,
+        messages: [
+          { role: 'system', content: 'You are a Spanish tutor.' },
+          { role: 'user', content: 'Hello!' },
+        ],
+      }),
+    }));
+  });
+
+  it('throws ModelConnectionUnavailableError when no active validated connection exists', async () => {
+    const fetchImpl = vi.fn();
+    const client = createModelConnectionClient({ repository: repositoryWith(), fetchImpl });
+
+    await expect(client.chat({
+      messages: [{ role: 'user', content: 'Hi' }],
+    })).rejects.toMatchObject({ message: 'No validated active browser model connection is available.' });
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+});
+
+describe('roleplay functions', () => {
+  it('startRoleplay sends scenario prompt and returns first message', async () => {
+    const fetchImpl = vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({
+      choices: [{ message: { content: 'Hello! Welcome to our conversation practice. Let\'s begin! [tip] Try speaking slowly at first.' } }],
+    })));
+    const client = createModelConnectionClient({ repository: repositoryWith(activeConnection), fetchImpl });
+
+    const result = await client.startRoleplay({
+      vocabulary: ['hello', 'goodbye'],
+      scenarioContext: 'Practice greeting vocabulary',
+    });
+
+    expect(result.aiResponse).toContain('Hello!');
+    expect(result.aiResponse).toContain('[tip]');
+    expect(fetchImpl).toHaveBeenCalledWith('https://models.example.test/v1/chat/completions', expect.objectContaining({
+      body: expect.stringContaining('You are Maya'),
+    }));
+  });
+
+  it('continueRoleplay sends chat history and returns AI response', async () => {
+    const fetchImpl = vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({
+      choices: [{ message: { content: 'Great job using those words! [tip] Remember to smile when greeting.' } }],
+    })));
+    const client = createModelConnectionClient({ repository: repositoryWith(activeConnection), fetchImpl });
+
+    const result = await client.continueRoleplay({
+      vocabulary: ['hello', 'goodbye'],
+      scenarioContext: 'Practice greeting vocabulary',
+      chatHistory: [
+        { role: 'assistant', text: 'Hello! Welcome!' },
+        { role: 'user', text: 'Hi there!' },
+      ],
+      userMessage: 'How are you?',
+    });
+
+    expect(result.aiResponse).toContain('Great job');
+    const body = JSON.parse(fetchImpl.mock.calls[0][1].body);
+    expect(body.messages).toHaveLength(4); // system + 2 history + 1 user
+    expect(body.messages[0].role).toBe('system');
+    expect(body.messages[body.messages.length - 1].content).toContain('How are you?');
+  });
+
+  it('evaluateRoleplay returns parsed score and feedback', async () => {
+    const fetchImpl = vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({
+      choices: [{ message: { content: '{"score": 85, "feedback": "Good vocabulary usage!", "tips": ["Speak more slowly", "Use more connectors", "Great pronunciation"]}' } }],
+    })));
+    const client = createModelConnectionClient({ repository: repositoryWith(activeConnection), fetchImpl });
+
+    const result = await client.evaluateRoleplay({
+      userInput: 'Hello! How are you today?',
+      scenarioContext: 'Practice greeting vocabulary',
+      vocabulary: ['hello', 'goodbye'],
+    });
+
+    expect(result.score).toBe(85);
+    expect(result.feedback).toBe('Good vocabulary usage!');
+    expect(result.tips).toHaveLength(3);
+  });
+
+  it('evaluateRoleplay handles malformed JSON gracefully', async () => {
+    const fetchImpl = vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({
+      choices: [{ message: { content: 'The response was decent. No JSON here.' } }],
+    })));
+    const client = createModelConnectionClient({ repository: repositoryWith(activeConnection), fetchImpl });
+
+    await expect(client.evaluateRoleplay({
+      userInput: 'Hello!',
+      scenarioContext: 'Greeting practice',
+    })).rejects.toThrow('Failed to parse evaluation response');
+  });
+
+  it('roleplay functions throw ModelConnectionUnavailableError without connection', async () => {
+    const fetchImpl = vi.fn();
+    const client = createModelConnectionClient({ repository: repositoryWith(), fetchImpl });
+
+    await expect(client.startRoleplay({ vocabulary: ['hi'], scenarioContext: 'test' }))
+      .rejects.toMatchObject({ message: 'No validated active browser model connection is available.' });
+    await expect(client.continueRoleplay({ vocabulary: ['hi'], scenarioContext: 'test', chatHistory: [], userMessage: 'hi' }))
+      .rejects.toMatchObject({ message: 'No validated active browser model connection is available.' });
+    await expect(client.evaluateRoleplay({ userInput: 'hi', scenarioContext: 'test' }))
+      .rejects.toMatchObject({ message: 'No validated active browser model connection is available.' });
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+});

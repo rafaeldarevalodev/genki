@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Send, MessageSquare, LineChart, Trophy, Volume2, Loader2, CheckCircle2, Mic } from 'lucide-react';
-import { startRoleplayAction, continueRoleplayAction, evaluateRoleplayAction, getTTSAudio } from '@/app/actions';
+import { getTTSAudio } from '@/app/actions';
+import { createModelConnectionClient } from '@/lib/model-connection-client';
 import { useSettings } from '@/hooks/use-settings';
 import { useDecks } from '@/hooks/use-decks';
 import { useToast } from '@/hooks/use-toast';
@@ -40,16 +41,20 @@ export default function RoleplayView({ deck }: RoleplayViewProps) {
   useEffect(() => {
     const initRoleplay = async () => {
       setLoading(true);
-      const result = await startRoleplayAction(deck.cards);
-      if ('error' in result) {
+      try {
+        const client = createModelConnectionClient();
+        const vocabulary = deck.cards.map(c => c.front);
+        const context = `The user wants to practice the following vocabulary in a conversation: ${vocabulary.join(', ')}. Create a simple, friendly scenario where they can use these words and start with the first message.`;
+        const result = await client.startRoleplay({ vocabulary, scenarioContext: context });
+        setRoleplayContext(context);
+        setChatHistory([{ role: 'assistant', text: result.aiResponse }]);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
         toast({
           title: 'Failed to start roleplay',
-          description: result.error,
+          description: message,
           variant: 'destructive',
         });
-      } else {
-        setRoleplayContext(result.scenario);
-        setChatHistory([{ role: 'assistant', text: result.first_message }]);
       }
       setLoading(false);
     };
@@ -69,16 +74,23 @@ export default function RoleplayView({ deck }: RoleplayViewProps) {
     setUserMsg('');
     setLoading(true);
 
-    const vocabulary = deck.cards.map(c => c.front);
-    const result = await continueRoleplayAction(newHistory, userMsg, roleplayContext, vocabulary);
-    if ('error' in result) {
+    try {
+      const client = createModelConnectionClient();
+      const vocabulary = deck.cards.map(c => c.front);
+      const result = await client.continueRoleplay({
+        vocabulary,
+        scenarioContext: roleplayContext,
+        chatHistory: newHistory,
+        userMessage: userMsg,
+      });
+      setChatHistory([...newHistory, { role: 'assistant', text: result.aiResponse }]);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
       toast({
         title: 'AI Error',
-        description: result.error,
+        description: message,
         variant: 'destructive',
       });
-    } else {
-      setChatHistory([...newHistory, { role: 'assistant', text: result.text }]);
     }
     setLoading(false);
   };
@@ -86,16 +98,22 @@ export default function RoleplayView({ deck }: RoleplayViewProps) {
   const handleEvaluation = async () => {
     if (chatHistory.filter(m => m.role === 'user').length < 2 || !roleplayContext) return;
     setLoading(true);
-    const result = await evaluateRoleplayAction(chatHistory, roleplayContext);
-    if ('error' in result) {
-      toast({
-        title: 'Evaluation Error',
-        description: result.error,
-        variant: 'destructive',
+    try {
+      const client = createModelConnectionClient();
+      const userInput = chatHistory.filter(m => m.role === 'user').map(m => m.text).join('\n');
+      const result = await client.evaluateRoleplay({
+        userInput,
+        scenarioContext: roleplayContext,
       });
-    } else {
       setAiEvaluation(result);
       addXp(Math.round(result.score / 5)); // Grant XP based on score
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      toast({
+        title: 'Evaluation Error',
+        description: message,
+        variant: 'destructive',
+      });
     }
     setLoading(false);
   };

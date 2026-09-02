@@ -81,6 +81,33 @@ function completionUrl(baseUrl: string) {
   return `${baseUrl}/chat/completions`;
 }
 
+interface ChatMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
+
+export interface StartRoleplayInput {
+  vocabulary: string[];
+  scenarioContext: string;
+}
+
+export interface ContinueRoleplayInput {
+  vocabulary: string[];
+  scenarioContext: string;
+  chatHistory: { role: 'user' | 'assistant'; text: string }[];
+  userMessage: string;
+}
+
+export interface EvaluateRoleplayInput {
+  userInput: string;
+  scenarioContext: string;
+  vocabulary?: string[];
+}
+
+const ROLEPLAY_SYSTEM_PROMPT = `You are Maya, a friendly English conversation tutor. Keep responses to 2-3 sentences maximum. Be encouraging and natural. After responding, include [tip] with a brief pronunciation or grammar tip. Keep the response text separate from the tip.`;
+
+const EVALUATE_SYSTEM_PROMPT = `You are an English conversation evaluator. Rate 0-100, give detailed feedback, and provide 3 tips.`;
+
 export function createModelConnectionClient({
   repository = createModelConnectionsRepository(),
   fetchImpl = fetch,
@@ -111,7 +138,36 @@ export function createModelConnectionClient({
     return result;
   };
 
+  const chat = async (options: {
+    messages: ChatMessage[];
+    temperature?: number;
+    maxTokens?: number;
+  }): Promise<string> => {
+    const restored = await repository.load();
+    const connection = getActiveValidatedConnection(restored.connections, restored.activeConnectionId);
+    const response = await fetchImpl(completionUrl(connection.baseUrl), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(connection.credential ? { Authorization: `Bearer ${connection.credential}` } : {}),
+      },
+      body: JSON.stringify({
+        model: connection.modelId,
+        temperature: options.temperature ?? 0.7,
+        max_tokens: options.maxTokens ?? 2000,
+        messages: options.messages,
+      }),
+    });
+
+    if (!response.ok) throw new Error(`The browser model request failed (${response.status}).`);
+    const payload = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
+    const result = payload.choices?.[0]?.message?.content;
+    if (!result) throw new Error('The model returned an empty response.');
+    return result;
+  };
+
   return {
+    chat,
     async generateCards(input: GenerateBrowserCardsInput) {
       const content = [
         { type: 'text', text: cleanText(input.text) },
@@ -133,6 +189,66 @@ export function createModelConnectionClient({
         throw new Error('The model returned an invalid CEFR classification.');
       }
       return { cefrLevel: parsed.cefrLevel, justification: parsed.justification ?? 'No justification provided.' };
+    },
+
+    async startRoleplay(input: StartRoleplayInput): Promise<{ aiResponse: string }> {
+      const vocabList = input.vocabulary.join(', ');
+      const systemContext = `${ROLEPLAY_SYSTEM_PROMPT}\n\nScenario: ${input.scenarioContext}\nVocabulary: ${vocabList}`;
+      const prompt = `Start a conversation using: ${vocabList}`;
+
+      const aiResponse = await chat({
+        messages: [
+          { role: 'system', content: systemContext },
+          { role: 'user', content: prompt },
+        ],
+        temperature: 0.7,
+        maxTokens: 600,
+      });
+
+      return { aiResponse };
+    },
+
+    async continueRoleplay(input: ContinueRoleplayInput): Promise<{ aiResponse: string }> {
+      const vocabList = input.vocabulary.join(', ');
+      const systemContext = `${ROLEPLAY_SYSTEM_PROMPT}\n\nScenario: ${input.scenarioContext}\nVocabulary: ${vocabList}`;
+
+      const messages: ChatMessage[] = [
+        { role: 'system', content: systemContext },
+        ...input.chatHistory.map((m) => ({ role: m.role, content: m.text })),
+        { role: 'user', content: input.userMessage },
+      ];
+
+      const aiResponse = await chat({
+        messages,
+        temperature: 0.7,
+        maxTokens: 600,
+      });
+
+      return { aiResponse };
+    },
+
+    async evaluateRoleplay(input: EvaluateRoleplayInput): Promise<{ score: number; feedback: string; tips: string[] }> {
+      const vocabList = input.vocabulary?.join(', ') || 'general';
+      const prompt = `Evaluate: Scenario="${input.scenarioContext}", Vocab="${vocabList}", Response="${input.userInput}"\n\nReturn JSON: {"score": 0-100, "feedback": "detailed", "tips": ["tip1", "tip2", "tip3"]}`;
+
+      const result = await chat({
+        messages: [
+          { role: 'system', content: EVALUATE_SYSTEM_PROMPT },
+          { role: 'user', content: prompt },
+        ],
+        temperature: 0.5,
+        maxTokens: 800,
+      });
+
+      const jsonMatch = result.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error('Failed to parse evaluation response');
+
+      const parsed = JSON.parse(jsonMatch[0]);
+      return {
+        score: typeof parsed.score === 'number' ? parsed.score : 70,
+        feedback: parsed.feedback || 'Good attempt!',
+        tips: Array.isArray(parsed.tips) ? parsed.tips.slice(0, 3) : ['Keep practicing!'],
+      };
     },
   };
 }
